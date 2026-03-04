@@ -1,6 +1,6 @@
-# Project Title
+# Course Planner Plus
 
-> One-line description of what your project does
+> Visualizer for all SJSU major course requirements.
 
 ## Team
 
@@ -9,25 +9,28 @@
 | Name 1 | [@username](https://github.com/username) | name@sjsu.edu |
 | Name 2 | [@username](https://github.com/username) | name@sjsu.edu |
 | Name 3 | [@username](https://github.com/username) | name@sjsu.edu |
-| Name 4 | [@username](https://github.com/username) | name@sjsu.edu |
+| Yunfei | [@ychen1026](https://github.com/ychen1026) | yunfei.chen@sjsu.edu |
 
-**Advisor:** [Advisor Name]
+**Advisor:** Carlos Rojas
 
 ---
 
 ## Problem Statement
 
-[2-3 sentences describing the problem you're solving and why it matters]
+University students often struggle with effectively planning their academic journey due to limited guidance and disconnected tools. Existing systems at SJSU, like MyPlanner and MyScheduler, allow students to see a set of required courses and generate semester schedules, but they are lacking when it comes to prerequisite validation, providing information on major/minor requirements, real-time class availability information, and the ability to simulate problems such as gap semesters or course failures. 
 
 ## Solution
 
-[2-3 sentences describing your solution approach]
+An **interactive roadmap** will be built into a single, centralized academic planning platform that allows students to map out their desired entire path to graduation in one place. This project will focus on dynamically visualizing prerequisite relationships and the critical path that will determine the time to complete a degree. This information will help students clearly see what classes are more urgent, what classes contribute to completing a minor, and how delays or changes in their schedule can impact their graduation timeline.
 
 ### Key Features
 
-- Feature 1
-- Feature 2
-- Feature 3
+- Dynamic Prerequisite Visualization: 
+    - An interactive graph that displays course dependencies and highlights the critical path required for graduation.
+- Real-Time Plan Adjustment:
+    - Automatically update the interactive roadmap information based on user preferences.
+- Critical Path Demonstration:
+    - Visually marks the sequence of courses that directly determine degree completion rate.
 
 ---
 
