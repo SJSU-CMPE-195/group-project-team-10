@@ -7,7 +7,7 @@
 | Name | GitHub                                    | Email                 |
 |------|-------------------------------------------|-----------------------|
 | Name 1 | [@username](https://github.com/username)  | name@sjsu.edu         |
-| Name 2 | [@miiiyyi](https://github.com/miiiyyi)  | mita.yang@sjsu.edu   |
+| Mita | [@miiiyyi](https://github.com/miiiyyi)  | mita.yang@sjsu.edu   |
 | Name 3 | [@smol-derp](https://github.com/smol-derp)          | jiajun.zheng@sjsu.edu |
 | Yunfei | [@ychen1026](https://github.com/ychen1026) | yunfei.chen@sjsu.edu  |
 
