@@ -8,11 +8,11 @@
 
 ---
 
-## Advisor Meetings
+## Advisor Meetings (bi-weekly)
 
 | Date | Duration | Format | Attendees | Summary | Action Items |
 |------|----------|--------|-----------|---------|--------------|
-| | | In-person / Remote | | | |
+| 2/23/2026 | 30+ mins | Remote | JiaJun, Dayven, Mita, Yunfei | Decide on the main features for the project; Confirm the main technology stack: Java w/ Spring Boot; Went in depth about Report 1 and assign Team roles for Report 1  | Work on everyone's assigned role for Report 1|
 | | | In-person / Remote | | | |
 | | | In-person / Remote | | | |
 | | | In-person / Remote | | | |
