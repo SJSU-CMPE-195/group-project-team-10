@@ -8,7 +8,7 @@
 |------|-------------------------------------------|-----------------------|
 | Dayven | [@daylenh](https://github.com/daylenh)  | dayven.lenh@sjsu.edu         |
 | Mita | [@miiiyyi](https://github.com/miiiyyi)  | mita.yang@sjsu.edu   |
-| Name 3 | [@smol-derp](https://github.com/smol-derp)          | jiajun.zheng@sjsu.edu |
+| Jia Jun Zheng | [@smol-derp](https://github.com/smol-derp)  | jiajun.zheng@sjsu.edu |
 | Yunfei | [@ychen1026](https://github.com/ychen1026) | yunfei.chen@sjsu.edu  |
 
 **Advisor:** Carlos Rojas
