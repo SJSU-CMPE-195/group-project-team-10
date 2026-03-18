@@ -9,6 +9,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
 
     steps:
       - name: Checkout code
@@ -25,15 +28,14 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build project
-        run: ./backend/gradlew build
+        run: ./gradlew build -x test
 
       - name: Run tests
-        run: ./backend/gradlew test
+        run: ./gradlew test
 
       - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-reports
-          path: build/reports/tests/
-
+          path: backend/build/reports/tests/test/
