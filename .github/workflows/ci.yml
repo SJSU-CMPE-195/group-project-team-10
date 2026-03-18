@@ -25,10 +25,10 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build project
-        run: ./gradlew build
+        run: ./backend/gradlew build
 
       - name: Run tests
-        run: ./gradlew test
+        run: ./backend/gradlew test
 
       - name: Upload test reports
         if: always()
