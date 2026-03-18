@@ -55,7 +55,7 @@ An **interactive roadmap** will be built into a single, centralized academic pla
 
 | Category | Technology                    |
 |----------|-------------------------------|
-| Frontend |                               |
+| Frontend | Vite + React Framework        |
 | Backend | Kotlin + Spring Boot + Gradle |
 | Database |                               |
 | Deployment |                               |
@@ -116,8 +116,6 @@ npm run dev
 
 ### Running Tests
 
-```bash
-[test command]
 ```
 
 ---
