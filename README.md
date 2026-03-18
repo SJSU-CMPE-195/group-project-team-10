@@ -106,6 +106,13 @@ cd backend
 
 # The app will be available at http://localhost:XXXX
 ```
+#### Frontend
+```bash
+cd frontend
+npm run dev
+```
+```bash
+# The app will be available at http://localhost:5173/
 
 ### Running Tests
 
