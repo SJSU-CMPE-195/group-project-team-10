@@ -55,7 +55,7 @@ An **interactive roadmap** will be built into a single, centralized academic pla
 
 | Category | Technology                    |
 |----------|-------------------------------|
-| Frontend |                               |
+| Frontend | Vite + React Framework        |
 | Backend | Kotlin + Spring Boot + Gradle |
 | Database |                               |
 | Deployment |                               |
@@ -106,11 +106,16 @@ cd backend
 
 # The app will be available at http://localhost:XXXX
 ```
+#### Frontend
+```bash
+cd frontend
+npm run dev
+```
+```bash
+# The app will be available at http://localhost:5173/
 
 ### Running Tests
 
-```bash
-[test command]
 ```
 
 ---
