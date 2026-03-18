@@ -162,3 +162,8 @@ docker-data/
 # ===========================
 # Add project-specific ignores below
 .envs
+
+# Kotlin / Gradle
+.kotlin/
+hs_err_pid*
+replay_pid*

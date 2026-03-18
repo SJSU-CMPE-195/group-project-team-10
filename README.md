@@ -53,12 +53,12 @@ An **interactive roadmap** will be built into a single, centralized academic pla
 
 ## Tech Stack
 
-| Category | Technology |
-|----------|------------|
-| Frontend | |
-| Backend | |
-| Database | |
-| Deployment | |
+| Category | Technology                    |
+|----------|-------------------------------|
+| Frontend |                               |
+| Backend | Kotlin + Spring Boot + Gradle |
+| Database |                               |
+| Deployment |                               |
 
 ---
 
@@ -68,6 +68,12 @@ An **interactive roadmap** will be built into a single, centralized academic pla
 
 - [Prerequisite 1] v.X.X+
 - [Prerequisite 2] v.X.X+
+- Make sure you have the following installed:
+  - Git
+  - JDK 21
+  - IntelliJ IDEA recommended
+> Gradle does not need to be installed separately because this project uses the Gradle wrapper.
+
 
 ### Installation
 
@@ -89,6 +95,11 @@ cp .env.example .env
 
 ### Running Locally
 
+#### Backend
+```bash
+cd backend
+./gradlew bootRun
+```
 ```bash
 # Development mode
 [dev command]
@@ -125,6 +136,7 @@ cp .env.example .env
 
 ```
 .
+├── backend/                  # Kotlin + Spring Boot backend
 ├── [folder]/           # Description
 ├── src/                # Source code files
 ├── tests/              # Test files
