@@ -3,8 +3,8 @@ import { describe, it, expect } from 'vitest'
 import App from './App'
 
 describe('App', () => {
-    it('renders the get started heading', () => {
+    it('renders the backend test heading', () => {
         render(<App />)
-        expect(screen.getByText('Get started')).toBeDefined()
+        expect(screen.getByText('Backend Test Via CORS')).toBeDefined()
     })
 })
