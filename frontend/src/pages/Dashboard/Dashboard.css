@@ -1,0 +1,128 @@
+.dashboard {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.dashboard h1 {
+  margin-bottom: 4px;
+}
+
+.dashboard-subtitle {
+  color: var(--text);
+  font-size: 16px;
+  margin-bottom: 32px;
+}
+
+.progress-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.progress-label {
+  font-weight: 500;
+  color: var(--text-h);
+}
+
+.progress-value {
+  font-size: 14px;
+  color: var(--text);
+}
+
+.progress-bar-track {
+  height: 10px;
+  background: var(--border);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.progress-bar-track.small {
+  height: 6px;
+  margin-top: 8px;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 5px;
+  transition: width 0.3s ease;
+}
+
+.requirements-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.requirement-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.requirement-name {
+  font-weight: 500;
+  color: var(--text-h);
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.requirement-progress {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.dashboard-warning {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--status-failed);
+  border: 1px solid var(--status-failed);
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 14px;
+  margin-bottom: 24px;
+}
+
+.dashboard-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.action-button {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  text-decoration: none;
+  color: var(--text-h);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  transition: background 0.15s, box-shadow 0.15s;
+  cursor: pointer;
+}
+
+.action-button:hover {
+  box-shadow: var(--shadow);
+}
+
+.action-button.primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.action-button.primary:hover {
+  opacity: 0.9;
+}

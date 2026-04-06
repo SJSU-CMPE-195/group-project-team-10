@@ -1,0 +1,30 @@
+.validation-alert {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid var(--status-failed);
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 14px;
+}
+
+.validation-alert-header {
+  font-weight: 600;
+  color: var(--status-failed);
+  margin-bottom: 8px;
+}
+
+.validation-alert-list {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.validation-alert-list li {
+  line-height: 1.4;
+}
+
+.validation-alert-list strong {
+  color: var(--text-h);
+}
