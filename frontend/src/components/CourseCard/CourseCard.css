@@ -1,0 +1,75 @@
+.course-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  padding: 16px;
+  transition: box-shadow 0.15s;
+}
+
+.course-card:hover {
+  box-shadow: var(--shadow);
+}
+
+.course-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.course-card-code {
+  font-weight: 600;
+  color: var(--text-h);
+  font-size: 15px;
+}
+
+.course-card-dept {
+  font-size: 11px;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: var(--accent);
+  background: var(--accent-bg);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.course-card-title {
+  color: var(--text);
+  font-size: 14px;
+  margin-bottom: 6px;
+  line-height: 1.3;
+}
+
+.course-card-units {
+  font-size: 13px;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.course-card-desc {
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+
+.course-card-toggle {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.course-card-toggle:hover {
+  text-decoration: underline;
+}
+
+.course-card-prereqs {
+  font-size: 12px;
+  color: var(--text);
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}

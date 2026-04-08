@@ -15,6 +15,20 @@
   --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
   --mono: ui-monospace, Consolas, monospace;
 
+  --status-completed: #22c55e;
+  --status-in-progress: #3b82f6;
+  --status-planned: #6b7280;
+  --status-failed: #ef4444;
+  --status-blocked: #f97316;
+
+  --edge-default: #9ca3af;
+  --edge-satisfied: #22c55e;
+  --edge-violated: #ef4444;
+
+  --card-bg: #ffffff;
+  --card-border: #e5e4e7;
+  --nav-bg: #f9fafb;
+
   font: 18px/145% var(--sans);
   letter-spacing: 0.18px;
   color-scheme: light dark;
@@ -43,10 +57,20 @@
     --social-bg: rgba(47, 48, 58, 0.5);
     --shadow:
       rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
 
-  #social .button-icon {
-    filter: invert(1) brightness(2);
+    --status-completed: #4ade80;
+    --status-in-progress: #60a5fa;
+    --status-planned: #9ca3af;
+    --status-failed: #f87171;
+    --status-blocked: #fb923c;
+
+    --edge-default: #6b7280;
+    --edge-satisfied: #4ade80;
+    --edge-violated: #f87171;
+
+    --card-bg: #1f2028;
+    --card-border: #2e303a;
+    --nav-bg: #1a1b22;
   }
 }
 
@@ -55,11 +79,8 @@ body {
 }
 
 #root {
-  width: 1126px;
   max-width: 100%;
   margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
   min-height: 100svh;
   display: flex;
   flex-direction: column;

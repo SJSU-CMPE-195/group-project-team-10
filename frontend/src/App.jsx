@@ -1,28 +1,23 @@
-import { useState, useEffect } from 'react'
+import { Routes, Route } from 'react-router-dom'
+import { RoadmapProvider } from './context/RoadmapContext'
+import Layout from './components/Layout/Layout'
+import Dashboard from './pages/Dashboard/Dashboard'
+import Roadmap from './pages/Roadmap/Roadmap'
+import Catalog from './pages/Catalog/Catalog'
 import './App.css'
 
 function App() {
-  const [message, setMessage] = useState("Loading...")
-
-  useEffect(() => {
-  fetch("http://localhost:8080/api/health")
-  .then(res => res.json())
-  .then(data => {
-    console.log("Backend says:", data)
-    setMessage(JSON.stringify(data))
-    })
-  .catch(err => {
-    console.error("Error:", err)
-    setMessage("Error connecting to backend")
-    })
-  }, [])
-  
-return (
-  <div>
-    <h1>Backend Test Via CORS</h1>
-    <p>{message}</p>
-  </div>
-)
+  return (
+    <RoadmapProvider>
+      <Routes>
+        <Route element={<Layout />}>
+          <Route index element={<Dashboard />} />
+          <Route path="roadmap" element={<Roadmap />} />
+          <Route path="catalog" element={<Catalog />} />
+        </Route>
+      </Routes>
+    </RoadmapProvider>
+  )
 }
 
 export default App
