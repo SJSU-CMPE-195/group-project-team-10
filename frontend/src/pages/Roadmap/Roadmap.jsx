@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ReactFlow, Background, Controls, MarkerType } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
@@ -122,11 +122,13 @@ function Roadmap() {
   const [nodes, setNodes] = useState([])
   const [edges, setEdges] = useState([])
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     const { nodes: newNodes, edges: newEdges } = buildNodesAndEdges(semesters)
     setNodes(newNodes)
     setEdges(newEdges)
   }, [semesters])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const onNodesChange = (changes) => {
     setNodes((nds) => applyNodeChanges(changes, nds))
