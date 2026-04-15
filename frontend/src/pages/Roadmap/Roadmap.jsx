@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ReactFlow, Background, Controls, MarkerType } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
@@ -8,6 +8,7 @@ import { courseMap } from '../../data/courses'
 import prerequisites from '../../data/prerequisites'
 import CourseNode from '../../components/CourseNode/CourseNode'
 import ValidationAlert from '../../components/ValidationAlert/ValidationAlert'
+import { applyNodeChanges, applyEdgeChanges } from '@xyflow/react'
 import './Roadmap.css'
 
 const NODE_TYPES = { course: CourseNode }
@@ -118,8 +119,25 @@ function Roadmap() {
   const { semesters, hasUnsavedChanges } = state
   const violations = validateSemesterPlan(semesters, prerequisites)
 
-  const { nodes, edges } = useMemo(() => buildNodesAndEdges(semesters), [semesters])
+  const [nodes, setNodes] = useState([])
+  const [edges, setEdges] = useState([])
 
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    const { nodes: newNodes, edges: newEdges } = buildNodesAndEdges(semesters)
+    setNodes(newNodes)
+    setEdges(newEdges)
+  }, [semesters])
+  /* eslint-enable react-hooks/set-state-in-effect */
+
+  const onNodesChange = (changes) => {
+    setNodes((nds) => applyNodeChanges(changes, nds))
+  }
+
+  const onEdgesChange = (changes) => {
+    setEdges((eds) => applyEdgeChanges(changes, eds))
+  }
+  
   const handleBack = () => {
     if (hasUnsavedChanges) {
       const choice = window.confirm("You have unsaved changes. Press OK to discard, or Cancel to stay.")
@@ -207,7 +225,10 @@ function Roadmap() {
           nodes={nodes}
           edges={edges}
           nodeTypes={NODE_TYPES}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
           fitView
+          nodesDraggable={true}
           minZoom={0.3}
           maxZoom={1.5}
           proOptions={{ hideAttribution: true }}
