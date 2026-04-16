@@ -105,3 +105,23 @@
   background: var(--border);
   border: none;
 }
+.course-node-remove {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-h);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 20px;
+  text-align: center;
+}
+
+.course-node-remove:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fff;
+}

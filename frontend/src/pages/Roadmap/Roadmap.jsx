@@ -4,7 +4,7 @@ import { ReactFlow, Background, Controls, MarkerType } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { useRoadmap, useRoadmapDispatch } from '../../context/RoadmapContext'
 import { validateSemesterPlan } from '../../utils/prerequisiteValidator'
-import { courseMap } from '../../data/courses'
+import courses, { courseMap } from '../../data/courses'
 import prerequisites from '../../data/prerequisites'
 import CourseNode from '../../components/CourseNode/CourseNode'
 import ValidationAlert from '../../components/ValidationAlert/ValidationAlert'
@@ -60,6 +60,8 @@ function buildNodesAndEdges(semesters) {
         type: 'course',
         position: { x, y: HEADER_HEIGHT + TOP_PADDING + j * ROW_HEIGHT },
         data: {
+          courseId: sc.courseId,
+          semesterId: sem.semesterId,
           courseCode: course.courseCode,
           courseTitle: course.courseTitle,
           units: course.units,
@@ -115,6 +117,10 @@ function Roadmap() {
   const dispatch = useRoadmapDispatch()
   const navigate = useNavigate()
   const [failCourseId, setFailCourseId] = useState("")
+  const [showAddCourseModal, setShowAddCourseModal] = useState(false)
+  const [addSemesterId, setAddSemesterId] = useState("")
+  const [addCourseId, setAddCourseId] = useState("")
+  const [addCourseStatus, setAddCourseStatus] = useState("planned")
 
   const { semesters, hasUnsavedChanges } = state
   const violations = validateSemesterPlan(semesters, prerequisites)
@@ -167,6 +173,36 @@ function Roadmap() {
     dispatch({ type: "ADD_GAP_SEMESTER", afterSemesterId: lastId })
   }
 
+  const openAddCourseModal = () => {
+    setShowAddCourseModal(true)
+  }
+
+  const closeAddCourseModal = () => {
+    setShowAddCourseModal(false)
+    setAddSemesterId("")
+    setAddCourseId("")
+    setAddCourseStatus("planned")
+  }
+
+  const handleDiscardChanges = () => {
+    dispatch({ type: "DISCARD_CHANGES" })
+  }
+
+  const handleAddCourse = () => {
+    const semesterId = parseInt(addSemesterId)
+    const courseId = parseInt(addCourseId)
+    if (!semesterId || !courseId) return
+
+    dispatch({
+      type: "ADD_COURSE_TO_SEMESTER",
+      semesterId,
+      courseId,
+      status: addCourseStatus,
+    })
+
+    closeAddCourseModal()
+  }
+
   const failableCourses = semesters
     .flatMap(s => s.courses)
     .filter(c => c.status === "completed" || c.status === "in_progress")
@@ -175,6 +211,11 @@ function Roadmap() {
       return course ? { courseId: c.courseId, label: course.courseCode } : null
     })
     .filter(Boolean)
+  const existingCourseIds = new Set(
+    semesters.flatMap(s => s.courses.map(c => c.courseId))
+  )
+
+  const addableCourses = courses.filter(course => !existingCourseIds.has(course.courseId))
 
   return (
     <div className="roadmap-page">
@@ -206,6 +247,10 @@ function Roadmap() {
             </button>
           </div>
 
+          <button onClick={openAddCourseModal} className="roadmap-btn">
+            Add Course
+          </button>
+
           <button onClick={handleAddGap} className="roadmap-btn">
             Add Gap Semester
           </button>
@@ -217,8 +262,82 @@ function Roadmap() {
           >
             Save Changes
           </button>
+
+          <button
+            onClick={handleDiscardChanges}
+            disabled={!hasUnsavedChanges}
+            className="roadmap-btn"
+          >
+            Cancel Changes
+          </button>
         </div>
       </div>
+
+      {showAddCourseModal && (
+        <div className="roadmap-modal-backdrop" onClick={closeAddCourseModal}>
+          <div className="roadmap-modal" onClick={(e) => e.stopPropagation()}>
+            <h3>Add Course</h3>
+
+            <div className="roadmap-modal-field">
+              <label>Semester</label>
+              <select
+                value={addSemesterId}
+                onChange={e => setAddSemesterId(e.target.value)}
+                className="roadmap-select"
+              >
+                <option value="">Select semester...</option>
+                {semesters.map(sem => (
+                  <option key={sem.semesterId} value={sem.semesterId}>
+                    {sem.term}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="roadmap-modal-field">
+              <label>Course</label>
+              <select
+                value={addCourseId}
+                onChange={e => setAddCourseId(e.target.value)}
+                className="roadmap-select"
+              >
+                <option value="">Select course...</option>
+                {addableCourses.map(course => (
+                  <option key={course.courseId} value={course.courseId}>
+                    {course.courseCode} — {course.courseTitle}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="roadmap-modal-field">
+              <label>Status</label>
+              <select
+                value={addCourseStatus}
+                onChange={e => setAddCourseStatus(e.target.value)}
+                className="roadmap-select"
+              >
+                <option value="planned">Planned</option>
+                <option value="in_progress">In Progress</option>
+                <option value="completed">Completed</option>
+              </select>
+            </div>
+
+            <div className="roadmap-modal-actions">
+              <button onClick={closeAddCourseModal} className="roadmap-btn">
+                Cancel
+              </button>
+              <button
+                onClick={handleAddCourse}
+                disabled={!addSemesterId || !addCourseId}
+                className="roadmap-btn primary"
+              >
+                Add Course
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="roadmap-flow-container">
         <ReactFlow
