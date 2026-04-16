@@ -94,6 +94,40 @@ export function roadmapReducer(state, action) {
       return { ...state, semesters: withCourse, hasUnsavedChanges: true }
     }
 
+    case "ADD_COURSE_TO_SEMESTER": {
+      const { semesterId, courseId, status = "planned" } = action
+
+      // Prevent duplicates anywhere in the roadmap
+      const alreadyExists = state.semesters.some(sem =>
+        sem.courses.some(c => c.courseId === courseId)
+      )
+      if (alreadyExists) return state
+
+      const newSemesters = state.semesters.map(sem => {
+        if (sem.semesterId !== semesterId) return sem
+        return {
+          ...sem,
+          courses: [...sem.courses, { courseId, status }],
+        }
+      })
+
+      return { ...state, semesters: newSemesters, hasUnsavedChanges: true }
+    }
+
+    case "REMOVE_COURSE_FROM_SEMESTER": {
+      const { semesterId, courseId } = action
+
+      const newSemesters = state.semesters.map(sem => {
+        if (sem.semesterId !== semesterId) return sem
+        return {
+          ...sem,
+          courses: sem.courses.filter(c => c.courseId !== courseId),
+        }
+      })
+
+      return { ...state, semesters: newSemesters, hasUnsavedChanges: true }
+    }
+
     case "SAVE_CHANGES": {
       return {
         ...state,
