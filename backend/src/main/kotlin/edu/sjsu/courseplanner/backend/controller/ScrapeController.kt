@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
-// Exposes API endpoints for scraping and debugging the Spring 2026 schedule data.
+// Exposes API endpoints for scraping and debugging the Fall 2026 schedule data.
 @RestController
 @RequestMapping("/api/scrape")
 class ScrapeController(
@@ -34,10 +34,10 @@ class ScrapeController(
         return scheduleScraperService.scrapeSectionsDebug(limit)
     }
 
-    // Scrapes the Spring 2026 page and saves the parsed rows into the database.
+    // Scrapes the Fall 2026 page and saves the parsed rows into the database.
     @PostMapping("/import")
-    fun importSpring2026(): Map<String, Any> {
-        val term = "Spring 2026"
+    fun importFall2026(): Map<String, Any> {
+        val term = "Fall 2026"
         val scraped = scheduleScraperService.scrapeSectionsDebug(Int.MAX_VALUE).parsed
         val savedCount = sectionService.replaceSectionsForTerm(term, scraped)
 
