@@ -5,11 +5,11 @@ import edu.sjsu.courseplanner.backend.dto.ScrapedSectionDto
 import org.jsoup.Jsoup
 import org.springframework.stereotype.Service
 
-// Fetches the Spring 2026 schedule page and parses HTML table rows into structured data.
+// Fetches the Fall 2026 schedule page and parses HTML table rows into structured data.
 @Service
 class ScheduleScraperService {
 
-    private val url = "https://sjsu.edu/classes/schedules/spring-2026.php"
+    private val url = "https://sjsu.edu/classes/schedules/fall-2026.php"
     private val sectionPattern = Regex("""^(.*?) \(Section ([^)]+)\)$""")
     private val classNumberPattern = Regex("""\d{5}""")
 
