@@ -4,7 +4,7 @@ import './CourseNode.css'
 
 function CourseNode({ data }) {
   const dispatch = useRoadmapDispatch()
-  const { courseId, semesterId, courseCode, courseTitle, units, status } = data
+  const { courseId, semesterId, courseCode, courseTitle, units, status, hasIssue, issueTypes = [], } = data
 
   const handleRemove = (e) => {
     e.stopPropagation()
@@ -22,6 +22,12 @@ function CourseNode({ data }) {
       <button className="course-node-remove" onClick={handleRemove} title="Remove course">
         ×
       </button>
+
+      {hasIssue && (
+        <div className="course-node-warning" title={issueTypes.join(', ')}>
+          {issueTypes.includes('coreq') ? 'COREQ' : 'PREREQ'}
+        </div>
+      )}
 
       <div className="course-node-code">{courseCode}</div>
       <div className="course-node-title">{courseTitle}</div>
