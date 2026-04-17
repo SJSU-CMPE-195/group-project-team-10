@@ -19,6 +19,26 @@ const HEADER_HEIGHT = 50
 const LEFT_PADDING = 40
 const TOP_PADDING = 60
 
+const getSemesterHeight = (sem) => {
+  const courseCount = sem.courses.length
+  return HEADER_HEIGHT + TOP_PADDING + courseCount * ROW_HEIGHT + 40
+}
+
+const getSemesterFromX = (x, semesters) => {
+  const index = Math.round((x - LEFT_PADDING) / COLUMN_WIDTH)
+  return semesters[index]
+}
+
+const getInsertIndexFromY = (y) => {
+  const offsetY = y - (HEADER_HEIGHT + TOP_PADDING)
+  return Math.max(0, Math.round(offsetY / ROW_HEIGHT))
+}
+
+const snapToColumn = (x) => {
+  const index = Math.round((x - LEFT_PADDING) / COLUMN_WIDTH)
+  return LEFT_PADDING + index * COLUMN_WIDTH
+}
+
 function buildNodesAndEdges(semesters) {
   const nodes = []
   const edges = []
@@ -27,20 +47,21 @@ function buildNodesAndEdges(semesters) {
   for (let i = 0; i < semesters.length; i++) {
     const sem = semesters[i]
     const x = LEFT_PADDING + i * COLUMN_WIDTH
-
     nodes.push({
       id: `sem-${sem.semesterId}`,
       type: 'default',
       position: { x, y: 0 },
       data: { label: sem.term },
       style: {
+        width: COLUMN_WIDTH,
+        height: getSemesterHeight(sem),
+
         background: 'transparent',
         border: 'none',
+
         fontSize: '14px',
         fontWeight: 600,
-        width: 180,
         textAlign: 'center',
-        pointerEvents: 'none',
       },
       draggable: false,
       selectable: false,
@@ -58,7 +79,10 @@ function buildNodesAndEdges(semesters) {
       nodes.push({
         id: nodeId,
         type: 'course',
-        position: { x, y: HEADER_HEIGHT + TOP_PADDING + j * ROW_HEIGHT },
+        position: {
+          x: LEFT_PADDING + i * COLUMN_WIDTH,
+          y: HEADER_HEIGHT + TOP_PADDING + j * ROW_HEIGHT
+        },
         data: {
           courseId: sc.courseId,
           semesterId: sem.semesterId,
@@ -121,12 +145,28 @@ function Roadmap() {
   const [addSemesterId, setAddSemesterId] = useState("")
   const [addCourseId, setAddCourseId] = useState("")
   const [addCourseStatus, setAddCourseStatus] = useState("planned")
+  const [hoverSemesterIndex, setHoverSemesterIndex] = useState(null)
 
   const { semesters, hasUnsavedChanges } = state
   const violations = validateSemesterPlan(semesters, prerequisites)
 
   const [nodes, setNodes] = useState([])
   const [edges, setEdges] = useState([])
+
+  const decoratedNodes = nodes.map(n => {
+    if (!n.id.startsWith('sem-')) return n
+
+    const semIndex = semesters.findIndex(s => `sem-${s.semesterId}` === n.id)
+
+    return {
+      ...n,
+      className: hoverSemesterIndex === semIndex ? 'semester-column-highlight' : ''
+    }
+  })
+
+  const onNodesChange = (changes) => {
+    setNodes((nds) => applyNodeChanges(changes, nds))
+  }
 
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
@@ -136,12 +176,38 @@ function Roadmap() {
   }, [semesters])
   /* eslint-enable react-hooks/set-state-in-effect */
 
-  const onNodesChange = (changes) => {
-    setNodes((nds) => applyNodeChanges(changes, nds))
-  }
-
   const onEdgesChange = (changes) => {
     setEdges((eds) => applyEdgeChanges(changes, eds))
+  }
+
+  const onNodeDrag = (_, node) => {
+    if (!node.id.startsWith('course-')) return
+
+    const sem = getSemesterFromX(node.position.x, semesters)
+    const index = semesters.findIndex(s => s === sem)
+    setHoverSemesterIndex(index)
+  }
+
+  const onNodeDragStop = (_, node) => {
+    if (!node.id.startsWith('course-')) return
+    
+    const courseId = parseInt(node.id.replace('course-', ''))
+    const targetSemester = getSemesterFromX(node.position.x || 0, semesters)
+    const toIndex = getInsertIndexFromY(node.position.y || 0)
+
+    if (!targetSemester) return
+
+    const snappedX = snapToColumn(node.position.x || 0)
+    node.position.x = snappedX
+    
+    dispatch({
+      type: 'MOVE_COURSE',
+      courseId,
+      toSemesterId: targetSemester.semesterId,
+      toIndex
+    })
+
+    setHoverSemesterIndex(null)
   }
   
   const handleBack = () => {
@@ -341,11 +407,13 @@ function Roadmap() {
 
       <div className="roadmap-flow-container">
         <ReactFlow
-          nodes={nodes}
+          nodes={decoratedNodes}
           edges={edges}
           nodeTypes={NODE_TYPES}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
+          onNodeDrag={onNodeDrag}
+          onNodeDragStop = {onNodeDragStop}
           fitView
           nodesDraggable={true}
           minZoom={0.3}

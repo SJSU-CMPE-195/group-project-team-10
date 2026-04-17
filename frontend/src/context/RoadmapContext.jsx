@@ -67,31 +67,54 @@ export function roadmapReducer(state, action) {
     }
 
     case "MOVE_COURSE": {
-      const { courseId, fromSemesterId, toSemesterId } = action
-      if (fromSemesterId === toSemesterId) return state
+      const { courseId, toSemesterId, toIndex } = action
 
-      let movedCourse = null
-      const withoutCourse = state.semesters.map(sem => {
-        if (sem.semesterId !== fromSemesterId) return sem
-        return {
-          ...sem,
-          courses: sem.courses.filter(c => {
-            if (c.courseId === courseId) {
-              movedCourse = c
-              return false
-            }
-            return true
-          }),
+      let fromSemesterId = null
+      let currentIndex = -1
+
+      for (const sem of state.semesters) {
+        const idx = sem.courses.findIndex(c => c.courseId === courseId)
+        if (idx !== -1) {
+          fromSemesterId = sem.semesterId
+          currentIndex = idx
+          break
         }
-      })
-      if (!movedCourse) return state
+      }
 
-      const withCourse = withoutCourse.map(sem => {
-        if (sem.semesterId !== toSemesterId) return sem
-        return { ...sem, courses: [...sem.courses, movedCourse] }
-      })
+      if (fromSemesterId == null) return state
 
-      return { ...state, semesters: withCourse, hasUnsavedChanges: true }
+      if (
+        fromSemesterId === toSemesterId &&
+        (toIndex === currentIndex || toIndex == null)
+      ) {
+        return state
+      }
+
+      const newSemesters = state.semesters.map(sem => ({
+        ...sem,
+        courses: sem.courses.filter(c => c.courseId !== courseId)
+      }))
+
+      const targetSem = newSemesters.find(s => s.semesterId === toSemesterId)
+
+      const course = state.semesters
+        .flatMap(s => s.courses)
+        .find(c => c.courseId === courseId)
+
+      if (!targetSem || !course) return state
+
+      const insertIndex =
+        toIndex >= 0 && toIndex <= targetSem.courses.length
+          ? toIndex
+          : targetSem.courses.length
+
+      targetSem.courses.splice(insertIndex, 0, course)
+
+      return {
+        ...state,
+        semesters: newSemesters,
+        hasUnsavedChanges: true
+      }
     }
 
     case "ADD_COURSE_TO_SEMESTER": {
