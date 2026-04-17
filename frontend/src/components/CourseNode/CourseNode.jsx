@@ -17,7 +17,7 @@ function CourseNode({ data }) {
 
   return (
     <div className={`course-node course-node--${status}`}>
-      <Handle type="target" position={Position.Left} className="course-handle" />
+      <Handle type="target" position={Position.Top} className="course-handle" />
 
       <button className="course-node-remove" onClick={handleRemove} title="Remove course">
         ×
@@ -33,7 +33,7 @@ function CourseNode({ data }) {
         </span>
       </div>
 
-      <Handle type="source" position={Position.Right} className="course-handle" />
+      <Handle type="source" position={Position.Bottom} className="course-handle" />
     </div>
   )
 }

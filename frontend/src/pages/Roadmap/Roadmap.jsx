@@ -13,30 +13,30 @@ import './Roadmap.css'
 
 const NODE_TYPES = { course: CourseNode }
 
-const COLUMN_WIDTH = 230
-const ROW_HEIGHT = 130
-const HEADER_HEIGHT = 50
+const SEMESTER_ROW_HEIGHT = 200
+const COURSE_WIDTH = 200
+const HEADER_WIDTH = 140
 const LEFT_PADDING = 40
-const TOP_PADDING = 60
+const TOP_PADDING = 40
 
-const getSemesterHeight = (sem) => {
+const getSemesterWidth = (sem) => {
   const courseCount = sem.courses.length
-  return HEADER_HEIGHT + TOP_PADDING + courseCount * ROW_HEIGHT + 40
+  return HEADER_WIDTH + LEFT_PADDING + courseCount * COURSE_WIDTH + 40
 }
 
-const getSemesterFromX = (x, semesters) => {
-  const index = Math.round((x - LEFT_PADDING) / COLUMN_WIDTH)
+const getSemesterFromY = (y, semesters) => {
+  const index = Math.round((y - TOP_PADDING) / SEMESTER_ROW_HEIGHT)
   return semesters[index]
 }
 
-const getInsertIndexFromY = (y) => {
-  const offsetY = y - (HEADER_HEIGHT + TOP_PADDING)
-  return Math.max(0, Math.round(offsetY / ROW_HEIGHT))
+const getInsertIndexFromX = (x) => {
+  const offsetX = x - (LEFT_PADDING + HEADER_WIDTH)
+  return Math.max(0, Math.round(offsetX / COURSE_WIDTH))
 }
 
-const snapToColumn = (x) => {
-  const index = Math.round((x - LEFT_PADDING) / COLUMN_WIDTH)
-  return LEFT_PADDING + index * COLUMN_WIDTH
+const snapToRow = (y) => {
+  const index = Math.round((y - TOP_PADDING) / SEMESTER_ROW_HEIGHT)
+  return TOP_PADDING + index * SEMESTER_ROW_HEIGHT
 }
 
 function buildNodesAndEdges(semesters) {
@@ -46,15 +46,15 @@ function buildNodesAndEdges(semesters) {
 
   for (let i = 0; i < semesters.length; i++) {
     const sem = semesters[i]
-    const x = LEFT_PADDING + i * COLUMN_WIDTH
+    const y = TOP_PADDING + i * SEMESTER_ROW_HEIGHT
     nodes.push({
       id: `sem-${sem.semesterId}`,
       type: 'default',
-      position: { x, y: 0 },
+      position: { x: 0, y },
       data: { label: sem.term },
       style: {
-        width: COLUMN_WIDTH,
-        height: getSemesterHeight(sem),
+        width: getSemesterWidth(sem),
+        height: SEMESTER_ROW_HEIGHT,
 
         background: 'transparent',
         border: 'none',
@@ -80,8 +80,8 @@ function buildNodesAndEdges(semesters) {
         id: nodeId,
         type: 'course',
         position: {
-          x: LEFT_PADDING + i * COLUMN_WIDTH,
-          y: HEADER_HEIGHT + TOP_PADDING + j * ROW_HEIGHT
+          x: LEFT_PADDING + HEADER_WIDTH + j * COURSE_WIDTH,
+          y: TOP_PADDING + i * SEMESTER_ROW_HEIGHT + 30,
         },
         data: {
           courseId: sc.courseId,
@@ -183,23 +183,23 @@ function Roadmap() {
   const onNodeDrag = (_, node) => {
     if (!node.id.startsWith('course-')) return
 
-    const sem = getSemesterFromX(node.position.x, semesters)
+    const sem = getSemesterFromY(node.position.y, semesters)
     const index = semesters.findIndex(s => s === sem)
     setHoverSemesterIndex(index)
   }
 
   const onNodeDragStop = (_, node) => {
     if (!node.id.startsWith('course-')) return
-    
+
     const courseId = parseInt(node.id.replace('course-', ''))
-    const targetSemester = getSemesterFromX(node.position.x || 0, semesters)
-    const toIndex = getInsertIndexFromY(node.position.y || 0)
+    const targetSemester = getSemesterFromY(node.position.y || 0, semesters)
+    const toIndex = getInsertIndexFromX(node.position.x || 0)
 
     if (!targetSemester) return
 
-    const snappedX = snapToColumn(node.position.x || 0)
-    node.position.x = snappedX
-    
+    const snappedY = snapToRow(node.position.y || 0)
+    node.position.y = snappedY
+
     dispatch({
       type: 'MOVE_COURSE',
       courseId,
