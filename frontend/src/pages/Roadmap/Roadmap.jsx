@@ -1,14 +1,13 @@
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { ReactFlow, Background, Controls, MarkerType } from '@xyflow/react'
+import {useEffect, useState} from 'react'
+import {useNavigate} from 'react-router-dom'
+import {ReactFlow, Background, Controls, MarkerType,applyEdgeChanges, applyNodeChanges} from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { useRoadmap, useRoadmapDispatch } from '../../context/RoadmapContext'
-import { validateSemesterPlan } from '../../utils/prerequisiteValidator'
-import courses, { courseMap } from '../../data/courses'
+import {useRoadmap, useRoadmapDispatch} from '../../context/RoadmapContext'
+import {validateSemesterPlan} from '../../utils/prerequisiteValidator'
+import courses, {courseMap} from '../../data/courses'
 import prerequisites from '../../data/prerequisites'
 import CourseNode from '../../components/CourseNode/CourseNode'
 import ValidationAlert from '../../components/ValidationAlert/ValidationAlert'
-import { applyNodeChanges, applyEdgeChanges } from '@xyflow/react'
 import './Roadmap.css'
 
 function SemesterNode({ data }) {
@@ -19,6 +18,8 @@ const NODE_TYPES = { course: CourseNode, semester: SemesterNode }
 
 const SEMESTER_ROW_HEIGHT = 200
 const COURSE_WIDTH = 200
+const COURSE_CARD_HEIGHT = 96
+const COURSE_Y_OFFSET = (SEMESTER_ROW_HEIGHT - COURSE_CARD_HEIGHT) / 2
 const HEADER_WIDTH = 140
 const LEFT_PADDING = 40
 const TOP_PADDING = 40
@@ -40,7 +41,7 @@ const getInsertIndexFromX = (x) => {
 
 const snapToRow = (y) => {
   const index = Math.round((y - TOP_PADDING) / SEMESTER_ROW_HEIGHT)
-  return TOP_PADDING + index * SEMESTER_ROW_HEIGHT
+  return TOP_PADDING + index * SEMESTER_ROW_HEIGHT + COURSE_Y_OFFSET
 }
 
 function buildNodesAndEdges(semesters) {
@@ -78,7 +79,7 @@ function buildNodesAndEdges(semesters) {
         type: 'course',
         position: {
           x: LEFT_PADDING + HEADER_WIDTH + j * COURSE_WIDTH,
-          y: TOP_PADDING + i * SEMESTER_ROW_HEIGHT + 30,
+          y: TOP_PADDING + i * SEMESTER_ROW_HEIGHT + COURSE_Y_OFFSET,
         },
         data: {
           courseId: sc.courseId,
@@ -193,8 +194,7 @@ function Roadmap() {
 
     if (!targetSemester) return
 
-    const snappedY = snapToRow(node.position.y || 0)
-    node.position.y = snappedY
+    node.position.y = snapToRow(node.position.y || 0)
 
     dispatch({
       type: 'MOVE_COURSE',
