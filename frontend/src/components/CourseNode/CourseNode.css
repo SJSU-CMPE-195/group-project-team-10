@@ -189,41 +189,20 @@ select.course-node-status option {
   opacity: 1;
 }
 
-.course-node-note-editor {
-  margin: 6px 0 8px 0;
-}
-
-.course-node-note-editor textarea {
-  width: 100%;
-  min-height: 54px;
-  resize: vertical;
-  border-radius: 6px;
-  border: 1px solid var(--border);
-  background: var(--card-bg);
-  color: var(--text-h);
-  padding: 6px 8px;
-  font: inherit;
-  font-size: 11px;
-  box-sizing: border-box;
-}
-
-.course-node-note-actions {
+.course-node-note-row {
   display: flex;
+  align-items: center;
   gap: 6px;
   margin-top: 6px;
 }
 
-.course-node-note-actions button {
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--text-h);
-  border-radius: 6px;
-  padding: 2px 8px;
-  cursor: pointer;
-  font-size: 11px;
-}
 .course-node-note-preview {
-  margin-top: 6px;
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  text-align: left;
   font-size: 11px;
   color: var(--text);
   opacity: 0.85;
@@ -231,5 +210,81 @@ select.course-node-status option {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 100%;
+  cursor: pointer;
+}
+
+.course-node-note-preview:hover {
+  opacity: 1;
+}
+
+.course-node-more-btn {
+  border: none;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 11px;
+  padding: 0;
+  white-space: nowrap;
+}
+
+.course-note-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+}
+
+.course-note-modal {
+  width: 440px;
+  max-width: calc(100vw - 32px);
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+
+.course-note-modal h3 {
+  margin: 0 0 16px 0;
+  color: var(--text-h);
+  font-size: 18px;
+}
+
+.course-note-modal textarea {
+  width: 100%;
+  min-height: 140px;
+  resize: vertical;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  color: var(--text-h);
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 12px;
+  box-sizing: border-box;
+}
+
+.course-note-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.course-note-modal-btn {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-h);
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.course-note-modal-btn-primary {
+  background: rgba(168, 85, 247, 0.18);
+  border-color: rgba(168, 85, 247, 0.35);
 }

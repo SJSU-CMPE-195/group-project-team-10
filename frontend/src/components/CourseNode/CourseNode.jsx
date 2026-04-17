@@ -13,7 +13,7 @@ const STATUS_OPTIONS = [
 function CourseNode({ data }) {
   const dispatch = useRoadmapDispatch()
   const { courseId, semesterId, courseCode, courseTitle, units, status, note = "", hasIssue, issueTypes = [], } = data
-  const [isEditingNote, setIsEditingNote] = useState(false)
+  const [showNoteModal, setShowNoteModal] = useState(false)
   const [draftNote, setDraftNote] = useState(note)
 
   const handleRemove = (e) => {
@@ -33,21 +33,25 @@ function CourseNode({ data }) {
     })
   }
 
-  const handleSaveNote = (e) => {
+  const openNoteModal = (e) => {
       e.stopPropagation()
+      setDraftNote(note)
+      setShowNoteModal(true)
+  }
+
+  const closeNoteModal = () => {
+      setDraftNote(note)
+      setShowNoteModal(false)
+  }
+
+  const handleSaveNote = () => {
       dispatch({
         type: "SET_COURSE_NOTE",
         semesterId,
         courseId,
         note: draftNote,
       })
-      setIsEditingNote(false)
-    }
-
-  const handleCancelNote = (e) => {
-      e.stopPropagation()
-      setDraftNote(note)
-      setIsEditingNote(false)
+      setShowNoteModal(false)
   }
 
   return (
@@ -70,10 +74,7 @@ function CourseNode({ data }) {
         <button
           type="button"
           className="course-node-note-btn"
-          onClick={(e) => {
-            e.stopPropagation()
-            setIsEditingNote(v => !v)
-          }}
+          onClick={openNoteModal}
           title="Edit note"
         >
           📝
@@ -81,25 +82,24 @@ function CourseNode({ data }) {
       </div>
       <div className="course-node-title">{courseTitle}</div>
 
-      {note && !isEditingNote && (
-          <div className="course-node-note-preview">{note}</div>
-      )}
-
-      {isEditingNote && (
-          <div
-            className="course-node-note-editor"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <textarea
-                value={draftNote}
-                onChange={(e) => setDraftNote(e.target.value)}
-                placeholder="Add note..."
-            />
-            <div className="course-node-note-actions">
-                <button type="button" onClick={handleSaveNote}>Save</button>
-                <button type="button" onClick={handleCancelNote}>Cancel</button>
-            </div>
-         </div>
+      {note && (
+          <div className="course-node-note-row">
+              <button
+                 type="button"
+                 className="course-node-note-preview"
+                 onClick={openNoteModal}
+                 title={note}
+              >
+                 {note}
+              </button>
+              <button
+                  type="button"
+                  className="course-node-more-btn"
+                  onClick={openNoteModal}
+              >
+                  More
+              </button>
+          </div>
       )}
 
       <div className="course-node-footer">
@@ -120,6 +120,43 @@ function CourseNode({ data }) {
           ))}
         </select>
       </div>
+
+      {showNoteModal && (
+          <div
+             className="course-note-modal-backdrop"
+             onClick={closeNoteModal}
+          >
+            <div
+                className="course-note-modal"
+                onClick={(e) => e.stopPropagation()}
+            >
+               <h3>{courseCode} note</h3>
+
+               <textarea
+                  value={draftNote}
+                  onChange={(e) => setDraftNote(e.target.value)}
+                  placeholder="Add note..."
+               />
+
+               <div className="course-note-modal-actions">
+                   <button
+                     type="button"
+                     className="course-note-modal-btn"
+                     onClick={closeNoteModal}
+                   >
+                     Cancel
+                   </button>
+                   <button
+                     type="button"
+                     className="course-note-modal-btn course-note-modal-btn-primary"
+                     onClick={handleSaveNote}
+                   >
+                     Save
+                   </button>
+               </div>
+            </div>
+          </div>
+      )}
 
       <Handle type="source" position={Position.Bottom} className="course-handle" />
     </div>
