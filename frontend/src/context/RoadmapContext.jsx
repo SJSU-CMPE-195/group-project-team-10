@@ -66,32 +66,28 @@ export function roadmapReducer(state, action) {
       return { ...state, semesters: newSemesters, hasUnsavedChanges: true }
     }
 
-    case "MOVE_COURSE": {
-      const { courseId, fromSemesterId, toSemesterId } = action
-      if (fromSemesterId === toSemesterId) return state
+    case 'MOVE_COURSE': {
+      const { courseId, toSemesterId, toIndex } = action
 
-      let movedCourse = null
-      const withoutCourse = state.semesters.map(sem => {
-        if (sem.semesterId !== fromSemesterId) return sem
-        return {
-          ...sem,
-          courses: sem.courses.filter(c => {
-            if (c.courseId === courseId) {
-              movedCourse = c
-              return false
-            }
-            return true
-          }),
-        }
-      })
-      if (!movedCourse) return state
+      const newSemesters = state.semesters.map(sem => ({
+        ...sem,
+        courses: sem.courses.filter(c => c.courseId !== courseId)
+      }))
 
-      const withCourse = withoutCourse.map(sem => {
-        if (sem.semesterId !== toSemesterId) return sem
-        return { ...sem, courses: [...sem.courses, movedCourse] }
-      })
+      const targetSem = newSemesters.find(s => s.semesterId === toSemesterId)
+      const course = state.semesters
+      .flatMap(s => s.courses)
+      .find(c => c.courseId === courseId)
 
-      return { ...state, semesters: withCourse, hasUnsavedChanges: true }
+      if (targetSem && course) {
+        targetSem.courses.splice(toIndex ?? targetSem.courses.length, 0, course)
+      }
+
+      return {
+        ...state,
+        semesters: newSemesters,
+        hasUnsavedChanges: true
+      }
     }
 
     case "ADD_COURSE_TO_SEMESTER": {
