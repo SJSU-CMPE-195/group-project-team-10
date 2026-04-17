@@ -42,6 +42,31 @@ describe('roadmapReducer', () => {
     })
   })
 
+  describe('SET_COURSE_STATUS', () => {
+    it('updates the course status', () => {
+      const state = makeState([
+        { semesterId: 1, courses: [{ courseId: 1, status: "planned" }] },
+      ])
+      const next = roadmapReducer(state, {
+        type: "SET_COURSE_STATUS", courseId: 1, status: "in_progress",
+      })
+      expect(next.semesters[0].courses[0].status).toBe("in_progress")
+      expect(next.hasUnsavedChanges).toBe(true)
+    })
+
+    it('cascades to blocked downstream when status is failed', () => {
+      const state = makeState([
+        { semesterId: 1, courses: [{ courseId: 1, status: "completed" }] },
+        { semesterId: 2, courses: [{ courseId: 2, status: "planned" }] },
+      ])
+      const next = roadmapReducer(state, {
+        type: "SET_COURSE_STATUS", courseId: 1, status: "failed",
+      })
+      expect(next.semesters[0].courses[0].status).toBe("failed")
+      expect(next.semesters[1].courses[0].status).toBe("blocked")
+    })
+  })
+
   describe('ADD_GAP_SEMESTER', () => {
     it('inserts a gap semester after the specified semester', () => {
       const state = makeState([

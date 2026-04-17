@@ -140,7 +140,6 @@ function Roadmap() {
   const state = useRoadmap()
   const dispatch = useRoadmapDispatch()
   const navigate = useNavigate()
-  const [failCourseId, setFailCourseId] = useState("")
   const [showAddCourseModal, setShowAddCourseModal] = useState(false)
   const [addSemesterId, setAddSemesterId] = useState("")
   const [addCourseId, setAddCourseId] = useState("")
@@ -226,13 +225,6 @@ function Roadmap() {
     dispatch({ type: "SAVE_CHANGES" })
   }
 
-  const handleMarkFailed = () => {
-    const id = parseInt(failCourseId)
-    if (!id) return
-    dispatch({ type: "MARK_COURSE_FAILED", courseId: id })
-    setFailCourseId("")
-  }
-
   const handleAddGap = () => {
     if (semesters.length === 0) return
     const lastId = semesters[semesters.length - 1].semesterId
@@ -269,14 +261,6 @@ function Roadmap() {
     closeAddCourseModal()
   }
 
-  const failableCourses = semesters
-    .flatMap(s => s.courses)
-    .filter(c => c.status === "completed" || c.status === "in_progress")
-    .map(c => {
-      const course = courseMap.get(c.courseId)
-      return course ? { courseId: c.courseId, label: course.courseCode } : null
-    })
-    .filter(Boolean)
   const existingCourseIds = new Set(
     semesters.flatMap(s => s.courses.map(c => c.courseId))
   )
@@ -293,26 +277,6 @@ function Roadmap() {
         <h2>Roadmap</h2>
 
         <div className="roadmap-toolbar-actions">
-          <div className="roadmap-fail-group">
-            <select
-              value={failCourseId}
-              onChange={e => setFailCourseId(e.target.value)}
-              className="roadmap-select"
-            >
-              <option value="">Mark as Failed...</option>
-              {failableCourses.map(c => (
-                <option key={c.courseId} value={c.courseId}>{c.label}</option>
-              ))}
-            </select>
-            <button
-              onClick={handleMarkFailed}
-              disabled={!failCourseId}
-              className="roadmap-btn danger"
-            >
-              Fail
-            </button>
-          </div>
-
           <button onClick={openAddCourseModal} className="roadmap-btn">
             Add Course
           </button>

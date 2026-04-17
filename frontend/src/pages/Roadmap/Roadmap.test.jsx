@@ -24,15 +24,4 @@ describe('Roadmap', () => {
     renderWithProviders(<Roadmap />, { route: '/roadmap' })
     expect(screen.getByText('Add Gap Semester')).toBeDefined()
   })
-
-  it('renders the mark as failed dropdown', () => {
-    renderWithProviders(<Roadmap />, { route: '/roadmap' })
-    expect(screen.getByText('Mark as Failed...')).toBeDefined()
-  })
-
-  it('renders the fail button as disabled when no course selected', () => {
-    renderWithProviders(<Roadmap />, { route: '/roadmap' })
-    const failBtn = screen.getByText('Fail')
-    expect(failBtn.disabled).toBe(true)
-  })
 })

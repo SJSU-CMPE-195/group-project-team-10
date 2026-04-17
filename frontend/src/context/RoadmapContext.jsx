@@ -41,6 +41,32 @@ export function roadmapReducer(state, action) {
       return { ...state, semesters: newSemesters, hasUnsavedChanges: true }
     }
 
+    case "SET_COURSE_STATUS": {
+      const { courseId, status } = action
+
+      if (status === "failed") {
+        const blocked = getBlockedCourses(courseId, state.semesters, prerequisites)
+        const blockedSet = new Set(blocked)
+        const newSemesters = state.semesters.map(sem => ({
+          ...sem,
+          courses: sem.courses.map(c => {
+            if (c.courseId === courseId) return { ...c, status: "failed" }
+            if (blockedSet.has(c.courseId)) return { ...c, status: "blocked" }
+            return c
+          }),
+        }))
+        return { ...state, semesters: newSemesters, hasUnsavedChanges: true }
+      }
+
+      const newSemesters = state.semesters.map(sem => ({
+        ...sem,
+        courses: sem.courses.map(c =>
+          c.courseId === courseId ? { ...c, status } : c
+        ),
+      }))
+      return { ...state, semesters: newSemesters, hasUnsavedChanges: true }
+    }
+
     case "ADD_GAP_SEMESTER": {
       const idx = state.semesters.findIndex(s => s.semesterId === action.afterSemesterId)
       if (idx === -1) return state
