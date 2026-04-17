@@ -145,8 +145,7 @@ select.course-node-status option {
   color: var(--text-h);
   cursor: pointer;
   font-size: 14px;
-  line-height: 20px;
-  text-align: center;
+  font-family: Arial, sans-serif;
 }
 
 .course-node-remove:hover {
