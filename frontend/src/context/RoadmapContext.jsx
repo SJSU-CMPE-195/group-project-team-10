@@ -15,55 +15,50 @@ function buildInitialState() {
   }
 }
 
+function applyFailCascade(semesters, courseId) {
+  const blockedSet = new Set(getBlockedCourses(courseId, semesters, prerequisites))
+  return semesters.map(sem => ({
+    ...sem,
+    courses: sem.courses.map(c => {
+      if (c.courseId === courseId) return { ...c, status: "failed" }
+      if (blockedSet.has(c.courseId)) return { ...c, status: "blocked" }
+      return c
+    }),
+  }))
+}
+
+function setCourseStatus(semesters, courseId, status) {
+  return semesters.map(sem => ({
+    ...sem,
+    courses: sem.courses.map(c =>
+      c.courseId === courseId ? { ...c, status } : c
+    ),
+  }))
+}
+
 export function roadmapReducer(state, action) {
   switch (action.type) {
     case "MARK_COURSE_FAILED": {
-      const blocked = getBlockedCourses(action.courseId, state.semesters, prerequisites)
-      const blockedSet = new Set(blocked)
-      const newSemesters = state.semesters.map(sem => ({
-        ...sem,
-        courses: sem.courses.map(c => {
-          if (c.courseId === action.courseId) return { ...c, status: "failed" }
-          if (blockedSet.has(c.courseId)) return { ...c, status: "blocked" }
-          return c
-        }),
-      }))
-      return { ...state, semesters: newSemesters, hasUnsavedChanges: true }
+      return {
+        ...state,
+        semesters: applyFailCascade(state.semesters, action.courseId),
+        hasUnsavedChanges: true,
+      }
     }
 
     case "MARK_COURSE_COMPLETED": {
-      const newSemesters = state.semesters.map(sem => ({
-        ...sem,
-        courses: sem.courses.map(c =>
-          c.courseId === action.courseId ? { ...c, status: "completed" } : c
-        ),
-      }))
-      return { ...state, semesters: newSemesters, hasUnsavedChanges: true }
+      return {
+        ...state,
+        semesters: setCourseStatus(state.semesters, action.courseId, "completed"),
+        hasUnsavedChanges: true,
+      }
     }
 
     case "SET_COURSE_STATUS": {
       const { courseId, status } = action
-
-      if (status === "failed") {
-        const blocked = getBlockedCourses(courseId, state.semesters, prerequisites)
-        const blockedSet = new Set(blocked)
-        const newSemesters = state.semesters.map(sem => ({
-          ...sem,
-          courses: sem.courses.map(c => {
-            if (c.courseId === courseId) return { ...c, status: "failed" }
-            if (blockedSet.has(c.courseId)) return { ...c, status: "blocked" }
-            return c
-          }),
-        }))
-        return { ...state, semesters: newSemesters, hasUnsavedChanges: true }
-      }
-
-      const newSemesters = state.semesters.map(sem => ({
-        ...sem,
-        courses: sem.courses.map(c =>
-          c.courseId === courseId ? { ...c, status } : c
-        ),
-      }))
+      const newSemesters = status === "failed"
+        ? applyFailCascade(state.semesters, courseId)
+        : setCourseStatus(state.semesters, courseId, status)
       return { ...state, semesters: newSemesters, hasUnsavedChanges: true }
     }
 
