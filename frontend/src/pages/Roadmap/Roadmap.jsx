@@ -11,7 +11,11 @@ import ValidationAlert from '../../components/ValidationAlert/ValidationAlert'
 import { applyNodeChanges, applyEdgeChanges } from '@xyflow/react'
 import './Roadmap.css'
 
-const NODE_TYPES = { course: CourseNode }
+function SemesterNode({ data }) {
+  return <div className="roadmap-semester-label">{data.label}</div>
+}
+
+const NODE_TYPES = { course: CourseNode, semester: SemesterNode }
 
 const SEMESTER_ROW_HEIGHT = 200
 const COURSE_WIDTH = 200
@@ -49,19 +53,12 @@ function buildNodesAndEdges(semesters) {
     const y = TOP_PADDING + i * SEMESTER_ROW_HEIGHT
     nodes.push({
       id: `sem-${sem.semesterId}`,
-      type: 'default',
+      type: 'semester',
       position: { x: 0, y },
       data: { label: sem.term },
       style: {
         width: getSemesterWidth(sem),
         height: SEMESTER_ROW_HEIGHT,
-
-        background: 'transparent',
-        border: 'none',
-
-        fontSize: '14px',
-        fontWeight: 600,
-        textAlign: 'center',
       },
       draggable: false,
       selectable: false,
