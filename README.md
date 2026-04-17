@@ -1,14 +1,12 @@
 # Course Planner Plus
 
-> Visualizer for all SJSU major course requirements.
-
 ## Team
 
-| Name | GitHub                                    | Email                 |
-|------|-------------------------------------------|-----------------------|
+| Name   | GitHub                                    | Email                 |
+|--------|-------------------------------------------|-----------------------|
 | Dayven | [@daylenh](https://github.com/daylenh)  | dayven.lenh@sjsu.edu         |
-| Mita | [@miiiyyi](https://github.com/miiiyyi)  | mita.yang@sjsu.edu   |
-| Jia Jun Zheng | [@smol-derp](https://github.com/smol-derp)  | jiajun.zheng@sjsu.edu |
+| Mita   | [@miiiyyi](https://github.com/miiiyyi)  | mita.yang@sjsu.edu   |
+| Jiajun | [@smol-derp](https://github.com/smol-derp)  | jiajun.zheng@sjsu.edu |
 | Yunfei | [@ychen1026](https://github.com/ychen1026) | yunfei.chen@sjsu.edu  |
 
 **Advisor:** Carlos Rojas
@@ -34,7 +32,7 @@ An **interactive roadmap** will be built into a single, centralized academic pla
 
 ---
 
-## Demo
+## Demo (will update when more complete)
 
 [Link to demo video or GIF]
 
@@ -44,21 +42,23 @@ An **interactive roadmap** will be built into a single, centralized academic pla
 
 ## Screenshots
 
-| Feature | Screenshot |
-|---------|------------|
-| [Feature 1] | ![Screenshot](docs/screenshots/feature1.png) |
-| [Feature 2] | ![Screenshot](docs/screenshots/feature2.png) |
+| Feature      | Screenshot                                    |
+|--------------|-----------------------------------------------|
+| Dashboard    | ![Screenshot](docs/screenshots/dashboard.png) |
+| Roadmap      | ![Screenshot](docs/screenshots/roadmap.png)   |
+| Catalog      | ![Screenshot](docs/screenshots/catalog.png)   |
+| Course Notes | ![Screenshot](docs/screenshots/notes.png)     |
 
 ---
 
 ## Tech Stack
 
-| Category | Technology                    |
-|----------|-------------------------------|
-| Frontend | Vite + React Framework        |
-| Backend | Kotlin + Spring Boot + Gradle |
-| Database |                               |
-| Deployment |                               |
+| Category | Technology                           |
+|----------|--------------------------------------|
+| Frontend | React, Vite, React Router, ReactFlow |
+| Backend | Kotlin, Spring Boot, Gradle, JSoup   |
+| Database | MySQL                                |
+| Deployment | TDB                                  |
 
 ---
 
@@ -66,56 +66,61 @@ An **interactive roadmap** will be built into a single, centralized academic pla
 
 ### Prerequisites
 
-- [Prerequisite 1] v.X.X+
-- [Prerequisite 2] v.X.X+
-- Make sure you have the following installed:
-  - Git
-  - JDK 21
-  - IntelliJ IDEA recommended
+Make sure you have the following installed:
+- Git
+- JDK 21
+- Node.js 20+ and npm
+- IntelliJ IDEA recommended
+
 > Gradle does not need to be installed separately because this project uses the Gradle wrapper.
+> MySQL is not required yet. Tests use H2 in memory and the runs without a database attached.
 
 
 ### Installation
 
 ```bash
 # Clone the repository
-git clone https://github.com/[org]/[repo].git
-cd [repo]
+git clone https://github.com/SJSU-CMPE-195/group-project-team-10.git
+cd group-project-team-10
 
-# Install dependencies
-[install command]
-
-# Set up environment variables
-cp .env.example .env
-# Edit .env with your values
-
-# Run database migrations (if applicable)
-[migration command]
+# Install frontend dependencies
+cd frontend
+npm install
+cd ..
 ```
 
+Backend dependencies are resolved automatically by Gradle the first time you run `./gradlew bootRun` or `./gradlew build`.
+
 ### Running Locally
+
+Run the backend and frontend in separate terminals.
 
 #### Backend
 ```bash
 cd backend
 ./gradlew bootRun
+# Available at http://localhost:8080
+# Health check: http://localhost:8080/api/health
 ```
-```bash
-# Development mode
-[dev command]
 
-# The app will be available at http://localhost:XXXX
-```
 #### Frontend
 ```bash
 cd frontend
 npm run dev
+# Available at http://localhost:5173
 ```
-```bash
-# The app will be available at http://localhost:5173/
 
 ### Running Tests
 
+```bash
+# Backend (JUnit 5, H2 in memory)
+cd backend
+./gradlew test
+
+# Frontend (Vitest + React Testing Library)
+cd frontend
+npm run test          # single run
+npm run test:watch    # watch mode
 ```
 
 ---
@@ -127,11 +132,13 @@ npm run dev
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/resource` | Get all resources |
-| GET | `/api/resource/:id` | Get resource by ID |
-| POST | `/api/resource` | Create new resource |
-| PUT | `/api/resource/:id` | Update resource |
-| DELETE | `/api/resource/:id` | Delete resource |
+| GET  | `/api/health` | Health check — returns `{"status":"ok"}` |
+| GET  | `/api/scrape/test` | Preview parsed SJSU Fall 2026 schedule rows (optional `?limit=N`) |
+| GET  | `/api/scrape/debug` | Scrape stats + sample rows for debugging |
+| POST | `/api/scrape/import` | Scrape SJSU Fall 2026 schedule page and persist sections to the DB |
+| GET  | `/api/sections` | List all persisted sections (optional `?term=`) |
+| GET  | `/api/schedule-data/full-schedule` | All course offerings (optional `?term=`) |
+| GET  | `/api/schedule-data/departments/{dept}/courses` | Courses for a given department |
 
 </details>
 
@@ -140,50 +147,26 @@ npm run dev
 ## Project Structure
 
 ```
-.
-├── backend/                  # Kotlin + Spring Boot backend
-├── [folder]/           # Description
-├── src/                # Source code files
-├── tests/              # Test files
-├── docs/               # Documentation files
+group-project-team-10/
+├── backend/                          # Kotlin + Spring Boot backend (Gradle)
+│   └── src/main/kotlin/edu/sjsu/courseplanner/backend/
+│       ├── controller/               # REST controllers (health, scrape, sections)
+│       ├── service/                  # JSoup schedule scraper + data services
+│       ├── repository/               # Spring Data JPA repositories
+│       ├── model/                    # JPA entities (SectionEntity active; others placeholder)
+│       ├── dto/                      # Request/response DTOs
+│       └── config/                   # CORS config
+├── frontend/                         # React + Vite frontend
+│   └── src/
+│       ├── pages/                    # Dashboard, Roadmap, Catalog
+│       ├── components/               # CourseNode, CourseCard, ValidationAlert, Layout
+│       ├── context/                  # RoadmapContext (reducer-based state)
+│       ├── data/                     # Static courses, prerequisites, degree requirements
+│       └── utils/                    # prerequisiteValidator
+├── docs/                             # diagrams, screenshots
+├── .github/workflows/                # CI pipeline
 └── README.md
 ```
-
----
-
-## Contributing
-
-1. Create a feature branch (`git checkout -b feature/amazing-feature`)
-2. Commit your changes (`git commit -m 'Add amazing feature'`)
-3. Push to the branch (`git push origin feature/amazing-feature`)
-4. Open a Pull Request
-
-### Branch Naming
-
-- `feature/` - New features
-- `fix/` - Bug fixes
-- `docs/` - Documentation updates
-- `refactor/` - Code refactoring
-
-### Commit Messages
-
-Use clear, descriptive commit messages:
-- `Add user authentication endpoint`
-- `Fix database connection timeout issue`
-- `Update README with setup instructions`
-
----
-
-## Acknowledgments
-
-- [Resource/Library/Person]
-- [Resource/Library/Person]
-
----
-
-## License
-
-This project is licensed under the <FILL IN> License - see the [LICENSE](LICENSE) file for details.
 
 ---
 

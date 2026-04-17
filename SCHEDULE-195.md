@@ -1,4 +1,4 @@
-# Meeting Log
+# Meeting Log (in zoom, this is outdated)
 
 **Project:** [Project Title]
 **Team:** [Team Name]
