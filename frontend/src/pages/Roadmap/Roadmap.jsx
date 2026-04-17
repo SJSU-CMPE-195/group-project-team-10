@@ -97,6 +97,7 @@ function buildNodesAndEdges(semesters, violations) {
           courseTitle: course.courseTitle,
           units: course.units,
           status: sc.status,
+          note: sc.note || "",
           hasIssue: issueTypes.length > 0,
           issueTypes,
         },
