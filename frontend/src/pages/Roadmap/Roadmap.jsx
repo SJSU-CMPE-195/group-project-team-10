@@ -1,4 +1,4 @@
-import {useEffect, useState} from 'react'
+import {useEffect, useMemo, useState} from 'react'
 import {useNavigate} from 'react-router-dom'
 import {ReactFlow, Background, Controls, MarkerType,applyEdgeChanges, applyNodeChanges} from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
@@ -44,10 +44,17 @@ const snapToRow = (y) => {
   return TOP_PADDING + index * SEMESTER_ROW_HEIGHT + COURSE_Y_OFFSET
 }
 
-function buildNodesAndEdges(semesters) {
+function buildNodesAndEdges(semesters, violations) {
   const nodes = []
   const edges = []
   const coursePositions = new Map()
+
+  const violationMap = new Map()
+
+  for (const v of violations) {
+    if (!violationMap.has(v.courseId)) violationMap.set(v.courseId, [])
+    violationMap.get(v.courseId).push(v.type)
+  }
 
   for (let i = 0; i < semesters.length; i++) {
     const sem = semesters[i]
@@ -74,6 +81,8 @@ function buildNodesAndEdges(semesters) {
       const nodeId = `course-${sc.courseId}`
       coursePositions.set(sc.courseId, nodeId)
 
+      const issueTypes = violationMap.get(sc.courseId) || []
+
       nodes.push({
         id: nodeId,
         type: 'course',
@@ -88,6 +97,8 @@ function buildNodesAndEdges(semesters) {
           courseTitle: course.courseTitle,
           units: course.units,
           status: sc.status,
+          hasIssue: issueTypes.length > 0,
+          issueTypes,
         },
       })
     }
@@ -145,7 +156,10 @@ function Roadmap() {
   const [hoverSemesterIndex, setHoverSemesterIndex] = useState(null)
 
   const { semesters, hasUnsavedChanges } = state
-  const violations = validateSemesterPlan(semesters, prerequisites)
+  const violations = useMemo(
+    () => validateSemesterPlan(semesters, prerequisites),
+    [semesters]
+  )
 
   const [nodes, setNodes] = useState([])
   const [edges, setEdges] = useState([])
@@ -167,10 +181,10 @@ function Roadmap() {
 
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
-    const { nodes: newNodes, edges: newEdges } = buildNodesAndEdges(semesters)
+    const { nodes: newNodes, edges: newEdges } = buildNodesAndEdges(semesters, violations)
     setNodes(newNodes)
     setEdges(newEdges)
-  }, [semesters])
+  }, [semesters, violations])
   /* eslint-enable react-hooks/set-state-in-effect */
 
   const onEdgesChange = (changes) => {
