@@ -1,6 +1,6 @@
 package edu.sjsu.courseplanner.backend.config
 
-import edu.sjsu.courseplanner.backend.repository.SectionsTable
+import edu.sjsu.courseplanner.backend.repository.plannerSchemaTables
 import javax.sql.DataSource
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
@@ -18,7 +18,7 @@ class ExposedDatabaseConfig {
     @Bean
     fun exposedSchemaInitializer(database: Database) = ApplicationRunner {
         transaction(database) {
-            SchemaUtils.createMissingTablesAndColumns(SectionsTable)
+            SchemaUtils.createMissingTablesAndColumns(*plannerSchemaTables)
         }
     }
 }
