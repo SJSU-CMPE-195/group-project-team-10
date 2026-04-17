@@ -1,42 +1,47 @@
-import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { ReactFlow, Background, Controls, MarkerType } from '@xyflow/react'
+import {useEffect, useMemo, useState} from 'react'
+import {useNavigate} from 'react-router-dom'
+import {ReactFlow, Background, Controls, MarkerType,applyEdgeChanges, applyNodeChanges} from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { useRoadmap, useRoadmapDispatch } from '../../context/RoadmapContext'
-import { validateSemesterPlan } from '../../utils/prerequisiteValidator'
-import courses, { courseMap } from '../../data/courses'
+import {useRoadmap, useRoadmapDispatch} from '../../context/RoadmapContext'
+import {validateSemesterPlan} from '../../utils/prerequisiteValidator'
+import courses, {courseMap} from '../../data/courses'
 import prerequisites from '../../data/prerequisites'
 import CourseNode from '../../components/CourseNode/CourseNode'
 import ValidationAlert from '../../components/ValidationAlert/ValidationAlert'
-import { applyNodeChanges, applyEdgeChanges } from '@xyflow/react'
 import './Roadmap.css'
 
-const NODE_TYPES = { course: CourseNode }
-
-const COLUMN_WIDTH = 230
-const ROW_HEIGHT = 130
-const HEADER_HEIGHT = 50
-const LEFT_PADDING = 40
-const TOP_PADDING = 60
-
-const getSemesterHeight = (sem) => {
-  const courseCount = sem.courses.length
-  return HEADER_HEIGHT + TOP_PADDING + courseCount * ROW_HEIGHT + 40
+function SemesterNode({ data }) {
+  return <div className="roadmap-semester-label">{data.label}</div>
 }
 
-const getSemesterFromX = (x, semesters) => {
-  const index = Math.round((x - LEFT_PADDING) / COLUMN_WIDTH)
+const NODE_TYPES = { course: CourseNode, semester: SemesterNode }
+
+const SEMESTER_ROW_HEIGHT = 200
+const COURSE_WIDTH = 200
+const COURSE_CARD_HEIGHT = 96
+const COURSE_Y_OFFSET = (SEMESTER_ROW_HEIGHT - COURSE_CARD_HEIGHT) / 2
+const HEADER_WIDTH = 140
+const LEFT_PADDING = 40
+const TOP_PADDING = 40
+
+const getSemesterWidth = (sem) => {
+  const courseCount = sem.courses.length
+  return HEADER_WIDTH + LEFT_PADDING + courseCount * COURSE_WIDTH + 40
+}
+
+const getSemesterFromY = (y, semesters) => {
+  const index = Math.round((y - TOP_PADDING) / SEMESTER_ROW_HEIGHT)
   return semesters[index]
 }
 
-const getInsertIndexFromY = (y) => {
-  const offsetY = y - (HEADER_HEIGHT + TOP_PADDING)
-  return Math.max(0, Math.round(offsetY / ROW_HEIGHT))
+const getInsertIndexFromX = (x) => {
+  const offsetX = x - (LEFT_PADDING + HEADER_WIDTH)
+  return Math.max(0, Math.round(offsetX / COURSE_WIDTH))
 }
 
-const snapToColumn = (x) => {
-  const index = Math.round((x - LEFT_PADDING) / COLUMN_WIDTH)
-  return LEFT_PADDING + index * COLUMN_WIDTH
+const snapToRow = (y) => {
+  const index = Math.round((y - TOP_PADDING) / SEMESTER_ROW_HEIGHT)
+  return TOP_PADDING + index * SEMESTER_ROW_HEIGHT + COURSE_Y_OFFSET
 }
 
 function buildNodesAndEdges(semesters, violations) {
@@ -53,22 +58,15 @@ function buildNodesAndEdges(semesters, violations) {
 
   for (let i = 0; i < semesters.length; i++) {
     const sem = semesters[i]
-    const x = LEFT_PADDING + i * COLUMN_WIDTH
+    const y = TOP_PADDING + i * SEMESTER_ROW_HEIGHT
     nodes.push({
       id: `sem-${sem.semesterId}`,
-      type: 'default',
-      position: { x, y: 0 },
+      type: 'semester',
+      position: { x: 0, y },
       data: { label: sem.term },
       style: {
-        width: COLUMN_WIDTH,
-        height: getSemesterHeight(sem),
-
-        background: 'transparent',
-        border: 'none',
-
-        fontSize: '14px',
-        fontWeight: 600,
-        textAlign: 'center',
+        width: getSemesterWidth(sem),
+        height: SEMESTER_ROW_HEIGHT,
       },
       draggable: false,
       selectable: false,
@@ -89,8 +87,8 @@ function buildNodesAndEdges(semesters, violations) {
         id: nodeId,
         type: 'course',
         position: {
-          x: LEFT_PADDING + i * COLUMN_WIDTH,
-          y: HEADER_HEIGHT + TOP_PADDING + j * ROW_HEIGHT
+          x: LEFT_PADDING + HEADER_WIDTH + j * COURSE_WIDTH,
+          y: TOP_PADDING + i * SEMESTER_ROW_HEIGHT + COURSE_Y_OFFSET,
         },
         data: {
           courseId: sc.courseId,
@@ -151,7 +149,6 @@ function Roadmap() {
   const state = useRoadmap()
   const dispatch = useRoadmapDispatch()
   const navigate = useNavigate()
-  const [failCourseId, setFailCourseId] = useState("")
   const [showAddCourseModal, setShowAddCourseModal] = useState(false)
   const [addSemesterId, setAddSemesterId] = useState("")
   const [addCourseId, setAddCourseId] = useState("")
@@ -197,23 +194,22 @@ function Roadmap() {
   const onNodeDrag = (_, node) => {
     if (!node.id.startsWith('course-')) return
 
-    const sem = getSemesterFromX(node.position.x, semesters)
+    const sem = getSemesterFromY(node.position.y, semesters)
     const index = semesters.findIndex(s => s === sem)
     setHoverSemesterIndex(index)
   }
 
   const onNodeDragStop = (_, node) => {
     if (!node.id.startsWith('course-')) return
-    
+
     const courseId = parseInt(node.id.replace('course-', ''))
-    const targetSemester = getSemesterFromX(node.position.x || 0, semesters)
-    const toIndex = getInsertIndexFromY(node.position.y || 0)
+    const targetSemester = getSemesterFromY(node.position.y || 0, semesters)
+    const toIndex = getInsertIndexFromX(node.position.x || 0)
 
     if (!targetSemester) return
 
-    const snappedX = snapToColumn(node.position.x || 0)
-    node.position.x = snappedX
-    
+    node.position.y = snapToRow(node.position.y || 0)
+
     dispatch({
       type: 'MOVE_COURSE',
       courseId,
@@ -238,13 +234,6 @@ function Roadmap() {
 
   const handleSave = () => {
     dispatch({ type: "SAVE_CHANGES" })
-  }
-
-  const handleMarkFailed = () => {
-    const id = parseInt(failCourseId)
-    if (!id) return
-    dispatch({ type: "MARK_COURSE_FAILED", courseId: id })
-    setFailCourseId("")
   }
 
   const handleAddGap = () => {
@@ -283,14 +272,6 @@ function Roadmap() {
     closeAddCourseModal()
   }
 
-  const failableCourses = semesters
-    .flatMap(s => s.courses)
-    .filter(c => c.status === "completed" || c.status === "in_progress")
-    .map(c => {
-      const course = courseMap.get(c.courseId)
-      return course ? { courseId: c.courseId, label: course.courseCode } : null
-    })
-    .filter(Boolean)
   const existingCourseIds = new Set(
     semesters.flatMap(s => s.courses.map(c => c.courseId))
   )
@@ -307,26 +288,6 @@ function Roadmap() {
         <h2>Roadmap</h2>
 
         <div className="roadmap-toolbar-actions">
-          <div className="roadmap-fail-group">
-            <select
-              value={failCourseId}
-              onChange={e => setFailCourseId(e.target.value)}
-              className="roadmap-select"
-            >
-              <option value="">Mark as Failed...</option>
-              {failableCourses.map(c => (
-                <option key={c.courseId} value={c.courseId}>{c.label}</option>
-              ))}
-            </select>
-            <button
-              onClick={handleMarkFailed}
-              disabled={!failCourseId}
-              className="roadmap-btn danger"
-            >
-              Fail
-            </button>
-          </div>
-
           <button onClick={openAddCourseModal} className="roadmap-btn">
             Add Course
           </button>

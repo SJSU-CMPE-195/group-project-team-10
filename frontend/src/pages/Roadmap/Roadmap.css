@@ -175,6 +175,22 @@
   margin-top: 10px;
 }
 
-.react-flow__node-default.semester-column-highlight {
-  background: rgba(99, 102, 241, 0.12) !important;
+.react-flow__node-semester {
+  pointer-events: none;
+  border-radius: 8px;
+}
+
+.react-flow__node-semester.semester-column-highlight {
+  background: rgba(99, 102, 241, 0.12);
+}
+
+.roadmap-semester-label {
+  width: 140px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding-left: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-h);
 }
