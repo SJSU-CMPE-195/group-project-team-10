@@ -66,8 +66,29 @@ export function roadmapReducer(state, action) {
       return { ...state, semesters: newSemesters, hasUnsavedChanges: true }
     }
 
-    case 'MOVE_COURSE': {
+    case "MOVE_COURSE": {
       const { courseId, toSemesterId, toIndex } = action
+
+      let fromSemesterId = null
+      let currentIndex = -1
+
+      for (const sem of state.semesters) {
+        const idx = sem.courses.findIndex(c => c.courseId === courseId)
+        if (idx !== -1) {
+          fromSemesterId = sem.semesterId
+          currentIndex = idx
+          break
+        }
+      }
+
+      if (fromSemesterId == null) return state
+
+      if (
+        fromSemesterId === toSemesterId &&
+        (toIndex === currentIndex || toIndex == null)
+      ) {
+        return state
+      }
 
       const newSemesters = state.semesters.map(sem => ({
         ...sem,
@@ -75,13 +96,19 @@ export function roadmapReducer(state, action) {
       }))
 
       const targetSem = newSemesters.find(s => s.semesterId === toSemesterId)
-      const course = state.semesters
-      .flatMap(s => s.courses)
-      .find(c => c.courseId === courseId)
 
-      if (targetSem && course) {
-        targetSem.courses.splice(toIndex ?? targetSem.courses.length, 0, course)
-      }
+      const course = state.semesters
+        .flatMap(s => s.courses)
+        .find(c => c.courseId === courseId)
+
+      if (!targetSem || !course) return state
+
+      const insertIndex =
+        toIndex >= 0 && toIndex <= targetSem.courses.length
+          ? toIndex
+          : targetSem.courses.length
+
+      targetSem.courses.splice(insertIndex, 0, course)
 
       return {
         ...state,
