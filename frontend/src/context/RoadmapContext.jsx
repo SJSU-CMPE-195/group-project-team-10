@@ -151,7 +151,7 @@ export function roadmapReducer(state, action) {
         if (sem.semesterId !== semesterId) return sem
         return {
           ...sem,
-          courses: [...sem.courses, { courseId, status }],
+          courses: [...sem.courses, { courseId, status, note: "" }],
         }
       })
 
@@ -166,6 +166,22 @@ export function roadmapReducer(state, action) {
         return {
           ...sem,
           courses: sem.courses.filter(c => c.courseId !== courseId),
+        }
+      })
+
+      return { ...state, semesters: newSemesters, hasUnsavedChanges: true }
+    }
+
+    case "SET_COURSE_NOTE": {
+      const { semesterId, courseId, note } = action
+
+      const newSemesters = state.semesters.map(sem => {
+        if (sem.semesterId !== semesterId) return sem
+        return {
+          ...sem,
+          courses: sem.courses.map(c =>
+            c.courseId === courseId ? { ...c, note } : c
+          ),
         }
       })
 
