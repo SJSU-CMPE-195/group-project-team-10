@@ -9,6 +9,9 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.http.HttpHeaders
+import org.springframework.http.MediaType
+import org.springframework.http.ResponseEntity
 
 // Exposes API endpoints for scraping and debugging the Fall 2026 schedule data.
 @RestController
@@ -46,5 +49,17 @@ class ScrapeController(
             "scrapedCount" to scraped.size,
             "savedCount" to savedCount
         )
+    }
+
+    // Scrapes the Fall 2026 page and returns the parsed rows as a downloadable CSV file.
+    @GetMapping("/export")
+    fun exportFall2026Csv(): ResponseEntity<String> {
+        val scraped = scheduleScraperService.scrapeSectionsDebug(Int.MAX_VALUE).parsed
+        val csv = scheduleScraperService.exportSectionsToCsv(scraped)
+
+        return ResponseEntity.ok()
+            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=fall_2026_schedule.csv")
+            .contentType(MediaType("text", "csv"))
+            .body(csv)
     }
 }

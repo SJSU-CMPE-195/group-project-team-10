@@ -7,12 +7,7 @@ import jakarta.persistence.*
  This is the first persistence model for schedule data.
 */
 @Entity
-@Table(
-    name = "sections",
-    uniqueConstraints = [
-        UniqueConstraint(columnNames = ["term", "classNumber"])
-    ]
-)
+@Table(name = "sections")
 data class SectionEntity(
 
     @Id
