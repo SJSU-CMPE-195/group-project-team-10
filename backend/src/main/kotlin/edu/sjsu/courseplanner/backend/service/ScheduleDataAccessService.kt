@@ -60,9 +60,7 @@ class ScheduleDataAccessService(
             .distinctBy { it.classNumber }
             .map { entity -> entity.copy(term = normalizedTerm) }
 
-        scheduleDataRepository.deleteScheduleForTerm(normalizedTerm)
-        scheduleDataRepository.saveAll(entities)
-        return entities.size
+        return scheduleDataRepository.replaceSectionsForTerm(normalizedTerm, entities)
     }
 
     // converts a SectionEntity into a frontend-ready SectionScheduleRowDto.

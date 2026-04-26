@@ -5,22 +5,26 @@ import edu.sjsu.courseplanner.backend.dto.ScrapedSectionDto
 import org.jsoup.Jsoup
 import org.springframework.stereotype.Service
 
-// Fetches the Fall 2026 schedule page and parses HTML table rows into structured data.
+// Fetches supported schedule pages and parses HTML table rows into structured data.
 @Service
 class ScheduleScraperService {
 
-    private val url = "https://sjsu.edu/classes/schedules/fall-2026.php"
+    private val scheduleUrls = mapOf(
+        "spring 2026" to "https://sjsu.edu/classes/schedules/spring-2026.php",
+        "fall 2026" to "https://sjsu.edu/classes/schedules/fall-2026.php"
+    )
     private val sectionPattern = Regex("""^(.*?) \(Section ([^)]+)\)$""")
     private val classNumberPattern = Regex("""\d{5}""")
 
     // Returns only the successfully parsed rows, limited to the requested amount.
-    fun scrapeSections(limit: Int = 10): List<ScrapedSectionDto> {
-        return scrapeSectionsDebug(limit).parsed
+    fun scrapeSections(term: String = "Spring 2026", limit: Int = 10): List<ScrapedSectionDto> {
+        return scrapeSectionsDebug(term, limit).parsed
     }
 
     // Returns parsed rows plus debug information about skipped rows and total coverage.
-    fun scrapeSectionsDebug(limit: Int = 20): ScrapeDebugResult {
-        val doc = Jsoup.connect(url)
+    fun scrapeSectionsDebug(term: String = "Spring 2026", limit: Int = 20): ScrapeDebugResult {
+        val normalizedTerm = normalizeSupportedTerm(term)
+        val doc = Jsoup.connect(scheduleUrls.getValue(normalizedTerm.lowercase()))
             .userAgent("Mozilla/5.0")
             .timeout(30_000)
             .get()
@@ -84,5 +88,13 @@ class ScheduleScraperService {
             parsed = parsed.take(limit),
             skippedRows = skipped.take(20)
         )
+    }
+
+    private fun normalizeSupportedTerm(term: String): String {
+        val normalized = term.trim().replace(Regex("\\s+"), " ")
+        require(scheduleUrls.containsKey(normalized.lowercase())) {
+            "Supported terms are Spring 2026 and Fall 2026"
+        }
+        return normalized
     }
 }

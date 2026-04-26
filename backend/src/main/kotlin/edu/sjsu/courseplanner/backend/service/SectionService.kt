@@ -27,8 +27,6 @@ class SectionService(
     // Replaces all saved rows for a term with the latest scraped results.
     @Transactional
     fun replaceSectionsForTerm(term: String, scraped: List<ScrapedSectionDto>): Int {
-        sectionRepository.deleteAllByTerm(term)
-
         val entities = scraped.map { dto ->
             SectionEntity(
                 term = term,
@@ -50,7 +48,6 @@ class SectionService(
             )
         }
 
-        sectionRepository.saveAll(entities)
-        return entities.size
+        return sectionRepository.replaceSectionsForTerm(term, entities)
     }
 }
