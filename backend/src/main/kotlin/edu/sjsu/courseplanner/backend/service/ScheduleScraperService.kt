@@ -7,30 +7,27 @@ import org.jsoup.nodes.Element
 import org.springframework.stereotype.Service
 import java.io.File
 
-// Fetches supported schedule pages and parses HTML table rows into structured data.
+// Parses saved schedule HTML files into structured data.
 @Service
 class ScheduleScraperService {
 
-    private val scheduleUrls = mapOf(
-        "spring 2026" to "https://sjsu.edu/classes/schedules/spring-2026.php",
-        "fall 2026" to "https://sjsu.edu/classes/schedules/fall-2026.php"
+    private val scheduleFiles = mapOf(
+        "spring 2026" to "data/spring-2026.html",
+        "fall 2026" to "data/fall-2026.html"
     )
     private val sectionPattern = Regex("""^(.*?) \(Section ([^)]+)\)$""")
     private val classNumberPattern = Regex("""\d{5}""")
 
     // Returns only the successfully parsed rows, limited to the requested amount.
-    fun scrapeSections(term: String = "Spring 2026", limit: Int = 10): List<ScrapedSectionDto> {
+    fun scrapeSections(term: String = "Fall 2026", limit: Int = 10): List<ScrapedSectionDto> {
         return scrapeSectionsDebug(term, limit).parsed
     }
 
     // Returns parsed rows plus debug information about skipped rows and total coverage.
-    fun scrapeSectionsDebug(term: String = "Spring 2026", limit: Int = 20): ScrapeDebugResult {
+    fun scrapeSectionsDebug(term: String = "Fall 2026", limit: Int = 20): ScrapeDebugResult {
         val normalizedTerm = normalizeSupportedTerm(term)
-        val doc = Jsoup.connect(scheduleUrls.getValue(normalizedTerm.lowercase()))
-            .userAgent("Mozilla/5.0")
-            .timeout(30_000)
-            .get()
-
+        val file = File(scheduleFiles.getValue(normalizedTerm.lowercase()))
+        require(file.exists()) { "Saved HTML file not found at: ${file.absolutePath}" }
         val doc = Jsoup.parse(file, "UTF-8")
 
         val rows = doc.select("#classSchedule tbody tr")
@@ -170,7 +167,7 @@ class ScheduleScraperService {
     
     private fun normalizeSupportedTerm(term: String): String {
         val normalized = term.trim().replace(Regex("\\s+"), " ")
-        require(scheduleUrls.containsKey(normalized.lowercase())) {
+        require(scheduleFiles.containsKey(normalized.lowercase())) {
             "Supported terms are Spring 2026 and Fall 2026"
         }
         return normalized

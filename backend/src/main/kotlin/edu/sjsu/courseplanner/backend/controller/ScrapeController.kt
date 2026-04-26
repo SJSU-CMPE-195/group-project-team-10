@@ -57,14 +57,17 @@ class ScrapeController(
         )
     }
 
-    // Scrapes the Fall 2026 page and returns the parsed rows as a downloadable CSV file.
+    // Returns the parsed rows for a supported term as a downloadable CSV file.
     @GetMapping("/export")
-    fun exportFall2026Csv(): ResponseEntity<String> {
-        val scraped = scheduleScraperService.scrapeSectionsDebug(Int.MAX_VALUE).parsed
+    fun exportTermCsv(
+        @RequestParam(defaultValue = "Fall 2026") term: String
+    ): ResponseEntity<String> {
+        val scraped = scheduleScraperService.scrapeSectionsDebug(term, Int.MAX_VALUE).parsed
         val csv = scheduleScraperService.exportSectionsToCsv(scraped)
+        val filename = term.trim().lowercase().replace(Regex("\\s+"), "_") + "_schedule.csv"
 
         return ResponseEntity.ok()
-            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=fall_2026_schedule.csv")
+            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=$filename")
             .contentType(MediaType("text", "csv"))
             .body(csv)
     }
