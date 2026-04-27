@@ -52,8 +52,8 @@ function buildNodesAndEdges(semesters, violations) {
   const violationMap = new Map()
 
   for (const v of violations) {
-    if (!violationMap.has(v.courseId)) violationMap.set(v.courseId, [])
-    violationMap.get(v.courseId).push(v.type)
+    if (!violationMap.has(v.missingPrereqId)) violationMap.set(v.missingPrereqId, [])
+    violationMap.get(v.missingPrereqId).push(v.type)
   }
 
   for (let i = 0; i < semesters.length; i++) {

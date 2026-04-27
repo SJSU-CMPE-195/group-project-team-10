@@ -59,6 +59,26 @@ describe('CourseNode', () => {
     expect(container.querySelector('.course-node--blocked')).not.toBeNull()
   })
 
+  it('applies warning class when planned course has prerequisite issue', () => {
+    const { container } = renderCourseNode({
+      ...defaultData,
+      status: 'planned',
+      hasIssue: true,
+      issueTypes: ['prereq'],
+    })
+    expect(container.querySelector('.course-node--warning')).not.toBeNull()
+  })
+
+  it('does not apply warning class to failed courses', () => {
+    const { container } = renderCourseNode({
+      ...defaultData,
+      status: 'failed',
+      hasIssue: true,
+      issueTypes: ['prereq'],
+    })
+    expect(container.querySelector('.course-node--warning')).toBeNull()
+  })
+
   it('renders remove button', () => {
     renderCourseNode(defaultData)
     expect(screen.getByTitle('Remove course')).toBeDefined()
