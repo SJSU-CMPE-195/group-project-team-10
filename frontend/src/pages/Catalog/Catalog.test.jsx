@@ -1,54 +1,109 @@
-import { screen, fireEvent } from '@testing-library/react'
-import { describe, it, expect } from 'vitest'
+import { fireEvent, screen, waitFor } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { renderWithProviders } from '../../test-utils'
 import Catalog from './Catalog'
 
+const termsResponse = ['Spring 2026', 'Fall 2026']
+
+const springCoursesResponse = [
+  {
+    courseId: 1,
+    courseCode: 'CMPE 195A',
+    courseTitle: 'Senior Design Project I',
+    description: 'Capstone planning and design.',
+    units: 3,
+    department: 'CMPE',
+    offeringCount: 2,
+    availableTerms: ['Spring 2026', 'Fall 2026'],
+  },
+  {
+    courseId: 2,
+    courseCode: 'MATH 42',
+    courseTitle: 'Discrete Mathematics',
+    description: 'Logic, proof techniques, and combinatorics.',
+    units: 3,
+    department: 'MATH',
+    offeringCount: 1,
+    availableTerms: ['Spring 2026'],
+  },
+]
+
 describe('Catalog', () => {
-  it('renders the heading', () => {
-    renderWithProviders(<Catalog />)
-    expect(screen.getByRole('heading', { name: 'Course Catalog' })).toBeDefined()
+  beforeEach(() => {
+    global.fetch = vi.fn(url => {
+      if (url === '/api/catalog/terms') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => termsResponse,
+        })
+      }
+
+      if (url === '/api/catalog/courses?term=Spring%202026') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => springCoursesResponse,
+        })
+      }
+
+      return Promise.reject(new Error(`Unhandled fetch request: ${url}`))
+    })
   })
 
-  it('renders the search input', () => {
-    renderWithProviders(<Catalog />)
-    expect(screen.getByPlaceholderText('Search courses...')).toBeDefined()
+  afterEach(() => {
+    vi.restoreAllMocks()
   })
 
-  it('shows all courses by default', () => {
+  it('loads catalog terms and courses from the backend', async () => {
     renderWithProviders(<Catalog />)
-    expect(screen.getByText(/Showing 32 of 32 courses/)).toBeDefined()
+
+    expect(await screen.findByText(/Showing 2 of 2 courses/)).toBeDefined()
+    expect(screen.getByText('CMPE 195A')).toBeDefined()
+    expect(screen.getByText('Senior Design Project I')).toBeDefined()
+    expect(screen.getByDisplayValue('Spring 2026')).toBeDefined()
+
+    expect(global.fetch).toHaveBeenCalledWith('/api/catalog/terms')
+    expect(global.fetch).toHaveBeenCalledWith('/api/catalog/courses?term=Spring%202026')
   })
 
-  it('filters courses by search text', () => {
+  it('filters backend-loaded courses by search text', async () => {
     renderWithProviders(<Catalog />)
-    const input = screen.getByPlaceholderText('Search courses...')
-    fireEvent.change(input, { target: { value: 'CMPE 120' } })
-    expect(screen.getByText(/Showing 1 of 32/)).toBeDefined()
+
+    await screen.findByText(/Showing 2 of 2 courses/)
+
+    fireEvent.change(screen.getByPlaceholderText('Search courses...'), {
+      target: { value: '195A' },
+    })
+
+    expect(screen.getByText(/Showing 1 of 2 courses/)).toBeDefined()
+    expect(screen.getByText('CMPE 195A')).toBeDefined()
   })
 
-  it('filters courses by department', () => {
+  it('filters backend-loaded courses by department', async () => {
     renderWithProviders(<Catalog />)
-    const mathChip = screen.getByRole('button', { name: 'MATH' })
-    fireEvent.click(mathChip)
-    expect(screen.getByText(/Showing 5 of 32/)).toBeDefined()
-  })
 
-  it('renders the All filter chip', () => {
-    renderWithProviders(<Catalog />)
-    expect(screen.getByRole('button', { name: 'All' })).toBeDefined()
-  })
+    await screen.findByText(/Showing 2 of 2 courses/)
 
-  it('resets department filter when All is clicked', () => {
-    renderWithProviders(<Catalog />)
     fireEvent.click(screen.getByRole('button', { name: 'MATH' }))
-    expect(screen.getByText(/Showing 5 of 32/)).toBeDefined()
-    fireEvent.click(screen.getByRole('button', { name: 'All' }))
-    expect(screen.getByText(/Showing 32 of 32/)).toBeDefined()
+
+    expect(screen.getByText(/Showing 1 of 2 courses/)).toBeDefined()
+    expect(screen.getByText('MATH 42')).toBeDefined()
   })
 
-  it('renders course cards', () => {
+  it('shows an error when catalog terms fail to load', async () => {
+    global.fetch = vi.fn(() =>
+      Promise.resolve({
+        ok: false,
+        status: 500,
+        json: async () => ({}),
+      })
+    )
+
     renderWithProviders(<Catalog />)
-    expect(screen.getByText('CMPE 30')).toBeDefined()
-    expect(screen.getByText('Programming Concepts and Methodology')).toBeDefined()
+
+    expect(await screen.findByText('Failed to load catalog terms (500)')).toBeDefined()
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledTimes(1)
+    })
   })
 })

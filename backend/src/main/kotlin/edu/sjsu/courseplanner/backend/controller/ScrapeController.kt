@@ -37,7 +37,7 @@ class ScrapeController(
     }
 
     // Scrapes a supported term page and saves the parsed rows into the database.
-    @PostMapping("/import")
+    @GetMapping("/import")
     fun importTerm(
         @RequestParam(defaultValue = "Spring 2026") term: String
     ): Map<String, Any> {
