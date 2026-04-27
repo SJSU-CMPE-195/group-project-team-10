@@ -28,10 +28,11 @@ const COURSE_Y_OFFSET = (SEMESTER_ROW_HEIGHT - COURSE_CARD_HEIGHT) / 2
 const HEADER_WIDTH = 140
 const LEFT_PADDING = 40
 const TOP_PADDING = 40
+const COURSE_GAP = 40
 
 const getSemesterWidth = (sem) => {
   const courseCount = sem.courses.length
-  return HEADER_WIDTH + LEFT_PADDING + courseCount * COURSE_WIDTH + 40
+  return HEADER_WIDTH + LEFT_PADDING + courseCount * COURSE_WIDTH + (courseCount - 1) * COURSE_GAP + 40
 }
 
 const getSemesterFromY = (y, semesters) => {
@@ -41,12 +42,19 @@ const getSemesterFromY = (y, semesters) => {
 
 const getInsertIndexFromX = (x) => {
   const offsetX = x - (LEFT_PADDING + HEADER_WIDTH)
-  return Math.max(0, Math.round(offsetX / COURSE_WIDTH))
+  return Math.max(0, Math.round(offsetX / (COURSE_WIDTH + COURSE_GAP)))
 }
 
 const snapToRow = (y) => {
   const index = Math.round((y - TOP_PADDING) / SEMESTER_ROW_HEIGHT)
   return TOP_PADDING + index * SEMESTER_ROW_HEIGHT + COURSE_Y_OFFSET
+}
+
+const snapToColumn = (x) => {
+  const index = Math.max(
+  0, Math.round((x - (LEFT_PADDING + HEADER_WIDTH)) / (COURSE_WIDTH + COURSE_GAP))
+  )
+  return LEFT_PADDING + HEADER_WIDTH + index * (COURSE_WIDTH + COURSE_GAP)
 }
 
 function buildNodesAndEdges(semesters, violations) {
@@ -96,7 +104,7 @@ function buildNodesAndEdges(semesters, violations) {
         id: nodeId,
         type: 'course',
         position: {
-          x: LEFT_PADDING + HEADER_WIDTH + j * COURSE_WIDTH,
+          x: LEFT_PADDING + HEADER_WIDTH + j * (COURSE_WIDTH + COURSE_GAP),
           y: TOP_PADDING + i * SEMESTER_ROW_HEIGHT + COURSE_Y_OFFSET,
         },
         data: {
@@ -164,6 +172,7 @@ function Roadmap() {
   const [addCourseId, setAddCourseId] = useState("")
   const [addCourseStatus, setAddCourseStatus] = useState("planned")
   const [hoverSemesterIndex, setHoverSemesterIndex] = useState(null)
+  const [selectedNodeId, setSelectedNodeId] = useState(null)
 
   const { semesters, hasUnsavedChanges } = state
   const violations = useMemo(
@@ -175,18 +184,49 @@ function Roadmap() {
   const [edges, setEdges] = useState([])
 
   const decoratedNodes = nodes.map(n => {
-    if (!n.id.startsWith('sem-')) return n
+    const isCourse = n.id.startsWith('course-')
+    const isSelected = isCourse && n.id === selectedNodeId
 
-    const semIndex = semesters.findIndex(s => `sem-${s.semesterId}` === n.id)
+    const semIndex = semesters.findIndex(
+      s => `sem-${s.semesterId}` === n.id
+    )
+
+    const isSemesterHovered =
+      hoverSemesterIndex === semIndex && n.id.startsWith('sem-')
 
     return {
       ...n,
-      className: hoverSemesterIndex === semIndex ? 'semester-column-highlight' : ''
+      className: [
+        isSemesterHovered ? 'semester-column-highlight' : '',
+        isSelected ? 'course-node--selected' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')
+    }
+  })
+
+  const decoratedEdges = edges.map(e => {
+  const isConnected =
+    e.source === selectedNodeId ||
+    e.target === selectedNodeId
+
+    return {
+      ...e,
+      zIndex: isConnected ? 1000 : 0,
+      style: {
+        ...e.style,
+        strokeWidth: isConnected ? 4 : 2,
+        opacity: isConnected ? 1 : 0.3,
+      },
     }
   })
 
   const onNodesChange = (changes) => {
     setNodes((nds) => applyNodeChanges(changes, nds))
+  }
+
+  const onNodeClick = (_, node) => {
+    setSelectedNodeId(prev => (prev === node.id ? null : node.id))
   }
 
   /* eslint-disable react-hooks/set-state-in-effect */
@@ -214,11 +254,29 @@ function Roadmap() {
 
     const courseId = parseInt(node.id.replace('course-', ''))
     const targetSemester = getSemesterFromY(node.position.y || 0, semesters)
-    const toIndex = getInsertIndexFromX(node.position.x || 0)
+    if (!targetSemester) return
+
+    const rawIndex = getInsertIndexFromX(node.position.x || 0)
+    const toIndex = Math.min(rawIndex, targetSemester.courses.length)
 
     if (!targetSemester) return
 
-    node.position.y = snapToRow(node.position.y || 0)
+    const snappedY = snapToRow(node.position.y || 0)
+    const snappedX = snapToColumn(node.position.x || 0)
+
+    setNodes((nds) =>
+      nds.map((n) =>
+        n.id === node.id
+        ? {
+          ...n,
+          position: {
+            x: snappedX,
+            y: snappedY,
+          },
+        }
+      : n
+      )
+    )
 
     dispatch({
       type: 'MOVE_COURSE',
@@ -393,17 +451,24 @@ function Roadmap() {
       <div className="roadmap-flow-container">
         <ReactFlow
           nodes={decoratedNodes}
-          edges={edges}
+          edges={decoratedEdges}
           nodeTypes={NODE_TYPES}
           onNodesChange={onNodesChange}
+          onNodeClick={onNodeClick}
+          onPaneClick={() => setSelectedNodeId(null)}
           onEdgesChange={onEdgesChange}
           onNodeDrag={onNodeDrag}
-          onNodeDragStop = {onNodeDragStop}
+          onNodeDragStop={onNodeDragStop}
+          onNodeDragStart={() => setSelectedNodeId(null)}
           fitView
           nodesDraggable={true}
           minZoom={0.3}
           maxZoom={1.5}
           proOptions={{ hideAttribution: true }}
+          selectionOnDrag={false}
+          nodesSelectable={false}
+          elementsSelectable={false}
+          selectNodesOnDrag={false}
         >
           <Background gap={20} size={1} />
           <Controls />
