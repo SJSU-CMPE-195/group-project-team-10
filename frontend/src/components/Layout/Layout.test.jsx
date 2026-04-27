@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from 'vitest'
 import App from '../../App'
 import { renderWithProviders } from '../../test-utils'
 
-vi.mock('../../context/AuthContext', () => ({
+vi.mock('../../context/useAuth', () => ({
   useAuth: () => ({
     user: null,
     authLoading: false,

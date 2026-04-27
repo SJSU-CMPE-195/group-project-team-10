@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { useAuth } from '../../context/AuthContext'
+import { useAuth } from "../../context/useAuth";
 import './Layout.css'
 
 const navLinkClass = ({ isActive }) => isActive ? "nav-link active" : "nav-link"
