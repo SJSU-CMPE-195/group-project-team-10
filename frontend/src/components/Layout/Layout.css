@@ -69,3 +69,123 @@
     padding: 16px;
   }
 }
+
+.login-button {
+  border: 1px solid rgba(192, 132, 252, 0.35);
+  margin-left: 8px;
+}
+
+.login-button:hover {
+  border-color: rgba(192, 132, 252, 0.6);
+}
+
+.login-button.active {
+  color: var(--accent);
+  background: var(--accent-bg);
+  font-weight: 500;
+}
+
+.nav-auth {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav-user {
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.logout-button {
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.logout-button:hover {
+  background: var(--accent-bg);
+  color: var(--text-h);
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.logout-modal {
+  width: 100%;
+  max-width: 380px;
+  padding: 1.5rem;
+  border-radius: 16px;
+  border: 1px solid #2a3147;
+  background: #171b2a;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+}
+
+.logout-modal h2 {
+  margin: 0;
+  color: #f5f7ff;
+  font-size: 1.35rem;
+}
+
+.logout-modal p {
+  margin: 0.6rem 0 1.25rem;
+  color: #98a2b3;
+  line-height: 1.5;
+}
+
+.logout-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.modal-cancel-button,
+.modal-logout-button {
+  padding: 0.65rem 0.9rem;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.modal-cancel-button {
+  border: 1px solid #30374f;
+  background: transparent;
+  color: #d0d5dd;
+}
+
+.modal-cancel-button:hover {
+  background: #1d2333;
+}
+
+.modal-logout-button {
+  border: none;
+  background: linear-gradient(90deg, #c084fc, #a855f7);
+  color: white;
+}
+
+.modal-logout-button:hover {
+  opacity: 0.9;
+}
+
+.profile-nav-link {
+  text-decoration: none;
+  padding: 8px 10px;
+  border-radius: 6px;
+}
+
+.profile-nav-link:hover {
+  background: var(--accent-bg);
+  color: var(--text-h);
+}
