@@ -293,3 +293,9 @@ select.course-node-status option {
   background: rgba(168, 85, 247, 0.18);
   border-color: rgba(168, 85, 247, 0.35);
 }
+
+.course-node--selected {
+  border: 3px solid #c084fc;
+  border-radius: 10px;
+  box-shadow: 0 0 0 3px rgba(192, 132, 252, 0.25);
+}
