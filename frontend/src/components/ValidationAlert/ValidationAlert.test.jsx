@@ -24,7 +24,7 @@ describe('ValidationAlert', () => {
     expect(screen.getByText('1 prerequisite issue')).toBeDefined()
     expect(screen.getByText(/CMPE 126/)).toBeDefined()
     expect(screen.getByText(/CMPE 120/)).toBeDefined()
-    expect(screen.getByText(/completed first/)).toBeDefined()
+    expect(screen.getByText(/must be planned after/)).toBeDefined()
   })
 
   it('renders a corequisite violation', () => {
@@ -35,7 +35,7 @@ describe('ValidationAlert', () => {
       type: "coreq",
     }]
     render(<ValidationAlert violations={violations} />)
-    expect(screen.getByText(/corequisite/)).toBeDefined()
+    expect(screen.getByText(/must be taken in the same semester/)).toBeDefined()
   })
 
   it('renders multiple violations', () => {

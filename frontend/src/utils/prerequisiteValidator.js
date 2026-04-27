@@ -13,7 +13,7 @@ export function getPrerequisites(courseId, prereqData) {
  */
 export function validateSemesterPlan(semesters, prereqData) {
   const violations = []
-  const completedBefore = new Set()
+  const plannedBefore = new Set()
   const inSameSemester = new Set()
 
   const prereqIndex = new Map()
@@ -35,7 +35,7 @@ export function validateSemesterPlan(semesters, prereqData) {
 
       for (const prereq of prereqs) {
         if (prereq.prereqType === "prereq") {
-          if (!completedBefore.has(prereq.prereqCourseId)) {
+          if (!plannedBefore.has(prereq.prereqCourseId)) {
             violations.push({
               courseId: course.courseId,
               semesterId: semester.semesterId,
@@ -44,7 +44,7 @@ export function validateSemesterPlan(semesters, prereqData) {
             })
           }
         } else if (prereq.prereqType === "coreq") {
-          if (!completedBefore.has(prereq.prereqCourseId) && !inSameSemester.has(prereq.prereqCourseId)) {
+          if (!inSameSemester.has(prereq.prereqCourseId)) {
             violations.push({
               courseId: course.courseId,
               semesterId: semester.semesterId,
@@ -57,9 +57,7 @@ export function validateSemesterPlan(semesters, prereqData) {
     }
 
     for (const course of semester.courses) {
-      if (course.status === "completed" || course.status === "in_progress") {
-        completedBefore.add(course.courseId)
-      }
+      plannedBefore.add(course.courseId)
     }
   }
 

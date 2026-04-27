@@ -19,8 +19,8 @@ function ValidationAlert({ violations }) {
           <li key={i}>
             <strong>{getCourseName(v.courseId)}</strong>
             {v.type === "prereq"
-              ? ` requires ${getCourseName(v.missingPrereqId)} to be completed first`
-              : ` needs corequisite ${getCourseName(v.missingPrereqId)} in the same or earlier semester`
+              ? ` must be planned after ${getCourseName(v.missingPrereqId)}`
+              : ` must be taken in the same semester as ${getCourseName(v.missingPrereqId)}`
             }
           </li>
         ))}
