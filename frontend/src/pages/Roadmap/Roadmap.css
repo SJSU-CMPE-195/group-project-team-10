@@ -105,7 +105,7 @@
 
 .roadmap-flow-container {
   flex: 1;
-  min-height: 0;
+  min-height: 320px;
   margin-top: 16px;
   border: 1px solid var(--border);
   border-radius: 8px;
