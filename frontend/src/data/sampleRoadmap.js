@@ -70,6 +70,7 @@ const sampleRoadmap = {
         { courseId: 15, status: "planned" },     // CMPE 152
         { courseId: 17, status: "planned" },     // CMPE 187
         { courseId: 18, status: "planned" },     // CMPE 195A
+        { courseId: 31, status: "planned" },     // ENGR 195A
       ],
     },
     {
@@ -77,6 +78,7 @@ const sampleRoadmap = {
       term: "Spring 2026",
       courses: [
         { courseId: 19, status: "planned" },     // CMPE 195B
+        { courseId: 32, status: "planned" },     // ENGR 195B
       ],
     },
   ],

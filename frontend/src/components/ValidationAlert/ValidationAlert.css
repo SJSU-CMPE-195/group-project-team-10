@@ -19,6 +19,8 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+  max-height: 20vh;
+  overflow-y: auto;
 }
 
 .validation-alert-list li {

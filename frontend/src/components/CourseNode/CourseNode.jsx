@@ -54,8 +54,10 @@ function CourseNode({ data }) {
       setShowNoteModal(false)
   }
 
+  const showWarning = hasIssue && status !== 'failed' && status !== 'blocked'
+
   return (
-    <div className={`course-node course-node--${status}`}>
+    <div className={`course-node course-node--${status}${showWarning ? ' course-node--warning' : ''}`}>
       <Handle type="target" position={Position.Top} className="course-handle" />
 
       <button className="course-node-remove" onClick={handleRemove} title="Remove course">

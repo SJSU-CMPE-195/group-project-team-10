@@ -11,7 +11,12 @@ import ValidationAlert from '../../components/ValidationAlert/ValidationAlert'
 import './Roadmap.css'
 
 function SemesterNode({ data }) {
-  return <div className="roadmap-semester-label">{data.label}</div>
+  return (
+    <div className="roadmap-semester-label">
+      <div className="roadmap-semester-term">{data.label}</div>
+      <div className="roadmap-semester-units">{data.units} units</div>
+    </div>
+  )
 }
 
 const NODE_TYPES = { course: CourseNode, semester: SemesterNode }
@@ -52,18 +57,22 @@ function buildNodesAndEdges(semesters, violations) {
   const violationMap = new Map()
 
   for (const v of violations) {
-    if (!violationMap.has(v.courseId)) violationMap.set(v.courseId, [])
-    violationMap.get(v.courseId).push(v.type)
+    if (!violationMap.has(v.missingPrereqId)) violationMap.set(v.missingPrereqId, [])
+    violationMap.get(v.missingPrereqId).push(v.type)
   }
 
   for (let i = 0; i < semesters.length; i++) {
     const sem = semesters[i]
     const y = TOP_PADDING + i * SEMESTER_ROW_HEIGHT
+    const totalUnits = sem.courses.reduce((sum, sc) => {
+      const course = courseMap.get(sc.courseId)
+      return sum + (course?.units ?? 0)
+    }, 0)
     nodes.push({
       id: `sem-${sem.semesterId}`,
       type: 'semester',
       position: { x: 0, y },
-      data: { label: sem.term },
+      data: { label: sem.term, units: totalUnits },
       style: {
         width: getSemesterWidth(sem),
         height: SEMESTER_ROW_HEIGHT,

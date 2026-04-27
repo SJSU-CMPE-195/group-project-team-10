@@ -38,6 +38,8 @@ const courses = [
 
   // Engineering
   { courseId: 28, courseCode: "ENGR 10", courseTitle: "Introduction to Engineering", description: "Overview of engineering disciplines and the engineering design process.", units: 3, department: "ENGR" },
+  { courseId: 31, courseCode: "ENGR 195A", courseTitle: "Global and Social Issues in Engineering", description: "Interdisciplinary seminar examining the social and global impacts of technology and engineering. Concurrent with a department senior design project (Part A).", units: 1, department: "ENGR" },
+  { courseId: 32, courseCode: "ENGR 195B", courseTitle: "Global and Social Issues in Engineering", description: "Second part of a two-course sequence examining the relationship of engineering to social, ethical, and cultural aspects of the broader community. Satisfies SJSU Studies V.", units: 1, department: "ENGR" },
 
   // English / GE
   { courseId: 29, courseCode: "ENGL 1A", courseTitle: "First-Year Writing", description: "Academic writing, critical reading, and research-based argumentation.", units: 3, department: "ENGL" },

@@ -116,6 +116,61 @@ describe('validateSemesterPlan', () => {
     const violations = validateSemesterPlan(semesters, samplePrereqs)
     expect(violations).toEqual([])
   })
+
+  it('does not flag prereq when planned in an earlier semester', () => {
+    const semesters = [
+      { semesterId: 1, courses: [{ courseId: 1, status: "planned" }] },
+      { semesterId: 2, courses: [{ courseId: 2, status: "planned" }] },
+    ]
+    const violations = validateSemesterPlan(semesters, samplePrereqs)
+    expect(violations.filter(v => v.type === "prereq")).toEqual([])
+  })
+
+  it('flags prereq when planned in the same semester', () => {
+    const semesters = [
+      { semesterId: 1, courses: [
+        { courseId: 1, status: "planned" },
+        { courseId: 2, status: "planned" },
+      ]},
+    ]
+    const violations = validateSemesterPlan(semesters, samplePrereqs)
+    expect(violations).toContainEqual({
+      courseId: 2, semesterId: 1, missingPrereqId: 1, type: "prereq",
+    })
+  })
+
+  it('flags prereq when planned in a later semester', () => {
+    const semesters = [
+      { semesterId: 1, courses: [{ courseId: 2, status: "planned" }] },
+      { semesterId: 2, courses: [{ courseId: 1, status: "planned" }] },
+    ]
+    const violations = validateSemesterPlan(semesters, samplePrereqs)
+    expect(violations).toContainEqual({
+      courseId: 2, semesterId: 1, missingPrereqId: 1, type: "prereq",
+    })
+  })
+
+  it('flags coreq when planned in an earlier semester', () => {
+    const semesters = [
+      { semesterId: 1, courses: [{ courseId: 2, status: "completed" }] },
+      { semesterId: 2, courses: [{ courseId: 5, status: "planned" }] },
+    ]
+    const violations = validateSemesterPlan(semesters, samplePrereqs)
+    const coreqViolation = violations.find(v => v.type === "coreq")
+    expect(coreqViolation).toBeDefined()
+    expect(coreqViolation.missingPrereqId).toBe(2)
+  })
+
+  it('flags coreq when planned in a later semester', () => {
+    const semesters = [
+      { semesterId: 1, courses: [{ courseId: 5, status: "planned" }] },
+      { semesterId: 2, courses: [{ courseId: 2, status: "planned" }] },
+    ]
+    const violations = validateSemesterPlan(semesters, samplePrereqs)
+    const coreqViolation = violations.find(v => v.type === "coreq")
+    expect(coreqViolation).toBeDefined()
+    expect(coreqViolation.missingPrereqId).toBe(2)
+  })
 })
 
 describe('getBlockedCourses', () => {

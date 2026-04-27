@@ -27,10 +27,12 @@ const prerequisites = [
   { courseId: 23, prereqCourseId: 22, prereqType: "prereq" },
   { courseId: 24, prereqCourseId: 21, prereqType: "prereq" },
   { courseId: 25, prereqCourseId: 23, prereqType: "prereq" },
-  { courseId: 26, prereqCourseId: 21, prereqType: "coreq" },
   { courseId: 27, prereqCourseId: 26, prereqType: "prereq" },
-  { courseId: 27, prereqCourseId: 22, prereqType: "coreq" },
   { courseId: 30, prereqCourseId: 29, prereqType: "prereq" },
+  { courseId: 18, prereqCourseId: 31, prereqType: "coreq" },  // CMPE 195A coreq ENGR 195A
+  { courseId: 31, prereqCourseId: 18, prereqType: "coreq" },  // ENGR 195A coreq CMPE 195A
+  { courseId: 19, prereqCourseId: 32, prereqType: "coreq" },  // CMPE 195B coreq ENGR 195B
+  { courseId: 32, prereqCourseId: 19, prereqType: "coreq" },  // ENGR 195B coreq CMPE 195B
 ]
 
 // Map from courseId -> array of its prerequisite edges
