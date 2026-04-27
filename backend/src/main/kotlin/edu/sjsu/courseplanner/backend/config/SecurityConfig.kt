@@ -76,6 +76,9 @@ class SecurityConfig(
                     .requestMatchers(HttpMethod.GET, "/api/auth/csrf").permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login", "/api/auth/logout").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/scrape/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/schedule-data/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/db/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/sections/**").permitAll()
                     .requestMatchers("/error").permitAll()
                     .anyRequest().authenticated()
             }
