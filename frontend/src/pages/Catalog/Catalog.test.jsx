@@ -30,7 +30,7 @@ const springCoursesResponse = [
 
 describe('Catalog', () => {
   beforeEach(() => {
-    global.fetch = vi.fn(url => {
+    globalThis.fetch = vi.fn(url => {
       if (url === '/api/catalog/terms') {
         return Promise.resolve({
           ok: true,
@@ -61,8 +61,8 @@ describe('Catalog', () => {
     expect(screen.getByText('Senior Design Project I')).toBeDefined()
     expect(screen.getByDisplayValue('Spring 2026')).toBeDefined()
 
-    expect(global.fetch).toHaveBeenCalledWith('/api/catalog/terms')
-    expect(global.fetch).toHaveBeenCalledWith('/api/catalog/courses?term=Spring%202026')
+    expect(globalThis.fetch).toHaveBeenCalledWith('/api/catalog/terms')
+    expect(globalThis.fetch).toHaveBeenCalledWith('/api/catalog/courses?term=Spring%202026')
   })
 
   it('filters backend-loaded courses by search text', async () => {
@@ -90,7 +90,7 @@ describe('Catalog', () => {
   })
 
   it('shows an error when catalog terms fail to load', async () => {
-    global.fetch = vi.fn(() =>
+    globalThis.fetch = vi.fn(() =>
       Promise.resolve({
         ok: false,
         status: 500,
@@ -103,7 +103,7 @@ describe('Catalog', () => {
     expect(await screen.findByText('Failed to load catalog terms (500)')).toBeDefined()
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledTimes(1)
+      expect(globalThis.fetch).toHaveBeenCalledTimes(1)
     })
   })
 })

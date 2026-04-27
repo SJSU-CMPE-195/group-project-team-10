@@ -12,7 +12,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
@@ -72,7 +72,7 @@ class ScrapeControllerTest {
                 )
             )
 
-        mockMvc.perform(post("/api/scrape/import").param("term", "Spring 2026"))
+        mockMvc.perform(get("/api/scrape/import").param("term", "Spring 2026"))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.term").value("Spring 2026"))
             .andExpect(jsonPath("$.scrapedCount").value(1))
