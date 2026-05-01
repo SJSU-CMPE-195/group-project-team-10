@@ -28,7 +28,8 @@ import java.util.function.Supplier
 
 @Configuration
 class SecurityConfig(
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val oAuth2LoginSuccessHandler: OAuth2LoginSuccessHandler
 ) {
 
     @Bean
@@ -38,6 +39,10 @@ class SecurityConfig(
     fun userDetailsService(): UserDetailsService = UserDetailsService { username ->
         val user = userRepository.findByEmail(username.trim().lowercase())
             ?: throw UsernameNotFoundException("User not found")
+
+        if (user.passwordHash.isNullOrBlank()) {
+            throw UsernameNotFoundException("User does not have local password login")
+        }
 
         User(
             user.email,
@@ -75,12 +80,16 @@ class SecurityConfig(
                     .requestMatchers(HttpMethod.GET, "/api/health").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/auth/csrf").permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login", "/api/auth/logout").permitAll()
+                    .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/scrape/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/schedule-data/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/db/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/sections/**").permitAll()
                     .requestMatchers("/error").permitAll()
                     .anyRequest().authenticated()
+            }
+            .oauth2Login { oauth2 ->
+                oauth2.successHandler(oAuth2LoginSuccessHandler)
             }
             .formLogin { it.disable() }
             .httpBasic { it.disable() }

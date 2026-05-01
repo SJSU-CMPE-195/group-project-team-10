@@ -37,6 +37,10 @@ function Login() {
     return "";
   }
 
+  function handleGoogleLogin() {
+    window.location.href = "http://localhost:8080/oauth2/authorization/google";
+  }
+
   async function handleSubmit(event) {
     event.preventDefault();
     setError("");
@@ -65,6 +69,18 @@ function Login() {
       <section className="auth-card">
         <h1>Log in</h1>
         <p className="auth-subtitle">Access your SJSU course planner.</p>
+
+        <button
+          type="button"
+          className="oauth-button"
+          onClick={handleGoogleLogin}
+        >
+          Continue with Google
+        </button>
+
+        <div className="auth-divider">
+          <span>or continue with email</span>
+        </div>
 
         <form onSubmit={handleSubmit} className="auth-form" noValidate>
           <label>

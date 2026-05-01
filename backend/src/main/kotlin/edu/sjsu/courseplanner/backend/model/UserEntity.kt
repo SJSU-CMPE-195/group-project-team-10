@@ -7,23 +7,23 @@ import jakarta.persistence.*
 data class UserEntity(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long? = null,
+    var id: Long? = null,
 
     @Column(nullable = false, unique = true, length = 255)
-    val email: String = "",
+    var email: String = "",
+
+    @Column(nullable = true, length = 255)
+    var passwordHash: String? = null,
 
     @Column(nullable = false, length = 255)
-    val passwordHash: String = "",
-
-    @Column(nullable = false, length = 255)
-    val fullName: String = "",
+    var fullName: String = "",
 
     @Column(nullable = false, length = 50)
-    val provider: String = "local",
+    var provider: String = "local",
 
     @Column(unique = true, length = 255)
-    val googleSub: String? = null,
+    var googleSub: String? = null,
 
     @Column(unique = true, length = 255)
-    val ssoSubject: String? = null
+    var ssoSubject: String? = null
 )

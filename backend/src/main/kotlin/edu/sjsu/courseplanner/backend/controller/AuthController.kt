@@ -16,6 +16,7 @@ import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository
 import org.springframework.web.bind.annotation.*
 import org.springframework.security.web.csrf.CsrfToken
+import org.springframework.security.oauth2.core.user.OAuth2User
 
 // expose auth endpoints
 @RestController
@@ -86,8 +87,15 @@ class AuthController(
     }
 
     private fun currentUserResponse(authentication: Authentication): AuthUserResponse {
-        val user = authService.getByEmail(authentication.name)
+        val email = when (val principal = authentication.principal) {
+            is OAuth2User -> principal.getAttribute<String>("email")
+            else -> authentication.name
+        }?.trim()?.lowercase()
+            ?: throw IllegalStateException("Authenticated user email not found")
+
+        val user = authService.getByEmail(email)
             ?: throw IllegalStateException("Authenticated user not found")
+
         return authService.mapToAuthUserResponse(user)
     }
 
