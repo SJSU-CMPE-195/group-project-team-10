@@ -24,6 +24,7 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-validation")
 	implementation("org.jetbrains.exposed:exposed-core:1.2.0")
 	implementation("org.jetbrains.exposed:exposed-jdbc:1.2.0")
+	implementation("org.jetbrains.exposed:exposed-java-time:1.2.0")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jsoup:jsoup:1.17.2")
 	implementation("tools.jackson.module:jackson-module-kotlin")

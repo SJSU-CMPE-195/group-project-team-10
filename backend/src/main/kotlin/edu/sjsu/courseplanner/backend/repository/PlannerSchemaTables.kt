@@ -1,6 +1,8 @@
 package edu.sjsu.courseplanner.backend.repository
 
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.javatime.CurrentTimestamp
+import org.jetbrains.exposed.v1.javatime.timestamp
 
 object MajorsTable : Table("majors") {
     val id = integer("major_id").autoIncrement()
@@ -20,7 +22,7 @@ object StudentsTable : Table("students") {
     val majorId = reference("major_id", MajorsTable.id).nullable()
     val startTerm = varchar("start_term", 20).nullable()
     val expectedGrad = varchar("expected_grad", 20).nullable()
-    val createdAt = varchar("created_at", 30).nullable()
+    val createdAt = timestamp("created_at").defaultExpression(CurrentTimestamp).nullable()
 
     override val primaryKey = PrimaryKey(id)
 }
