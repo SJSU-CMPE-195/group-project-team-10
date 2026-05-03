@@ -57,6 +57,24 @@
   transition: width 0.3s ease;
 }
 
+.dashboard-progress-note,
+.dashboard-status {
+  color: var(--text);
+  font-size: 13px;
+}
+
+.dashboard-progress-note {
+  margin-top: 10px;
+}
+
+.dashboard-status {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 24px;
+}
+
 .requirements-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));

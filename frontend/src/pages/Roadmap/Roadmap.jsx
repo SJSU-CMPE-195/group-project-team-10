@@ -4,10 +4,9 @@ import {ReactFlow, Background, Controls, MarkerType,applyEdgeChanges, applyNodeC
 import '@xyflow/react/dist/style.css'
 import {useRoadmap, useRoadmapDispatch} from '../../context/RoadmapContext'
 import {validateSemesterPlan} from '../../utils/prerequisiteValidator'
-import courses, {courseMap} from '../../data/courses'
-import prerequisites from '../../data/prerequisites'
 import CourseNode from '../../components/CourseNode/CourseNode'
 import ValidationAlert from '../../components/ValidationAlert/ValidationAlert'
+import { fetchRoadmapByMajor } from '../../api/roadmap'
 import './Roadmap.css'
 
 function SemesterNode({ data }) {
@@ -49,7 +48,7 @@ const snapToRow = (y) => {
   return TOP_PADDING + index * SEMESTER_ROW_HEIGHT + COURSE_Y_OFFSET
 }
 
-function buildNodesAndEdges(semesters, violations) {
+function buildNodesAndEdges(semesters, violations, courseMap, prerequisites) {
   const nodes = []
   const edges = []
   const coursePositions = new Map()
@@ -105,6 +104,7 @@ function buildNodesAndEdges(semesters, violations) {
           courseCode: course.courseCode,
           courseTitle: course.courseTitle,
           units: course.units,
+          requirementNames: course.requirementNames || [],
           status: sc.status,
           note: sc.note || "",
           hasIssue: issueTypes.length > 0,
@@ -165,10 +165,21 @@ function Roadmap() {
   const [addCourseStatus, setAddCourseStatus] = useState("planned")
   const [hoverSemesterIndex, setHoverSemesterIndex] = useState(null)
 
-  const { semesters, hasUnsavedChanges } = state
+  const {
+    semesters,
+    hasUnsavedChanges,
+    courses,
+    prerequisites,
+    majors,
+    majorInfo,
+    majorId,
+    isLoadingRoadmap,
+    roadmapError,
+  } = state
+  const courseMap = useMemo(() => new Map(courses.map(c => [c.courseId, c])), [courses])
   const violations = useMemo(
     () => validateSemesterPlan(semesters, prerequisites),
-    [semesters]
+    [semesters, prerequisites]
   )
 
   const [nodes, setNodes] = useState([])
@@ -191,11 +202,29 @@ function Roadmap() {
 
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
-    const { nodes: newNodes, edges: newEdges } = buildNodesAndEdges(semesters, violations)
+    const { nodes: newNodes, edges: newEdges } = buildNodesAndEdges(semesters, violations, courseMap, prerequisites)
     setNodes(newNodes)
     setEdges(newEdges)
-  }, [semesters, violations])
+  }, [semesters, violations, courseMap, prerequisites])
   /* eslint-enable react-hooks/set-state-in-effect */
+
+  const handleMajorChange = async (event) => {
+    const nextMajorId = parseInt(event.target.value)
+    if (!nextMajorId || nextMajorId === majorId) return
+
+    if (hasUnsavedChanges) {
+      const discard = window.confirm("Changing majors will replace this roadmap. Press OK to continue.")
+      if (!discard) return
+    }
+
+    dispatch({ type: "SET_ROADMAP_LOADING" })
+    try {
+      const roadmap = await fetchRoadmapByMajor(nextMajorId)
+      dispatch({ type: "SET_ROADMAP_DATA", roadmap })
+    } catch (error) {
+      dispatch({ type: "SET_ROADMAP_ERROR", error: error.message })
+    }
+  }
 
   const onEdgesChange = (changes) => {
     setEdges((eds) => applyEdgeChanges(changes, eds))
@@ -295,14 +324,32 @@ function Roadmap() {
           &larr; Back
         </button>
 
-        <h2>Roadmap</h2>
+        <div className="roadmap-title-group">
+          <h2>Roadmap</h2>
+          <span>{majorInfo?.majorName || "Loading major..."}</span>
+        </div>
 
         <div className="roadmap-toolbar-actions">
-          <button onClick={openAddCourseModal} className="roadmap-btn">
+          <select
+            value={majorId}
+            onChange={handleMajorChange}
+            className="roadmap-select roadmap-major-select"
+            disabled={isLoadingRoadmap}
+            aria-label="Select major"
+          >
+            {!majorId && <option value="">Loading majors...</option>}
+            {majors.map(major => (
+              <option key={major.majorId} value={major.majorId}>
+                {major.majorName}
+              </option>
+            ))}
+          </select>
+
+          <button onClick={openAddCourseModal} className="roadmap-btn" disabled={!majorInfo}>
             Add Course
           </button>
 
-          <button onClick={handleAddGap} className="roadmap-btn">
+          <button onClick={handleAddGap} className="roadmap-btn" disabled={!majorInfo}>
             Add Gap Semester
           </button>
 
@@ -323,6 +370,18 @@ function Roadmap() {
           </button>
         </div>
       </div>
+
+      {roadmapError && (
+        <div className="roadmap-error">
+          {roadmapError}
+        </div>
+      )}
+
+      {isLoadingRoadmap && (
+        <div className="roadmap-loading">
+          Loading roadmap data...
+        </div>
+      )}
 
       {showAddCourseModal && (
         <div className="roadmap-modal-backdrop" onClick={closeAddCourseModal}>
@@ -412,7 +471,7 @@ function Roadmap() {
 
       {violations.length > 0 && (
         <div className="roadmap-validation">
-          <ValidationAlert violations={violations} />
+              <ValidationAlert violations={violations} courseMap={courseMap} />
         </div>
       )}
     </div>

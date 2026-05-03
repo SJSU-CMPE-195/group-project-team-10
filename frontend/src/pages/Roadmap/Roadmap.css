@@ -18,6 +18,17 @@
   font-size: 20px;
 }
 
+.roadmap-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.roadmap-title-group span {
+  color: var(--text);
+  font-size: 12px;
+}
+
 .roadmap-toolbar-actions {
   display: flex;
   align-items: center;
@@ -55,6 +66,30 @@
   color: var(--text-h);
   font-size: 13px;
   cursor: pointer;
+}
+
+.roadmap-major-select {
+  max-width: 270px;
+}
+
+.roadmap-error,
+.roadmap-loading {
+  margin-top: 12px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.roadmap-error {
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: var(--status-failed);
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.roadmap-loading {
+  border: 1px solid var(--border);
+  color: var(--text);
+  background: var(--card-bg);
 }
 
 .roadmap-btn {

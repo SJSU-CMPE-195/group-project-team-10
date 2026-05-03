@@ -3,7 +3,15 @@ import { roadmapReducer } from './RoadmapContext'
 
 function makeState(semesters, hasUnsavedChanges = false) {
   const base = { majorId: 1, semesters }
-  return { ...base, savedState: structuredClone(base), hasUnsavedChanges }
+  return {
+    ...base,
+    prerequisites: [
+      { courseId: 2, prereqCourseId: 1, prereqType: "prereq" },
+      { courseId: 4, prereqCourseId: 1, prereqType: "prereq" },
+    ],
+    savedState: structuredClone(base),
+    hasUnsavedChanges
+  }
 }
 
 describe('roadmapReducer', () => {
@@ -143,10 +151,16 @@ describe('roadmapReducer', () => {
   })
 
   describe('RESET_ROADMAP', () => {
-    it('resets to initial sample roadmap', () => {
-      const state = makeState([])
+    it('resets to the saved roadmap state', () => {
+      const state = {
+        ...makeState([{ semesterId: 2, courses: [{ courseId: 2, status: "planned" }] }], true),
+        savedState: {
+          majorId: 1,
+          semesters: [{ semesterId: 1, courses: [{ courseId: 1, status: "completed" }] }],
+        },
+      }
       const next = roadmapReducer(state, { type: "RESET_ROADMAP" })
-      expect(next.semesters.length).toBeGreaterThan(0)
+      expect(next.semesters).toEqual(state.savedState.semesters)
       expect(next.hasUnsavedChanges).toBe(false)
     })
   })

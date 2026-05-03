@@ -60,6 +60,26 @@
   -webkit-box-orient: vertical;
 }
 
+.course-node-requirements {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.course-node-requirements span {
+  max-width: 100%;
+  padding: 2px 5px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-size: 10px;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .course-node-footer {
   display: flex;
   justify-content: space-between;
