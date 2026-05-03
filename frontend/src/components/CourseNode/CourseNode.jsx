@@ -10,7 +10,7 @@ const STATUS_OPTIONS = [
   { value: "failed", label: "failed" },
 ]
 
-function CourseNode({ data }) {
+function CourseNode({ data, selected }) {
   const dispatch = useRoadmapDispatch()
   const {
     courseId,
@@ -68,8 +68,7 @@ function CourseNode({ data }) {
   const showWarning = hasIssue && status !== 'failed' && status !== 'blocked'
 
   return (
-    <div className={`course-node course-node--${status}${showWarning ? ' course-node--warning' : ''}`}>
-      <Handle type="target" position={Position.Top} className="course-handle" />
+      <div className={`course-node course-node--${status}${showWarning ? ' course-node--warning' : ''} ${selected ? 'course-node--selected' : ''}`}>      <Handle type="target" position={Position.Top} className="course-handle" />
 
       <button className="course-node-remove" onClick={handleRemove} title="Remove course">
         ×

@@ -44,7 +44,7 @@ class ScheduleImportRepository(
             }
 
             if (row.instructor.isNotBlank() && row.instructor.uppercase() != "STAFF" && !instructorIdsByName.containsKey(row.instructor)) {
-                val instructorId = insertInstructor(row.instructor)
+                val instructorId = insertInstructor(row.instructor, row.courseCode)
                 instructorIdsByName[row.instructor] = instructorId
                 instructorsCreated++
             }
@@ -64,7 +64,7 @@ class ScheduleImportRepository(
                 statement[CourseOfferingsTable.instructorId] = instructorId
                 statement[CourseOfferingsTable.mode] = row.modeOfInstruction
                 statement[CourseOfferingsTable.seatsAvailable] = row.openSeats
-                statement[CourseOfferingsTable.scheduleInfo] = buildScheduleInfo(row)
+                statement[CourseOfferingsTable.scheduleInfo] = buildScheduleInfo(row).take(100)
             }
 
             SectionsTable.insert { statement ->
@@ -130,10 +130,12 @@ class ScheduleImportRepository(
         } get CoursesTable.id
     }
 
-    private fun insertInstructor(name: String): Int {
+    private fun insertInstructor(name: String, courseCode: String): Int {
+        val department = courseCode.substringBefore(' ').ifBlank { "UNKNOWN" }
+
         return InstructorsTable.insert { statement ->
             statement[InstructorsTable.name] = name
-            statement[InstructorsTable.department] = null
+            statement[InstructorsTable.department] = department
             statement[InstructorsTable.rateMyProfUrl] = null
             statement[InstructorsTable.rating] = null
         } get InstructorsTable.id

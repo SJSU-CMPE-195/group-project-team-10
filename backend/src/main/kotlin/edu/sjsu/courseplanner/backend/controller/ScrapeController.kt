@@ -9,6 +9,9 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.http.HttpHeaders
+import org.springframework.http.MediaType
+import org.springframework.http.ResponseEntity
 
 // Exposes API endpoints for scraping and debugging supported schedule terms.
 @RestController
@@ -52,5 +55,20 @@ class ScrapeController(
             "offeringsSaved" to result.offeringsSaved,
             "sectionsSaved" to result.sectionsSaved
         )
+    }
+
+    // Returns the parsed rows for a supported term as a downloadable CSV file.
+    @GetMapping("/export")
+    fun exportTermCsv(
+        @RequestParam(defaultValue = "Fall 2026") term: String
+    ): ResponseEntity<String> {
+        val scraped = scheduleScraperService.scrapeSectionsDebug(term, Int.MAX_VALUE).parsed
+        val csv = scheduleScraperService.exportSectionsToCsv(scraped)
+        val filename = term.trim().lowercase().replace(Regex("\\s+"), "_") + "_schedule.csv"
+
+        return ResponseEntity.ok()
+            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=$filename")
+            .contentType(MediaType("text", "csv"))
+            .body(csv)
     }
 }
