@@ -85,6 +85,7 @@ class SecurityConfig(
                     .requestMatchers(HttpMethod.GET, "/api/schedule-data/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/db/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/sections/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/catalog/**").permitAll()
                     .requestMatchers("/error").permitAll()
                     .anyRequest().authenticated()
             }
