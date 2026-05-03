@@ -1,6 +1,6 @@
 package edu.sjsu.courseplanner.backend.config
 
-import edu.sjsu.courseplanner.backend.model.UserEntity
+import edu.sjsu.courseplanner.backend.dto.UserDto
 import edu.sjsu.courseplanner.backend.repository.UserRepository
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -33,7 +33,7 @@ class OAuth2LoginSuccessHandler(
 
         val user = userRepository.findByGoogleSub(googleSub)
             ?: userRepository.findByEmail(email)
-            ?: UserEntity(
+            ?: UserDto(
                 email = email,
                 fullName = fullName,
                 passwordHash = null,

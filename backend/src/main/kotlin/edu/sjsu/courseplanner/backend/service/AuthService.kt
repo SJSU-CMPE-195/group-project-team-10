@@ -2,7 +2,7 @@ package edu.sjsu.courseplanner.backend.service
 
 import edu.sjsu.courseplanner.backend.dto.AuthUserResponse
 import edu.sjsu.courseplanner.backend.dto.RegisterRequest
-import edu.sjsu.courseplanner.backend.model.UserEntity
+import edu.sjsu.courseplanner.backend.dto.UserDto
 import edu.sjsu.courseplanner.backend.repository.UserRepository
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
@@ -30,7 +30,7 @@ class AuthService(
         }
 
         val user = userRepository.save(
-            UserEntity(
+            UserDto(
                 email = email,
                 passwordHash = encodedPassword,
                 fullName = fullName,
@@ -41,11 +41,11 @@ class AuthService(
         return mapToAuthUserResponse(user)
     }
 
-    fun getByEmail(email: String): UserEntity? {
+    fun getByEmail(email: String): UserDto? {
         return userRepository.findByEmail(email.trim().lowercase())
     }
 
-    fun mapToAuthUserResponse(user: UserEntity): AuthUserResponse {
+    fun mapToAuthUserResponse(user: UserDto): AuthUserResponse {
         return AuthUserResponse(
             id = requireNotNull(user.id),
             email = user.email,

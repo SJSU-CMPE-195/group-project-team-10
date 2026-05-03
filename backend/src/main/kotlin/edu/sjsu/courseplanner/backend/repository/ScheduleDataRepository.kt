@@ -1,6 +1,6 @@
 package edu.sjsu.courseplanner.backend.repository
 
-import edu.sjsu.courseplanner.backend.model.SectionEntity
+import edu.sjsu.courseplanner.backend.dto.SectionDto
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.eq
@@ -24,7 +24,7 @@ class ScheduleDataRepository(
 ) {
 
     // returns all course sections from the database, optionally filtered by term, and sorted.
-    fun findFullSchedule(term: String?): List<SectionEntity> = transaction(database) {
+    fun findFullSchedule(term: String?): List<SectionDto> = transaction(database) {
         SectionsTable
             .selectAll()
             .apply {
@@ -36,14 +36,14 @@ class ScheduleDataRepository(
             .orderBy(SectionsTable.courseCode to SortOrder.ASC)
             .orderBy(SectionsTable.sectionCode to SortOrder.ASC)
             .orderBy(SectionsTable.classNumber to SortOrder.ASC)
-            .map(::toSectionEntity)
+            .map(::toSectionDto)
     }
 
     // returns all course sections for a specific department (and optional term) using a LIKE match on course code.
     fun findByDepartment(
         department: String,
         term: String?
-    ): List<SectionEntity> = transaction(database) {
+    ): List<SectionDto> = transaction(database) {
         val departmentPrefix = "$department %"
 
         SectionsTable
@@ -58,7 +58,7 @@ class ScheduleDataRepository(
             .orderBy(SectionsTable.courseCode to SortOrder.ASC)
             .orderBy(SectionsTable.sectionCode to SortOrder.ASC)
             .orderBy(SectionsTable.classNumber to SortOrder.ASC)
-            .map(::toSectionEntity)
+            .map(::toSectionDto)
     }
 
     // deletes all course sections in the database that belong to a specific term
@@ -66,7 +66,7 @@ class ScheduleDataRepository(
         SectionsTable.deleteWhere { SectionsTable.term eq term }
     }
 
-    fun replaceSectionsForTerm(term: String, sections: List<SectionEntity>): Int = transaction(database) {
+    fun replaceSectionsForTerm(term: String, sections: List<SectionDto>): Int = transaction(database) {
         SectionsTable.deleteWhere { SectionsTable.term eq term }
         insertSections(sections)
         sections.size
@@ -78,12 +78,12 @@ class ScheduleDataRepository(
         }
     }
 
-    fun saveAll(sections: List<SectionEntity>): List<SectionEntity> = transaction(database) {
+    fun saveAll(sections: List<SectionDto>): List<SectionDto> = transaction(database) {
         insertSections(sections)
         sections
     }
 
-    private fun insertSections(sections: List<SectionEntity>) {
+    private fun insertSections(sections: List<SectionDto>) {
         sections.forEach { section ->
             SectionsTable.insert { statement ->
                 statement[SectionsTable.term] = section.term
@@ -106,8 +106,8 @@ class ScheduleDataRepository(
         }
     }
 
-    private fun toSectionEntity(row: ResultRow): SectionEntity {
-        return SectionEntity(
+    private fun toSectionDto(row: ResultRow): SectionDto {
+        return SectionDto(
             id = row[SectionsTable.id],
             term = row[SectionsTable.term],
             courseCode = row[SectionsTable.courseCode],

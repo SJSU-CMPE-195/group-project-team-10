@@ -124,6 +124,40 @@ object SemesterCoursesTable : Table("semester_courses") {
     override val primaryKey = PrimaryKey(semesterId, courseId)
 }
 
+object SectionsTable : Table("sections") {
+    val id = long("id").autoIncrement()
+    val term = varchar("term", 255)
+    val courseCode = varchar("course_code", 255)
+    val sectionCode = varchar("section_code", 255)
+    val classNumber = varchar("class_number", 255)
+    val modeOfInstruction = varchar("mode_of_instruction", 255)
+    val title = varchar("title", 500)
+    val satisfies = varchar("satisfies", 255).nullable()
+    val units = double("units")
+    val type = varchar("TYPE", 255)
+    val days = varchar("days", 255)
+    val times = varchar("times", 255)
+    val instructor = varchar("instructor", 255)
+    val location = varchar("location", 255)
+    val dates = varchar("dates", 255)
+    val openSeats = integer("open_seats")
+    val notes = text("notes").nullable()
+
+    override val primaryKey = PrimaryKey(id)
+}
+
+object UsersTable : Table("users") {
+    val id = long("id").autoIncrement()
+    val email = varchar("email", 255).uniqueIndex()
+    val passwordHash = varchar("password_hash", 255).nullable()
+    val fullName = varchar("full_name", 255)
+    val provider = varchar("provider", 50)
+    val googleSub = varchar("google_sub", 255).uniqueIndex().nullable()
+    val ssoSubject = varchar("sso_subject", 255).uniqueIndex().nullable()
+
+    override val primaryKey = PrimaryKey(id)
+}
+
 val plannerSchemaTables = arrayOf(
     MajorsTable,
     StudentsTable,
@@ -137,5 +171,6 @@ val plannerSchemaTables = arrayOf(
     StudentRoadmapsTable,
     SemestersTable,
     SemesterCoursesTable,
-    SectionsTable
+    SectionsTable,
+    UsersTable
 )

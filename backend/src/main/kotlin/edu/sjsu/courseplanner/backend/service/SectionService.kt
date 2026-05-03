@@ -1,7 +1,7 @@
 package edu.sjsu.courseplanner.backend.service
 
 import edu.sjsu.courseplanner.backend.dto.ScrapedSectionDto
-import edu.sjsu.courseplanner.backend.model.SectionEntity
+import edu.sjsu.courseplanner.backend.dto.SectionDto
 import edu.sjsu.courseplanner.backend.repository.SectionRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -15,12 +15,12 @@ class SectionService(
 ) {
 
     // Returns all saved sections.
-    fun getAllSections(): List<SectionEntity> {
+    fun getAllSections(): List<SectionDto> {
         return sectionRepository.findAll()
     }
 
     // Returns saved sections for one term.
-    fun getSectionsByTerm(term: String): List<SectionEntity> {
+    fun getSectionsByTerm(term: String): List<SectionDto> {
         return sectionRepository.findByTerm(term)
     }
 
@@ -28,7 +28,7 @@ class SectionService(
     @Transactional
     fun replaceSectionsForTerm(term: String, scraped: List<ScrapedSectionDto>): Int {
         val entities = scraped.map { dto ->
-            SectionEntity(
+            SectionDto(
                 term = term,
                 courseCode = dto.courseCode,
                 sectionCode = dto.sectionCode,
