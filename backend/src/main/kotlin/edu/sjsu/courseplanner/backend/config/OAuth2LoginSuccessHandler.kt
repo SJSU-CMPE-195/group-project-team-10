@@ -48,6 +48,6 @@ class OAuth2LoginSuccessHandler(
 
         userRepository.save(user)
 
-        response.sendRedirect("http://localhost:5173/?login=google-success")
+        response.sendRedirect("http://localhost:3030/?login=google-success")
     }
 }
