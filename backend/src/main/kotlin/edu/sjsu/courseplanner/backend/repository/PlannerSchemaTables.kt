@@ -66,7 +66,7 @@ object CourseOfferingsTable : Table("course_offerings") {
     val instructorId = reference("instructor_id", InstructorsTable.id).nullable()
     val mode = varchar("mode", 20).nullable()
     val seatsAvailable = integer("seats_available").default(0)
-    val scheduleInfo = varchar("schedule_info", 100).nullable()
+    val scheduleInfo = text("schedule_info").nullable()
 
     override val primaryKey = PrimaryKey(id)
 }

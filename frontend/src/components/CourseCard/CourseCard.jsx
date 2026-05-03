@@ -4,6 +4,7 @@ import './CourseCard.css'
 
 function CourseCard({ course, prereqs }) {
   const [expanded, setExpanded] = useState(false)
+  const availableTerms = course.availableTerms || []
 
   const prereqNames = prereqs.map(p => {
     const c = courseMap.get(p.prereqCourseId)
@@ -18,6 +19,11 @@ function CourseCard({ course, prereqs }) {
       </div>
       <div className="course-card-title">{course.courseTitle}</div>
       <div className="course-card-units">{course.units} units</div>
+      {typeof course.offeringCount === 'number' && (
+        <div className="course-card-offerings">
+          {course.offeringCount} offering{course.offeringCount === 1 ? '' : 's'} in selected term
+        </div>
+      )}
       {course.description && (
         <div className={`course-card-desc ${expanded ? 'expanded' : ''}`}>
           {expanded ? course.description : course.description.slice(0, 80)}
@@ -34,6 +40,11 @@ function CourseCard({ course, prereqs }) {
       {prereqNames.length > 0 && (
         <div className="course-card-prereqs">
           Prerequisites: {prereqNames.join(', ')}
+        </div>
+      )}
+      {availableTerms.length > 0 && (
+        <div className="course-card-terms">
+          Available terms: {availableTerms.join(', ')}
         </div>
       )}
     </div>
