@@ -161,3 +161,17 @@ CREATE TABLE IF NOT EXISTS sections (
     notes               TEXT         NULL,
     PRIMARY KEY (id)
 );
+
+CREATE TABLE IF NOT EXISTS users (
+    id            BIGINT       NOT NULL AUTO_INCREMENT,
+    email         VARCHAR(255) NOT NULL,
+    password_hash VARCHAR(255) NULL,
+    full_name     VARCHAR(255) NOT NULL,
+    provider      VARCHAR(50)  NOT NULL,
+    google_sub    VARCHAR(255) NULL,
+    sso_subject   VARCHAR(255) NULL,
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_users_email (email),
+    UNIQUE KEY uq_users_google_sub (google_sub),
+    UNIQUE KEY uq_users_sso_subject (sso_subject)
+);
