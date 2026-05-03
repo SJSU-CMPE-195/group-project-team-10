@@ -27,11 +27,10 @@ const COURSE_Y_OFFSET = (SEMESTER_ROW_HEIGHT - COURSE_CARD_HEIGHT) / 2
 const HEADER_WIDTH = 140
 const LEFT_PADDING = 40
 const TOP_PADDING = 40
-const COURSE_GAP = 40
 
 const getSemesterWidth = (sem) => {
   const courseCount = sem.courses.length
-  return HEADER_WIDTH + LEFT_PADDING + courseCount * COURSE_WIDTH + (courseCount - 1) * COURSE_GAP + 40
+  return HEADER_WIDTH + LEFT_PADDING + courseCount * COURSE_WIDTH + 40
 }
 
 const getSemesterFromY = (y, semesters) => {
@@ -41,12 +40,16 @@ const getSemesterFromY = (y, semesters) => {
 
 const getInsertIndexFromX = (x) => {
   const offsetX = x - (LEFT_PADDING + HEADER_WIDTH)
-  return Math.max(0, Math.round(offsetX / (COURSE_WIDTH + COURSE_GAP)))
+  return Math.max(0, Math.round(offsetX / COURSE_WIDTH))
 }
 
 const snapToRow = (y) => {
   const index = Math.round((y - TOP_PADDING) / SEMESTER_ROW_HEIGHT)
   return TOP_PADDING + index * SEMESTER_ROW_HEIGHT + COURSE_Y_OFFSET
+}
+
+const snapToColumn = (x) => {
+  return LEFT_PADDING + HEADER_WIDTH + getInsertIndexFromX(x) * COURSE_WIDTH
 }
 
 function buildNodesAndEdges(semesters, violations, courseMap, prerequisites) {
@@ -96,7 +99,7 @@ function buildNodesAndEdges(semesters, violations, courseMap, prerequisites) {
         id: nodeId,
         type: 'course',
         position: {
-          x: LEFT_PADDING + HEADER_WIDTH + j * (COURSE_WIDTH + COURSE_GAP),
+          x: LEFT_PADDING + HEADER_WIDTH + j * COURSE_WIDTH,
           y: TOP_PADDING + i * SEMESTER_ROW_HEIGHT + COURSE_Y_OFFSET,
         },
         data: {
@@ -165,7 +168,6 @@ function Roadmap() {
   const [addCourseId, setAddCourseId] = useState("")
   const [addCourseStatus, setAddCourseStatus] = useState("planned")
   const [hoverSemesterIndex, setHoverSemesterIndex] = useState(null)
-  const [selectedNodeId, setSelectedNodeId] = useState(null)
 
   const {
     semesters,
@@ -188,49 +190,18 @@ function Roadmap() {
   const [edges, setEdges] = useState([])
 
   const decoratedNodes = nodes.map(n => {
-    const isCourse = n.id.startsWith('course-')
-    const isSelected = isCourse && n.id === selectedNodeId
+    if (!n.id.startsWith('sem-')) return n
 
-    const semIndex = semesters.findIndex(
-      s => `sem-${s.semesterId}` === n.id
-    )
-
-    const isSemesterHovered =
-      hoverSemesterIndex === semIndex && n.id.startsWith('sem-')
+    const semIndex = semesters.findIndex(s => `sem-${s.semesterId}` === n.id)
 
     return {
       ...n,
-      className: [
-        isSemesterHovered ? 'semester-column-highlight' : '',
-        isSelected ? 'course-node--selected' : '',
-      ]
-        .filter(Boolean)
-        .join(' ')
-    }
-  })
-
-  const decoratedEdges = edges.map(e => {
-  const isConnected =
-    e.source === selectedNodeId ||
-    e.target === selectedNodeId
-
-    return {
-      ...e,
-      zIndex: isConnected ? 1000 : 0,
-      style: {
-        ...e.style,
-        strokeWidth: isConnected ? 4 : 2,
-        opacity: isConnected ? 1 : 0.3,
-      },
+      className: hoverSemesterIndex === semIndex ? 'semester-column-highlight' : ''
     }
   })
 
   const onNodesChange = (changes) => {
     setNodes((nds) => applyNodeChanges(changes, nds))
-  }
-
-  const onNodeClick = (_, node) => {
-    setSelectedNodeId(prev => (prev === node.id ? null : node.id))
   }
 
   /* eslint-disable react-hooks/set-state-in-effect */
@@ -276,29 +247,12 @@ function Roadmap() {
 
     const courseId = parseInt(node.id.replace('course-', ''))
     const targetSemester = getSemesterFromY(node.position.y || 0, semesters)
-    if (!targetSemester) return
-
-    const rawIndex = getInsertIndexFromX(node.position.x || 0)
-    const toIndex = Math.min(rawIndex, targetSemester.courses.length)
+    const toIndex = getInsertIndexFromX(node.position.x || 0)
 
     if (!targetSemester) return
 
-    const snappedY = snapToRow(node.position.y || 0)
-    const snappedX = snapToColumn(node.position.x || 0)
-
-    setNodes((nds) =>
-      nds.map((n) =>
-        n.id === node.id
-        ? {
-          ...n,
-          position: {
-            x: snappedX,
-            y: snappedY,
-          },
-        }
-      : n
-      )
-    )
+    node.position.y = snapToRow(node.position.y || 0)
+    node.position.x = snapToColumn(node.position.x || 0)
 
     dispatch({
       type: 'MOVE_COURSE',
@@ -503,24 +457,17 @@ function Roadmap() {
       <div className="roadmap-flow-container">
         <ReactFlow
           nodes={decoratedNodes}
-          edges={decoratedEdges}
+          edges={edges}
           nodeTypes={NODE_TYPES}
           onNodesChange={onNodesChange}
-          onNodeClick={onNodeClick}
-          onPaneClick={() => setSelectedNodeId(null)}
           onEdgesChange={onEdgesChange}
           onNodeDrag={onNodeDrag}
-          onNodeDragStop={onNodeDragStop}
-          onNodeDragStart={() => setSelectedNodeId(null)}
+          onNodeDragStop = {onNodeDragStop}
           fitView
           nodesDraggable={true}
           minZoom={0.3}
           maxZoom={1.5}
           proOptions={{ hideAttribution: true }}
-          selectionOnDrag={false}
-          nodesSelectable={false}
-          elementsSelectable={false}
-          selectNodesOnDrag={false}
         >
           <Background gap={20} size={1} />
           <Controls />
