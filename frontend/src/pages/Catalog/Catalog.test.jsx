@@ -45,6 +45,13 @@ describe('Catalog', () => {
         })
       }
 
+      if (url === '/api/sections?term=Spring%202026') {
+        return Promise.resolve({
+          ok: true,
+          json: async () => [],
+        })
+      }
+
       return Promise.reject(new Error(`Unhandled fetch request: ${url}`))
     })
   })
@@ -63,6 +70,7 @@ describe('Catalog', () => {
 
     expect(globalThis.fetch).toHaveBeenCalledWith('/api/catalog/terms')
     expect(globalThis.fetch).toHaveBeenCalledWith('/api/catalog/courses?term=Spring%202026')
+    expect(globalThis.fetch).toHaveBeenCalledWith('/api/sections?term=Spring%202026')
   })
 
   it('filters backend-loaded courses by search text', async () => {

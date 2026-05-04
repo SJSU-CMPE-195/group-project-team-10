@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { fetchCatalogCourses, fetchCatalogTerms } from '../../api/catalog'
+import { fetchSections } from '../../api/sections'
 import CourseCard from '../../components/CourseCard/CourseCard'
 import './Catalog.css'
 
@@ -11,6 +12,7 @@ function Catalog() {
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
   const [activeDept, setActiveDept] = useState(null)
+  const [sections, setSections] = useState([])
 
   useEffect(() => {
     let cancelled = false
@@ -48,9 +50,13 @@ function Catalog() {
       setError('')
 
       try {
-        const nextCourses = await fetchCatalogCourses(selectedTerm)
+        const [nextCourses, nextSections] = await Promise.all([
+          fetchCatalogCourses(selectedTerm),
+          fetchSections(selectedTerm),
+        ])
         if (cancelled) return
         setCourses(nextCourses)
+        setSections(nextSections)
       } catch (err) {
         if (!cancelled) {
           setError(err.message || 'Failed to load catalog courses')
@@ -84,6 +90,15 @@ function Catalog() {
       return matchesSearch && matchesDept
     })
   }, [courses, search, activeDept])
+
+  const sectionsByCourseCode = useMemo(() => {
+    return sections.reduce((map, section) => {
+      const key = section.courseCode
+      if (!map[key]) map[key] = []
+      map[key].push(section)
+      return map
+    }, {})
+  }, [sections])
 
   return (
     <div className="catalog-page">
@@ -144,6 +159,7 @@ function Catalog() {
             key={course.courseId}
             course={course}
             prereqs={[]}
+            sections={sectionsByCourseCode[course.courseCode] || []}
           />
         ))}
       </div>

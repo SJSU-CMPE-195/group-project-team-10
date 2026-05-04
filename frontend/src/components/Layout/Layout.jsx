@@ -28,6 +28,7 @@ function Layout() {
           <NavLink to="/" end className={navLinkClass}>Dashboard</NavLink>
           <NavLink to="/roadmap" className={navLinkClass}>Roadmap</NavLink>
           <NavLink to="/catalog" className={navLinkClass}>Catalog</NavLink>
+          <NavLink to="/schedule" className={navLinkClass}>Schedule</NavLink>
         </div>
 
         <div className="nav-auth">
