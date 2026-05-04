@@ -1,8 +1,7 @@
 package edu.sjsu.courseplanner.backend
 
 import edu.sjsu.courseplanner.backend.dto.ScrapedSectionDto
-import edu.sjsu.courseplanner.backend.model.SectionEntity
-import edu.sjsu.courseplanner.backend.repository.CourseOfferingsTable
+import edu.sjsu.courseplanner.backend.dto.SectionDto
 import edu.sjsu.courseplanner.backend.repository.ScheduleImportRepository
 import edu.sjsu.courseplanner.backend.repository.ScheduleDataRepository
 import edu.sjsu.courseplanner.backend.repository.SectionRepository
@@ -148,7 +147,7 @@ class DatabaseIntegrationTest {
         sectionCode: String,
         classNumber: String,
         openSeats: Int
-    ) = SectionEntity(
+    ) = SectionDto(
         term = term,
         courseCode = courseCode,
         sectionCode = sectionCode,

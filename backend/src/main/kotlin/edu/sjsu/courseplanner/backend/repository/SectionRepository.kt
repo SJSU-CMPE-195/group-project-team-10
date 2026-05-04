@@ -1,6 +1,6 @@
 package edu.sjsu.courseplanner.backend.repository
 
-import edu.sjsu.courseplanner.backend.model.SectionEntity
+import edu.sjsu.courseplanner.backend.dto.SectionDto
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.eq
@@ -19,29 +19,29 @@ import org.springframework.stereotype.Repository
 class SectionRepository(
     private val database: Database
 ) {
-    fun findAll(): List<SectionEntity> = transaction(database) {
+    fun findAll(): List<SectionDto> = transaction(database) {
         SectionsTable
             .selectAll()
             .orderBy(SectionsTable.term to SortOrder.ASC)
             .orderBy(SectionsTable.courseCode to SortOrder.ASC)
             .orderBy(SectionsTable.sectionCode to SortOrder.ASC)
-            .map(::toSectionEntity)
+            .map(::toSectionDto)
     }
 
-    fun findByTerm(term: String): List<SectionEntity> = transaction(database) {
+    fun findByTerm(term: String): List<SectionDto> = transaction(database) {
         SectionsTable
             .selectAll()
             .andWhere { SectionsTable.term eq term }
             .orderBy(SectionsTable.courseCode to SortOrder.ASC)
             .orderBy(SectionsTable.sectionCode to SortOrder.ASC)
-            .map(::toSectionEntity)
+            .map(::toSectionDto)
     }
 
     fun deleteAllByTerm(term: String): Int = transaction(database) {
         SectionsTable.deleteWhere { SectionsTable.term eq term }
     }
 
-    fun replaceSectionsForTerm(term: String, sections: List<SectionEntity>): Int = transaction(database) {
+    fun replaceSectionsForTerm(term: String, sections: List<SectionDto>): Int = transaction(database) {
         SectionsTable.deleteWhere { SectionsTable.term eq term }
         sections.forEach { section ->
             SectionsTable.insert { statement ->
@@ -66,8 +66,8 @@ class SectionRepository(
         sections.size
     }
 
-    private fun toSectionEntity(row: ResultRow): SectionEntity {
-        return SectionEntity(
+    private fun toSectionDto(row: ResultRow): SectionDto {
+        return SectionDto(
             id = row[SectionsTable.id],
             term = row[SectionsTable.term],
             courseCode = row[SectionsTable.courseCode],

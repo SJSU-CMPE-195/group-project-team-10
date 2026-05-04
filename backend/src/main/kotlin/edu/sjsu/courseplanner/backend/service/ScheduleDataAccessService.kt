@@ -3,7 +3,7 @@ package edu.sjsu.courseplanner.backend.service
 import edu.sjsu.courseplanner.backend.dto.DepartmentCourseSummaryDto
 import edu.sjsu.courseplanner.backend.dto.ScrapedSectionDto
 import edu.sjsu.courseplanner.backend.dto.SectionScheduleRowDto
-import edu.sjsu.courseplanner.backend.model.SectionEntity
+import edu.sjsu.courseplanner.backend.dto.SectionDto
 import edu.sjsu.courseplanner.backend.repository.ScheduleDataRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -63,8 +63,8 @@ class ScheduleDataAccessService(
         return scheduleDataRepository.replaceSectionsForTerm(normalizedTerm, entities)
     }
 
-    // converts a SectionEntity into a frontend-ready SectionScheduleRowDto.
-    private fun toScheduleRow(section: SectionEntity): SectionScheduleRowDto {
+    // converts a SectionDto into a frontend-ready SectionScheduleRowDto.
+    private fun toScheduleRow(section: SectionDto): SectionScheduleRowDto {
         val courseParts = splitCourseCode(section.courseCode)
         return SectionScheduleRowDto(
             term = section.term,
@@ -88,15 +88,15 @@ class ScheduleDataAccessService(
         )
     }
 
-    // cleans, validates, and converts scraped data into a SectionEntity ready for saving.
-    private fun toValidatedEntityDraft(dto: ScrapedSectionDto): SectionEntity {
+    // cleans, validates, and converts scraped data into a SectionDto ready for saving.
+    private fun toValidatedEntityDraft(dto: ScrapedSectionDto): SectionDto {
         val normalizedCourseCode = normalizeCourseCode(dto.courseCode)
         val courseParts = splitCourseCode(normalizedCourseCode)
         require(courseParts.first.isNotBlank() && courseParts.second.isNotBlank()) {
             "Course code must include both department and course number"
         }
 
-        return SectionEntity(
+        return SectionDto(
             term = "",
             courseCode = normalizedCourseCode,
             sectionCode = dto.sectionCode.trim(),

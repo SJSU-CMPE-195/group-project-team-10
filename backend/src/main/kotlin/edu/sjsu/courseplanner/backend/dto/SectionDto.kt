@@ -1,9 +1,9 @@
-package edu.sjsu.courseplanner.backend.model
+package edu.sjsu.courseplanner.backend.dto
 
 /*
  Stores one scraped course section row independent of the persistence library.
 */
-data class SectionEntity(
+data class SectionDto(
     val id: Long? = null,
     val term: String,
     val courseCode: String,

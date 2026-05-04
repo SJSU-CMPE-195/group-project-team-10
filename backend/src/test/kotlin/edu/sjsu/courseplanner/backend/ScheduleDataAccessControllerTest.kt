@@ -1,6 +1,6 @@
 package edu.sjsu.courseplanner.backend
 
-import edu.sjsu.courseplanner.backend.model.SectionEntity
+import edu.sjsu.courseplanner.backend.dto.SectionDto
 import edu.sjsu.courseplanner.backend.repository.ScheduleDataRepository
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -28,7 +28,7 @@ class ScheduleDataAccessControllerTest {
         scheduleDataRepository.deleteAll()
         scheduleDataRepository.saveAll(
             listOf(
-                SectionEntity(
+                SectionDto(
                     term = "Spring 2026",
                     courseCode = "CMPE 195A",
                     sectionCode = "01",
@@ -44,7 +44,7 @@ class ScheduleDataAccessControllerTest {
                     dates = "01/20-05/20",
                     openSeats = 12
                 ),
-                SectionEntity(
+                SectionDto(
                     term = "Spring 2026",
                     courseCode = "CMPE 195A",
                     sectionCode = "02",
@@ -60,7 +60,7 @@ class ScheduleDataAccessControllerTest {
                     dates = "01/20-05/20",
                     openSeats = 0
                 ),
-                SectionEntity(
+                SectionDto(
                     term = "Spring 2026",
                     courseCode = "MATH 42",
                     sectionCode = "03",

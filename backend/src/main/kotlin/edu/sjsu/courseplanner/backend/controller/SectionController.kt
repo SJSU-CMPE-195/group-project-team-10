@@ -1,6 +1,6 @@
 package edu.sjsu.courseplanner.backend.controller
 
-import edu.sjsu.courseplanner.backend.model.SectionEntity
+import edu.sjsu.courseplanner.backend.dto.SectionDto
 import edu.sjsu.courseplanner.backend.service.SectionService
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
@@ -20,7 +20,7 @@ class SectionController(
     @GetMapping
     fun getSections(
         @RequestParam(required = false) term: String?
-    ): List<SectionEntity> {
+    ): List<SectionDto> {
         return if (term.isNullOrBlank()) {
             sectionService.getAllSections()
         } else {
