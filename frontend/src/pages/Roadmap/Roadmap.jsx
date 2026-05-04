@@ -4,10 +4,9 @@ import {ReactFlow, Background, Controls, MarkerType,applyEdgeChanges, applyNodeC
 import '@xyflow/react/dist/style.css'
 import {useRoadmap, useRoadmapDispatch} from '../../context/RoadmapContext'
 import {validateSemesterPlan} from '../../utils/prerequisiteValidator'
-import courses, {courseMap} from '../../data/courses'
-import prerequisites from '../../data/prerequisites'
 import CourseNode from '../../components/CourseNode/CourseNode'
 import ValidationAlert from '../../components/ValidationAlert/ValidationAlert'
+import { fetchRoadmapByMajor } from '../../api/roadmap'
 import './Roadmap.css'
 
 function SemesterNode({ data }) {
@@ -28,11 +27,10 @@ const COURSE_Y_OFFSET = (SEMESTER_ROW_HEIGHT - COURSE_CARD_HEIGHT) / 2
 const HEADER_WIDTH = 140
 const LEFT_PADDING = 40
 const TOP_PADDING = 40
-const COURSE_GAP = 40
 
 const getSemesterWidth = (sem) => {
   const courseCount = sem.courses.length
-  return HEADER_WIDTH + LEFT_PADDING + courseCount * COURSE_WIDTH + (courseCount - 1) * COURSE_GAP + 40
+  return HEADER_WIDTH + LEFT_PADDING + courseCount * COURSE_WIDTH + 40
 }
 
 const getSemesterFromY = (y, semesters) => {
@@ -42,7 +40,7 @@ const getSemesterFromY = (y, semesters) => {
 
 const getInsertIndexFromX = (x) => {
   const offsetX = x - (LEFT_PADDING + HEADER_WIDTH)
-  return Math.max(0, Math.round(offsetX / (COURSE_WIDTH + COURSE_GAP)))
+  return Math.max(0, Math.round(offsetX / COURSE_WIDTH))
 }
 
 const snapToRow = (y) => {
@@ -51,13 +49,10 @@ const snapToRow = (y) => {
 }
 
 const snapToColumn = (x) => {
-  const index = Math.max(
-  0, Math.round((x - (LEFT_PADDING + HEADER_WIDTH)) / (COURSE_WIDTH + COURSE_GAP))
-  )
-  return LEFT_PADDING + HEADER_WIDTH + index * (COURSE_WIDTH + COURSE_GAP)
+  return LEFT_PADDING + HEADER_WIDTH + getInsertIndexFromX(x) * COURSE_WIDTH
 }
 
-function buildNodesAndEdges(semesters, violations) {
+function buildNodesAndEdges(semesters, violations, courseMap, prerequisites) {
   const nodes = []
   const edges = []
   const coursePositions = new Map()
@@ -104,7 +99,7 @@ function buildNodesAndEdges(semesters, violations) {
         id: nodeId,
         type: 'course',
         position: {
-          x: LEFT_PADDING + HEADER_WIDTH + j * (COURSE_WIDTH + COURSE_GAP),
+          x: LEFT_PADDING + HEADER_WIDTH + j * COURSE_WIDTH,
           y: TOP_PADDING + i * SEMESTER_ROW_HEIGHT + COURSE_Y_OFFSET,
         },
         data: {
@@ -113,6 +108,7 @@ function buildNodesAndEdges(semesters, violations) {
           courseCode: course.courseCode,
           courseTitle: course.courseTitle,
           units: course.units,
+          requirementNames: course.requirementNames || [],
           status: sc.status,
           note: sc.note || "",
           hasIssue: issueTypes.length > 0,
@@ -172,52 +168,35 @@ function Roadmap() {
   const [addCourseId, setAddCourseId] = useState("")
   const [addCourseStatus, setAddCourseStatus] = useState("planned")
   const [hoverSemesterIndex, setHoverSemesterIndex] = useState(null)
-  const [selectedNodeId, setSelectedNodeId] = useState(null)
 
-  const { semesters, hasUnsavedChanges } = state
+  const {
+    semesters,
+    hasUnsavedChanges,
+    courses,
+    prerequisites,
+    majors,
+    majorInfo,
+    majorId,
+    isLoadingRoadmap,
+    roadmapError,
+  } = state
+  const courseMap = useMemo(() => new Map(courses.map(c => [c.courseId, c])), [courses])
   const violations = useMemo(
     () => validateSemesterPlan(semesters, prerequisites),
-    [semesters]
+    [semesters, prerequisites]
   )
 
   const [nodes, setNodes] = useState([])
   const [edges, setEdges] = useState([])
 
   const decoratedNodes = nodes.map(n => {
-    const isCourse = n.id.startsWith('course-')
-    const isSelected = isCourse && n.id === selectedNodeId
+    if (!n.id.startsWith('sem-')) return n
 
-    const semIndex = semesters.findIndex(
-      s => `sem-${s.semesterId}` === n.id
-    )
-
-    const isSemesterHovered =
-      hoverSemesterIndex === semIndex && n.id.startsWith('sem-')
+    const semIndex = semesters.findIndex(s => `sem-${s.semesterId}` === n.id)
 
     return {
       ...n,
-      className: [
-        isSemesterHovered ? 'semester-column-highlight' : '',
-        isSelected ? 'course-node--selected' : '',
-      ]
-        .filter(Boolean)
-        .join(' ')
-    }
-  })
-
-  const decoratedEdges = edges.map(e => {
-  const isConnected =
-    e.source === selectedNodeId ||
-    e.target === selectedNodeId
-
-    return {
-      ...e,
-      zIndex: isConnected ? 1000 : 0,
-      style: {
-        ...e.style,
-        strokeWidth: isConnected ? 4 : 2,
-        opacity: isConnected ? 1 : 0.3,
-      },
+      className: hoverSemesterIndex === semIndex ? 'semester-column-highlight' : ''
     }
   })
 
@@ -225,17 +204,31 @@ function Roadmap() {
     setNodes((nds) => applyNodeChanges(changes, nds))
   }
 
-  const onNodeClick = (_, node) => {
-    setSelectedNodeId(prev => (prev === node.id ? null : node.id))
-  }
-
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
-    const { nodes: newNodes, edges: newEdges } = buildNodesAndEdges(semesters, violations)
+    const { nodes: newNodes, edges: newEdges } = buildNodesAndEdges(semesters, violations, courseMap, prerequisites)
     setNodes(newNodes)
     setEdges(newEdges)
-  }, [semesters, violations])
+  }, [semesters, violations, courseMap, prerequisites])
   /* eslint-enable react-hooks/set-state-in-effect */
+
+  const handleMajorChange = async (event) => {
+    const nextMajorId = parseInt(event.target.value)
+    if (!nextMajorId || nextMajorId === majorId) return
+
+    if (hasUnsavedChanges) {
+      const discard = window.confirm("Changing majors will replace this roadmap. Press OK to continue.")
+      if (!discard) return
+    }
+
+    dispatch({ type: "SET_ROADMAP_LOADING" })
+    try {
+      const roadmap = await fetchRoadmapByMajor(nextMajorId)
+      dispatch({ type: "SET_ROADMAP_DATA", roadmap })
+    } catch (error) {
+      dispatch({ type: "SET_ROADMAP_ERROR", error: error.message })
+    }
+  }
 
   const onEdgesChange = (changes) => {
     setEdges((eds) => applyEdgeChanges(changes, eds))
@@ -254,29 +247,12 @@ function Roadmap() {
 
     const courseId = parseInt(node.id.replace('course-', ''))
     const targetSemester = getSemesterFromY(node.position.y || 0, semesters)
-    if (!targetSemester) return
-
-    const rawIndex = getInsertIndexFromX(node.position.x || 0)
-    const toIndex = Math.min(rawIndex, targetSemester.courses.length)
+    const toIndex = getInsertIndexFromX(node.position.x || 0)
 
     if (!targetSemester) return
 
-    const snappedY = snapToRow(node.position.y || 0)
-    const snappedX = snapToColumn(node.position.x || 0)
-
-    setNodes((nds) =>
-      nds.map((n) =>
-        n.id === node.id
-        ? {
-          ...n,
-          position: {
-            x: snappedX,
-            y: snappedY,
-          },
-        }
-      : n
-      )
-    )
+    node.position.y = snapToRow(node.position.y || 0)
+    node.position.x = snapToColumn(node.position.x || 0)
 
     dispatch({
       type: 'MOVE_COURSE',
@@ -353,14 +329,32 @@ function Roadmap() {
           &larr; Back
         </button>
 
-        <h2>Roadmap</h2>
+        <div className="roadmap-title-group">
+          <h2>Roadmap</h2>
+          <span>{majorInfo?.majorName || "Loading major..."}</span>
+        </div>
 
         <div className="roadmap-toolbar-actions">
-          <button onClick={openAddCourseModal} className="roadmap-btn">
+          <select
+            value={majorId}
+            onChange={handleMajorChange}
+            className="roadmap-select roadmap-major-select"
+            disabled={isLoadingRoadmap}
+            aria-label="Select major"
+          >
+            {!majorId && <option value="">Loading majors...</option>}
+            {majors.map(major => (
+              <option key={major.majorId} value={major.majorId}>
+                {major.majorName}
+              </option>
+            ))}
+          </select>
+
+          <button onClick={openAddCourseModal} className="roadmap-btn" disabled={!majorInfo}>
             Add Course
           </button>
 
-          <button onClick={handleAddGap} className="roadmap-btn">
+          <button onClick={handleAddGap} className="roadmap-btn" disabled={!majorInfo}>
             Add Gap Semester
           </button>
 
@@ -381,6 +375,18 @@ function Roadmap() {
           </button>
         </div>
       </div>
+
+      {roadmapError && (
+        <div className="roadmap-error">
+          {roadmapError}
+        </div>
+      )}
+
+      {isLoadingRoadmap && (
+        <div className="roadmap-loading">
+          Loading roadmap data...
+        </div>
+      )}
 
       {showAddCourseModal && (
         <div className="roadmap-modal-backdrop" onClick={closeAddCourseModal}>
@@ -451,24 +457,17 @@ function Roadmap() {
       <div className="roadmap-flow-container">
         <ReactFlow
           nodes={decoratedNodes}
-          edges={decoratedEdges}
+          edges={edges}
           nodeTypes={NODE_TYPES}
           onNodesChange={onNodesChange}
-          onNodeClick={onNodeClick}
-          onPaneClick={() => setSelectedNodeId(null)}
           onEdgesChange={onEdgesChange}
           onNodeDrag={onNodeDrag}
-          onNodeDragStop={onNodeDragStop}
-          onNodeDragStart={() => setSelectedNodeId(null)}
+          onNodeDragStop = {onNodeDragStop}
           fitView
           nodesDraggable={true}
           minZoom={0.3}
           maxZoom={1.5}
           proOptions={{ hideAttribution: true }}
-          selectionOnDrag={false}
-          nodesSelectable={false}
-          elementsSelectable={false}
-          selectNodesOnDrag={false}
         >
           <Background gap={20} size={1} />
           <Controls />
@@ -477,7 +476,7 @@ function Roadmap() {
 
       {violations.length > 0 && (
         <div className="roadmap-validation">
-          <ValidationAlert violations={violations} />
+              <ValidationAlert violations={violations} courseMap={courseMap} />
         </div>
       )}
     </div>

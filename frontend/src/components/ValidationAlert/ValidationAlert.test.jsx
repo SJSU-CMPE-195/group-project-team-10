@@ -3,6 +3,11 @@ import { describe, it, expect } from 'vitest'
 import ValidationAlert from './ValidationAlert'
 
 describe('ValidationAlert', () => {
+  const courseMap = new Map([
+    [4, { courseCode: "CMPE 120" }],
+    [8, { courseCode: "CMPE 126" }],
+  ])
+
   it('renders nothing when there are no violations', () => {
     const { container } = render(<ValidationAlert violations={[]} />)
     expect(container.innerHTML).toBe('')
@@ -20,7 +25,7 @@ describe('ValidationAlert', () => {
       missingPrereqId: 4,  // CMPE 120
       type: "prereq",
     }]
-    render(<ValidationAlert violations={violations} />)
+    render(<ValidationAlert violations={violations} courseMap={courseMap} />)
     expect(screen.getByText('1 prerequisite issue')).toBeDefined()
     expect(screen.getByText(/CMPE 126/)).toBeDefined()
     expect(screen.getByText(/CMPE 120/)).toBeDefined()

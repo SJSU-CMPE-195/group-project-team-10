@@ -1,12 +1,11 @@
-import { courseMap } from '../../data/courses'
 import './ValidationAlert.css'
 
-function getCourseName(courseId) {
+function getCourseName(courseId, courseMap) {
   const course = courseMap.get(courseId)
   return course ? course.courseCode : `Course ${courseId}`
 }
 
-function ValidationAlert({ violations }) {
+function ValidationAlert({ violations, courseMap = new Map() }) {
   if (!violations || violations.length === 0) return null
 
   return (
@@ -17,10 +16,10 @@ function ValidationAlert({ violations }) {
       <ul className="validation-alert-list">
         {violations.map((v, i) => (
           <li key={i}>
-            <strong>{getCourseName(v.courseId)}</strong>
+            <strong>{getCourseName(v.courseId, courseMap)}</strong>
             {v.type === "prereq"
-              ? ` must be planned after ${getCourseName(v.missingPrereqId)}`
-              : ` must be taken in the same semester as ${getCourseName(v.missingPrereqId)}`
+              ? ` must be planned after ${getCourseName(v.missingPrereqId, courseMap)}`
+              : ` must be taken in the same semester as ${getCourseName(v.missingPrereqId, courseMap)}`
             }
           </li>
         ))}

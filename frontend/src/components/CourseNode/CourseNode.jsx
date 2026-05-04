@@ -12,7 +12,18 @@ const STATUS_OPTIONS = [
 
 function CourseNode({ data, selected }) {
   const dispatch = useRoadmapDispatch()
-  const { courseId, semesterId, courseCode, courseTitle, units, status, note = "", hasIssue, issueTypes = [], } = data
+  const {
+    courseId,
+    semesterId,
+    courseCode,
+    courseTitle,
+    units,
+    status,
+    note = "",
+    hasIssue,
+    issueTypes = [],
+    requirementNames = [],
+  } = data
   const [showNoteModal, setShowNoteModal] = useState(false)
   const [draftNote, setDraftNote] = useState(note)
 
@@ -82,6 +93,14 @@ function CourseNode({ data, selected }) {
         </button>
       </div>
       <div className="course-node-title">{courseTitle}</div>
+
+      {requirementNames.length > 0 && (
+        <div className="course-node-requirements">
+          {requirementNames.slice(0, 2).map(name => (
+            <span key={name}>{name}</span>
+          ))}
+        </div>
+      )}
 
       {note && (
           <div className="course-node-note-row">

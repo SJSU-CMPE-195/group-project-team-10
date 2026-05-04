@@ -1,22 +1,31 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useReducer } from 'react'
-import sampleRoadmap from '../data/sampleRoadmap'
-import prerequisites from '../data/prerequisites'
+import { createContext, useContext, useEffect, useReducer } from 'react'
+import { fetchMajors, fetchRoadmapByMajor } from '../api/roadmap'
 import { getBlockedCourses } from '../utils/prerequisiteValidator'
 
 const RoadmapContext = createContext(null)
 const RoadmapDispatchContext = createContext(null)
 
-function buildInitialState() {
+function buildInitialState(initialState) {
+  if (initialState) return initialState
+
   return {
-    ...structuredClone(sampleRoadmap),
-    savedState: structuredClone(sampleRoadmap),
+    majorId: "",
+    semesters: [],
+    majors: [],
+    majorInfo: null,
+    courses: [],
+    prerequisites: [],
+    degreeRequirements: [],
+    isLoadingRoadmap: true,
+    roadmapError: "",
+    savedState: { majorId: "", semesters: [] },
     hasUnsavedChanges: false,
   }
 }
 
-function applyFailCascade(semesters, courseId) {
-  const blockedSet = new Set(getBlockedCourses(courseId, semesters, prerequisites))
+function applyFailCascade(semesters, courseId, prereqData = []) {
+  const blockedSet = new Set(getBlockedCourses(courseId, semesters, prereqData))
   return semesters.map(sem => ({
     ...sem,
     courses: sem.courses.map(c => {
@@ -41,7 +50,7 @@ export function roadmapReducer(state, action) {
     case "MARK_COURSE_FAILED": {
       return {
         ...state,
-        semesters: applyFailCascade(state.semesters, action.courseId),
+        semesters: applyFailCascade(state.semesters, action.courseId, state.prerequisites),
         hasUnsavedChanges: true,
       }
     }
@@ -57,9 +66,58 @@ export function roadmapReducer(state, action) {
     case "SET_COURSE_STATUS": {
       const { courseId, status } = action
       const newSemesters = status === "failed"
-        ? applyFailCascade(state.semesters, courseId)
+        ? applyFailCascade(state.semesters, courseId, state.prerequisites)
         : setCourseStatus(state.semesters, courseId, status)
       return { ...state, semesters: newSemesters, hasUnsavedChanges: true }
+    }
+
+    case "SET_ROADMAP_LOADING": {
+      return {
+        ...state,
+        isLoadingRoadmap: true,
+        roadmapError: "",
+      }
+    }
+
+    case "SET_ROADMAP_ERROR": {
+      return {
+        ...state,
+        isLoadingRoadmap: false,
+        roadmapError: action.error || "Unable to load roadmap data.",
+      }
+    }
+
+    case "SET_MAJORS": {
+      return {
+        ...state,
+        majors: action.majors,
+      }
+    }
+
+    case "SET_ROADMAP_DATA": {
+      const nextRoadmap = {
+        majorId: action.roadmap.major.majorId,
+        semesters: structuredClone(action.roadmap.semesters),
+      }
+
+      return {
+        ...state,
+        majorId: action.roadmap.major.majorId,
+        majorInfo: {
+          majorId: action.roadmap.major.majorId,
+          majorName: action.roadmap.major.majorName,
+          department: action.roadmap.major.department,
+          totalRequiredUnits: action.roadmap.major.totalRequiredUnits,
+        },
+        courses: structuredClone(action.roadmap.courses),
+        prerequisites: structuredClone(action.roadmap.prerequisites),
+        degreeRequirements: structuredClone(action.roadmap.degreeRequirements),
+        semesters: structuredClone(action.roadmap.semesters),
+        savedState: nextRoadmap,
+        hasUnsavedChanges: false,
+        isLoadingRoadmap: false,
+        roadmapError: "",
+      }
     }
 
     case "ADD_GAP_SEMESTER": {
@@ -206,7 +264,12 @@ export function roadmapReducer(state, action) {
     }
 
     case "RESET_ROADMAP": {
-      return buildInitialState()
+      return {
+        ...state,
+        majorId: state.savedState.majorId,
+        semesters: structuredClone(state.savedState.semesters),
+        hasUnsavedChanges: false,
+      }
     }
 
     default:
@@ -214,8 +277,48 @@ export function roadmapReducer(state, action) {
   }
 }
 
-export function RoadmapProvider({ children }) {
-  const [state, dispatch] = useReducer(roadmapReducer, null, buildInitialState)
+export function RoadmapProvider({ children, initialState, disableAutoLoad = false }) {
+  const [state, dispatch] = useReducer(roadmapReducer, initialState, buildInitialState)
+
+  useEffect(() => {
+    if (disableAutoLoad) return undefined
+
+    let cancelled = false
+
+    async function loadInitialRoadmap() {
+      dispatch({ type: "SET_ROADMAP_LOADING" })
+
+      try {
+        const loadedMajors = await fetchMajors()
+        if (cancelled) return
+
+        dispatch({ type: "SET_MAJORS", majors: loadedMajors })
+
+        const firstMajorId = loadedMajors[0]?.majorId
+        if (!firstMajorId) {
+          dispatch({
+            type: "SET_ROADMAP_ERROR",
+            error: "No imported majors were found in the database.",
+          })
+          return
+        }
+
+        const roadmap = await fetchRoadmapByMajor(firstMajorId)
+        if (!cancelled) {
+          dispatch({ type: "SET_ROADMAP_DATA", roadmap })
+        }
+      } catch (error) {
+        if (!cancelled) {
+          dispatch({ type: "SET_ROADMAP_ERROR", error: error.message })
+        }
+      }
+    }
+
+    loadInitialRoadmap()
+    return () => {
+      cancelled = true
+    }
+  }, [disableAutoLoad])
 
   return (
     <RoadmapContext.Provider value={state}>
