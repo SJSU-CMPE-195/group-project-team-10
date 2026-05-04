@@ -1,0 +1,151 @@
+.schedule-page {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.schedule-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.schedule-header h2 {
+  margin: 0;
+}
+
+.schedule-header p {
+  margin: 6px 0 0;
+  color: var(--text);
+}
+
+.schedule-clear-button {
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  color: var(--text-h);
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.schedule-empty {
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 24px;
+  color: var(--text);
+}
+
+.schedule-grid {
+  display: grid;
+  grid-template-columns: 72px repeat(5, 1fr);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--card-bg);
+}
+
+.schedule-time-column,
+.schedule-day-column {
+  border-right: 1px solid var(--border);
+}
+
+.schedule-day-column:last-child {
+  border-right: none;
+}
+
+.schedule-day-header,
+.schedule-day-header-spacer {
+  height: 44px;
+  border-bottom: 1px solid var(--border);
+}
+
+.schedule-day-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-h);
+  font-weight: 600;
+}
+
+.schedule-time-label {
+  height: 60px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  font-size: 12px;
+  padding: 6px;
+  box-sizing: border-box;
+}
+
+.schedule-day-body {
+  position: relative;
+  height: 900px;
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 59px,
+      var(--border) 60px
+    );
+}
+
+.schedule-block {
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  border-radius: 10px;
+  padding: 8px;
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  color: var(--text-h);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 12px;
+}
+
+.schedule-block strong {
+  font-size: 13px;
+}
+
+.schedule-block button {
+  margin-top: 4px;
+  border: none;
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+  font-size: 12px;
+}
+
+.unscheduled-section-list {
+  margin-top: 20px;
+}
+
+.unscheduled-section-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 10px;
+}
+
+.unscheduled-section-card p {
+  margin: 4px 0 0;
+  color: var(--text);
+}
+
+.unscheduled-section-card button {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-h);
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+}

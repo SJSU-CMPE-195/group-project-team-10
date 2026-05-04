@@ -81,6 +81,8 @@ class SecurityConfig(
                     .requestMatchers(HttpMethod.GET, "/api/auth/csrf").permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login", "/api/auth/logout").permitAll()
                     .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/auth/me").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/roadmaps/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/scrape/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/schedule-data/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/db/**").permitAll()

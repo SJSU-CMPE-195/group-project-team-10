@@ -1,6 +1,7 @@
 import { render } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { RoadmapProvider } from './context/RoadmapContext'
+import { ScheduleProvider } from './context/ScheduleContext'
 import sampleRoadmap from './data/sampleRoadmap'
 import prerequisites from './data/prerequisites'
 import courses from './data/courses'
@@ -24,7 +25,11 @@ function buildTestRoadmapState() {
 export function renderWithProviders(ui, { route = '/', roadmapState = buildTestRoadmapState() } = {}) {
   return render(
     <MemoryRouter initialEntries={[route]}>
-      <RoadmapProvider initialState={roadmapState} disableAutoLoad>{ui}</RoadmapProvider>
+      <RoadmapProvider initialState={roadmapState} disableAutoLoad>
+        <ScheduleProvider>
+          {ui}
+        </ScheduleProvider>
+      </RoadmapProvider>
     </MemoryRouter>
   )
 }
