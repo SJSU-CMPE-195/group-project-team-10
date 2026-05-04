@@ -149,3 +149,27 @@
   padding: 6px 10px;
   cursor: pointer;
 }
+.schedule-actions {
+  display: flex;
+  align-items: end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.schedule-term-select-label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.schedule-term-select {
+  min-width: 160px;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  color: var(--text-h);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-family: var(--sans);
+}

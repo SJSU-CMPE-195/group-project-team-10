@@ -69,7 +69,7 @@ function CourseCard({ course, prereqs, sections = [] }) {
           {showSections && (
             <div className="course-card-sections">
               {sections.map(section => {
-                const selected = isSelected(section.id)
+                const selected = isSelected(section.id, section.term)
 
                 return (
                   <div key={section.id} className="course-section-row">
@@ -88,7 +88,7 @@ function CourseCard({ course, prereqs, sections = [] }) {
                     <button
                       type="button"
                       className={selected ? 'section-remove-button' : 'section-add-button'}
-                      onClick={() => selected ? removeSection(section.id) : addSection(section)}
+                      onClick={() => selected ? removeSection(section.id, section.term) : addSection(section)}
                     >
                       {selected ? 'Remove' : 'Add'}
                     </button>

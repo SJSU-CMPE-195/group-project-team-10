@@ -58,7 +58,14 @@ function formatMinutes(minutes) {
 }
 
 function Schedule() {
-  const { selectedSections, removeSection, clearSchedule } = useSchedule()
+  const {
+    activeTerm,
+    setActiveTerm,
+    availableTerms,
+    selectedSections,
+    removeSection,
+    clearSchedule,
+  } = useSchedule()
 
   const scheduledBlocks = useMemo(() => {
     return selectedSections.flatMap(section => {
@@ -92,16 +99,37 @@ function Schedule() {
           <p>{selectedSections.length} selected section{selectedSections.length === 1 ? '' : 's'}</p>
         </div>
 
-        {selectedSections.length > 0 && (
-          <button type="button" className="schedule-clear-button" onClick={clearSchedule}>
-            Clear schedule
-          </button>
-        )}
+        <div className="schedule-actions">
+          <label className="schedule-term-select-label">
+            Semester
+            <select
+              className="schedule-term-select"
+              value={activeTerm}
+              onChange={(event) => setActiveTerm(event.target.value)}
+            >
+              {availableTerms.map(term => (
+                <option key={term} value={term}>
+                  {term}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          {selectedSections.length > 0 && (
+            <button
+              type="button"
+              className="schedule-clear-button"
+              onClick={() => clearSchedule(activeTerm)}
+            >
+              Clear schedule
+            </button>
+          )}
+        </div>
       </div>
 
       {selectedSections.length === 0 ? (
         <div className="schedule-empty">
-          Add sections from the Catalog to build your weekly schedule.
+          Add sections from the Catalog to build your {activeTerm} weekly schedule.
         </div>
       ) : (
         <>
@@ -141,7 +169,7 @@ function Schedule() {
                           <strong>{block.courseCode}</strong>
                           <span>{block.times}</span>
                           <span>{block.location}</span>
-                          <button type="button" onClick={() => removeSection(block.id)}>
+                          <button type="button" onClick={() => removeSection(block.id, activeTerm)}>
                             Remove
                           </button>
                         </div>
@@ -161,7 +189,7 @@ function Schedule() {
                     <strong>{section.courseCode}</strong> · Section {section.sectionCode}
                     <p>{section.days || 'TBA'} · {section.times || 'TBA'} · {section.location}</p>
                   </div>
-                  <button type="button" onClick={() => removeSection(section.id)}>
+                  <button type="button" onClick={() => removeSection(section.id, activeTerm)}>
                     Remove
                   </button>
                 </div>
