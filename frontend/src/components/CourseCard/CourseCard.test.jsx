@@ -2,25 +2,28 @@ import { render, screen } from '@testing-library/react'
 import { describe, it, expect } from 'vitest'
 import CourseCard from './CourseCard'
 import { ScheduleProvider } from '../../context/ScheduleContext'
+import { RoadmapProvider } from '../../context/RoadmapContext'
 
 const mockCourse = {
   courseId: 4,
-  courseCode: "CMPE 120",
-  courseTitle: "Computer Organization and Architecture",
-  description: "Introduction to computer organization, digital logic, and processor design.",
+  courseCode: 'CMPE 120',
+  courseTitle: 'Computer Organization and Architecture',
+  description: 'Introduction to computer organization, digital logic, and processor design.',
   units: 3,
-  department: "CMPE",
+  department: 'CMPE',
 }
 
 const mockPrereqs = [
-  { courseId: 4, prereqCourseId: 2, prereqType: "prereq" },
+  { courseId: 4, prereqCourseId: 2, prereqType: 'prereq' },
 ]
 
 function renderCourseCard(ui) {
   return render(
-    <ScheduleProvider>
-      {ui}
-    </ScheduleProvider>
+    <RoadmapProvider>
+      <ScheduleProvider>
+        {ui}
+      </ScheduleProvider>
+    </RoadmapProvider>
   )
 }
 
