@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useRoadmap } from '../../context/RoadmapContext'
+import { useRoadmap, useRoadmapDispatch } from '../../context/RoadmapContext'
 import { useSchedule } from '../../context/useSchedule'
 import { fetchSections } from '../../api/sections'
 import './Schedule.css'
@@ -28,6 +28,7 @@ function parseDays(days) {
   for (const char of days.replace(/\s/g, '')) {
     if (DAYS.includes(char)) result.push(char)
   }
+
   return result
 }
 
@@ -64,11 +65,14 @@ function formatMinutes(minutes) {
   const minute = minutes % 60
   const period = hour24 >= 12 ? 'PM' : 'AM'
   const hour12 = hour24 % 12 || 12
+
   return `${hour12}:${String(minute).padStart(2, '0')} ${period}`
 }
 
 function Schedule() {
   const roadmapState = useRoadmap()
+  const roadmapDispatch = useRoadmapDispatch()
+  const [applyResult, setApplyResult] = useState(null)
 
   const {
     activeTerm,
@@ -177,6 +181,79 @@ function Schedule() {
   const totalHours = CALENDAR_END_HOUR - CALENDAR_START_HOUR
   const calendarHeight = totalHours * HOUR_HEIGHT
 
+  function getCourseForSelectedSection(section) {
+    if (section.courseId) {
+      const existingCourse = roadmapState.courses.find(
+        course => course.courseId === section.courseId
+      )
+
+      if (existingCourse) return existingCourse
+
+      return {
+        courseId: section.courseId,
+        courseCode: section.courseCode,
+        courseTitle: section.courseTitle || section.title || section.courseCode,
+        units: section.units || 0,
+        department: section.department || section.courseCode?.split(' ')[0] || '',
+        description: section.description || '',
+      }
+    }
+
+    return roadmapState.courses.find(
+      course => course.courseCode?.toLowerCase() === section.courseCode?.toLowerCase()
+    )
+  }
+
+  function handleApplyScheduleToRoadmap() {
+    const uniqueCoursesById = new Map()
+    const unmatchedSections = []
+
+    for (const section of selectedSections) {
+      const course = getCourseForSelectedSection(section)
+
+      if (!course?.courseId) {
+        unmatchedSections.push(section)
+        continue
+      }
+
+      if (!uniqueCoursesById.has(course.courseId)) {
+        uniqueCoursesById.set(course.courseId, course)
+      }
+    }
+
+    const targetSemester = roadmapState.semesters.find(
+      semester => normalizeTerm(semester.term) === normalizeTerm(activeTerm)
+    )
+
+    const existingRoadmapCourseIds = new Set(
+      targetSemester?.courses.map(course => course.courseId) || []
+    )
+
+    const matchedCourses = Array.from(uniqueCoursesById.values())
+
+    const addedCourses = matchedCourses.filter(
+      course => !existingRoadmapCourseIds.has(course.courseId)
+    )
+
+    const skippedCourses = matchedCourses.filter(
+      course => existingRoadmapCourseIds.has(course.courseId)
+    )
+
+    if (addedCourses.length > 0) {
+      roadmapDispatch({
+        type: 'APPLY_SCHEDULE_TO_ROADMAP',
+        term: activeTerm,
+        courses: addedCourses,
+      })
+    }
+
+    setApplyResult({
+      addedCourses,
+      skippedCourses,
+      unmatchedSections,
+    })
+  }
+
   const roadmapPanel = (
     <section className="roadmap-schedule-panel">
       <div className="roadmap-schedule-panel-header">
@@ -242,7 +319,14 @@ function Schedule() {
                       }
 
                       if (!isSelected(section.id, section.term)) {
-                        addSection(section)
+                        addSection({
+                          ...section,
+                          courseId: course.courseId,
+                          courseTitle: course.courseTitle,
+                          units: course.units,
+                          department: course.department,
+                          description: course.description,
+                        })
                       }
                     }}
                   >
@@ -299,16 +383,88 @@ function Schedule() {
           </label>
 
           {selectedSections.length > 0 && (
-            <button
-              type="button"
-              className="schedule-clear-button"
-              onClick={() => clearSchedule(activeTerm)}
-            >
-              Clear schedule
-            </button>
+            <>
+              <button
+                type="button"
+                className="schedule-apply-button"
+                onClick={handleApplyScheduleToRoadmap}
+              >
+                Apply schedule to roadmap
+              </button>
+
+              <button
+                type="button"
+                className="schedule-clear-button"
+                onClick={() => clearSchedule(activeTerm)}
+              >
+                Clear schedule
+              </button>
+            </>
           )}
         </div>
       </div>
+
+      {applyResult && (
+        <div className="schedule-apply-result">
+          <div className="schedule-apply-result-header">
+            <h3>Schedule applied to roadmap</h3>
+            <button type="button" onClick={() => setApplyResult(null)}>
+              ×
+            </button>
+          </div>
+
+          {applyResult.addedCourses.length > 0 && (
+            <div>
+              <strong>Added to {activeTerm}:</strong>
+              <ul>
+                {applyResult.addedCourses.map(course => (
+                  <li key={course.courseId}>
+                    {course.courseCode} — {course.courseTitle}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {applyResult.skippedCourses.length > 0 && (
+            <div>
+              <strong>Already in this roadmap semester:</strong>
+              <ul>
+                {applyResult.skippedCourses.map(course => (
+                  <li key={course.courseId}>
+                    {course.courseCode} — {course.courseTitle}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {applyResult.unmatchedSections.length > 0 && (
+            <div>
+              <strong>Could not match:</strong>
+              <ul>
+                {applyResult.unmatchedSections.map(section => (
+                  <li key={section.id}>
+                    {section.courseCode}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {applyResult.addedCourses.length === 0 &&
+            applyResult.skippedCourses.length === 0 &&
+            applyResult.unmatchedSections.length === 0 && (
+              <p>No selected sections were found.</p>
+            )}
+
+          {applyResult.addedCourses.length > 0 && (
+            <p className="schedule-apply-note">
+              Go to Roadmap and click Save Changes to persist this update.
+            </p>
+          )}
+        </div>
+      )}
 
       {selectedSections.length === 0 ? (
         <div className="schedule-empty">
@@ -321,6 +477,7 @@ function Schedule() {
               <div className="schedule-day-header-spacer" />
               {Array.from({ length: totalHours }, (_, index) => {
                 const minutes = minTime + index * 60
+
                 return (
                   <div
                     key={minutes}

@@ -106,6 +106,17 @@ function CourseCard({ course, prereqs, sections = [] }) {
     return c ? c.courseCode : `Course ${p.prereqCourseId}`
   })
 
+  function buildScheduledSection(section) {
+    return {
+      ...section,
+      courseId: course.courseId,
+      courseTitle: course.courseTitle,
+      units: course.units,
+      department: course.department,
+      description: course.description,
+    }
+  }
+
   function addSectionWithoutPrereqCheck(section) {
     const result = addSection(section)
 
@@ -118,11 +129,12 @@ function CourseCard({ course, prereqs, sections = [] }) {
   }
 
   function handleAddSection(section) {
-    const conflict = findConflict(section, section.term)
+    const scheduledSection = buildScheduledSection(section)
+    const conflict = findConflict(scheduledSection, scheduledSection.term)
 
     if (conflict) {
       setConflictModal({
-        section,
+        section: scheduledSection,
         conflict,
       })
       return
@@ -130,19 +142,19 @@ function CourseCard({ course, prereqs, sections = [] }) {
 
     const warnings = getPrereqWarnings({
       course,
-      section,
+      section: scheduledSection,
       roadmapState,
     })
 
     if (warnings.length > 0) {
       setPrereqModal({
-        section,
+        section: scheduledSection,
         warnings,
       })
       return
     }
 
-    addSectionWithoutPrereqCheck(section)
+    addSectionWithoutPrereqCheck(scheduledSection)
   }
 
   function closeConflictModal() {
