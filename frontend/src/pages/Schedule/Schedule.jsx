@@ -1,5 +1,7 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useRoadmap, useRoadmapDispatch } from '../../context/RoadmapContext'
 import { useSchedule } from '../../context/useSchedule'
+import { fetchSections } from '../../api/sections'
 import './Schedule.css'
 
 const DAYS = ['M', 'T', 'W', 'R', 'F']
@@ -11,6 +13,14 @@ const DAY_LABELS = {
   F: 'Friday',
 }
 
+const CALENDAR_START_HOUR = 8
+const CALENDAR_END_HOUR = 22
+const HOUR_HEIGHT = 64
+
+function normalizeTerm(term) {
+  return (term || '').trim().toLowerCase()
+}
+
 function parseDays(days) {
   if (!days || days.includes('TBA')) return []
 
@@ -18,6 +28,7 @@ function parseDays(days) {
   for (const char of days.replace(/\s/g, '')) {
     if (DAYS.includes(char)) result.push(char)
   }
+
   return result
 }
 
@@ -54,18 +65,96 @@ function formatMinutes(minutes) {
   const minute = minutes % 60
   const period = hour24 >= 12 ? 'PM' : 'AM'
   const hour12 = hour24 % 12 || 12
+
   return `${hour12}:${String(minute).padStart(2, '0')} ${period}`
 }
 
 function Schedule() {
+  const roadmapState = useRoadmap()
+  const roadmapDispatch = useRoadmapDispatch()
+  const [applyResult, setApplyResult] = useState(null)
+
   const {
     activeTerm,
     setActiveTerm,
     availableTerms,
     selectedSections,
+    addSection,
     removeSection,
     clearSchedule,
+    isSelected,
+    findConflict,
   } = useSchedule()
+
+  const [sections, setSections] = useState([])
+  const [sectionsLoading, setSectionsLoading] = useState(false)
+  const [sectionsError, setSectionsError] = useState('')
+
+  useEffect(() => {
+    if (!activeTerm) return undefined
+
+    let cancelled = false
+
+    async function loadSectionsForTerm() {
+      setSectionsLoading(true)
+      setSectionsError('')
+
+      try {
+        const nextSections = await fetchSections(activeTerm)
+        if (!cancelled) {
+          setSections(nextSections)
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setSections([])
+          setSectionsError(error.message || 'Failed to load sections')
+        }
+      } finally {
+        if (!cancelled) {
+          setSectionsLoading(false)
+        }
+      }
+    }
+
+    loadSectionsForTerm()
+
+    return () => {
+      cancelled = true
+    }
+  }, [activeTerm])
+
+  const roadmapCoursesForTerm = useMemo(() => {
+    const semester = roadmapState.semesters.find(
+      sem => normalizeTerm(sem.term) === normalizeTerm(activeTerm)
+    )
+
+    if (!semester) return []
+
+    return semester.courses
+      .map(plannedCourse => {
+        const course = roadmapState.courses.find(
+          item => item.courseId === plannedCourse.courseId
+        )
+
+        if (!course) return null
+
+        return {
+          ...course,
+          roadmapStatus: plannedCourse.status,
+          roadmapNote: plannedCourse.note,
+        }
+      })
+      .filter(Boolean)
+  }, [roadmapState.semesters, roadmapState.courses, activeTerm])
+
+  const sectionsByCourseCode = useMemo(() => {
+    return sections.reduce((map, section) => {
+      const key = section.courseCode
+      if (!map[key]) map[key] = []
+      map[key].push(section)
+      return map
+    }, {})
+  }, [sections])
 
   const scheduledBlocks = useMemo(() => {
     return selectedSections.flatMap(section => {
@@ -87,16 +176,194 @@ function Schedule() {
     return parseDays(section.days).length === 0 || !parseTimeRange(section.times)
   })
 
-  const minTime = 8 * 60
-  const maxTime = 22 * 60
-  const totalMinutes = maxTime - minTime
+  const minTime = CALENDAR_START_HOUR * 60
+  const maxTime = CALENDAR_END_HOUR * 60
+  const totalHours = CALENDAR_END_HOUR - CALENDAR_START_HOUR
+  const calendarHeight = totalHours * HOUR_HEIGHT
+
+  function getCourseForSelectedSection(section) {
+    if (section.courseId) {
+      const existingCourse = roadmapState.courses.find(
+        course => course.courseId === section.courseId
+      )
+
+      if (existingCourse) return existingCourse
+
+      return {
+        courseId: section.courseId,
+        courseCode: section.courseCode,
+        courseTitle: section.courseTitle || section.title || section.courseCode,
+        units: section.units || 0,
+        department: section.department || section.courseCode?.split(' ')[0] || '',
+        description: section.description || '',
+      }
+    }
+
+    return roadmapState.courses.find(
+      course => course.courseCode?.toLowerCase() === section.courseCode?.toLowerCase()
+    )
+  }
+
+  function handleApplyScheduleToRoadmap() {
+    const uniqueCoursesById = new Map()
+    const unmatchedSections = []
+
+    for (const section of selectedSections) {
+      const course = getCourseForSelectedSection(section)
+
+      if (!course?.courseId) {
+        unmatchedSections.push(section)
+        continue
+      }
+
+      if (!uniqueCoursesById.has(course.courseId)) {
+        uniqueCoursesById.set(course.courseId, course)
+      }
+    }
+
+    const targetSemester = roadmapState.semesters.find(
+      semester => normalizeTerm(semester.term) === normalizeTerm(activeTerm)
+    )
+
+    const existingRoadmapCourseIds = new Set(
+      targetSemester?.courses.map(course => course.courseId) || []
+    )
+
+    const matchedCourses = Array.from(uniqueCoursesById.values())
+
+    const addedCourses = matchedCourses.filter(
+      course => !existingRoadmapCourseIds.has(course.courseId)
+    )
+
+    const skippedCourses = matchedCourses.filter(
+      course => existingRoadmapCourseIds.has(course.courseId)
+    )
+
+    if (addedCourses.length > 0) {
+      roadmapDispatch({
+        type: 'APPLY_SCHEDULE_TO_ROADMAP',
+        term: activeTerm,
+        courses: addedCourses,
+      })
+    }
+
+    setApplyResult({
+      addedCourses,
+      skippedCourses,
+      unmatchedSections,
+    })
+  }
+
+  const roadmapPanel = (
+    <section className="roadmap-schedule-panel">
+      <div className="roadmap-schedule-panel-header">
+        <div>
+          <h3>Roadmap courses for {activeTerm}</h3>
+          <p>Choose sections for the courses planned in your roadmap.</p>
+        </div>
+      </div>
+
+      {sectionsError && (
+        <div className="schedule-inline-error">{sectionsError}</div>
+      )}
+
+      {roadmapState.isLoadingRoadmap ? (
+        <div className="schedule-empty">Loading roadmap courses...</div>
+      ) : roadmapCoursesForTerm.length === 0 ? (
+        <div className="schedule-empty">
+          No courses are planned in Roadmap for {activeTerm}.
+        </div>
+      ) : (
+        <div className="roadmap-course-section-list">
+          {roadmapCoursesForTerm.map(course => {
+            const courseSections = sectionsByCourseCode[course.courseCode] || []
+            const selectedForCourse = selectedSections.find(
+              section => section.courseCode === course.courseCode
+            )
+
+            return (
+              <div key={course.courseId} className="roadmap-course-section-card">
+                <div className="roadmap-course-section-info">
+                  <strong>{course.courseCode}</strong>
+                  <span>{course.courseTitle}</span>
+                  {selectedForCourse && (
+                    <small>
+                      Selected: Section {selectedForCourse.sectionCode} · {selectedForCourse.days || 'TBA'} · {selectedForCourse.times || 'TBA'}
+                    </small>
+                  )}
+                </div>
+
+                {sectionsLoading ? (
+                  <span className="schedule-section-loading">Loading sections...</span>
+                ) : courseSections.length === 0 ? (
+                  <span className="schedule-section-unavailable">No sections found</span>
+                ) : (
+                  <select
+                    className="roadmap-section-select"
+                    value={selectedForCourse?.id || ''}
+                    onChange={(event) => {
+                      const sectionId = Number(event.target.value)
+
+                      if (!sectionId) {
+                        if (selectedForCourse) {
+                          removeSection(selectedForCourse.id, activeTerm)
+                        }
+                        return
+                      }
+
+                      const section = courseSections.find(item => item.id === sectionId)
+                      if (!section) return
+
+                      if (selectedForCourse && selectedForCourse.id !== section.id) {
+                        removeSection(selectedForCourse.id, activeTerm)
+                      }
+
+                      if (!isSelected(section.id, section.term)) {
+                        addSection({
+                          ...section,
+                          courseId: course.courseId,
+                          courseTitle: course.courseTitle,
+                          units: course.units,
+                          department: course.department,
+                          description: course.description,
+                        })
+                      }
+                    }}
+                  >
+                    <option value="">Choose section</option>
+                    {courseSections.map(section => {
+                      const conflict = findConflict(section, activeTerm)
+
+                      return (
+                        <option
+                          key={section.id}
+                          value={section.id}
+                          disabled={Boolean(conflict)}
+                        >
+                          {section.sectionCode} · {section.days || 'TBA'} · {section.times || 'TBA'} · {section.location || 'TBA'}
+                          {conflict ? ` — conflicts with ${conflict.courseCode}` : ''}
+                        </option>
+                      )
+                    })}
+                  </select>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </section>
+  )
 
   return (
     <div className="schedule-page">
       <div className="schedule-header">
         <div>
           <h2>Weekly Schedule</h2>
-          <p>{selectedSections.length} selected section{selectedSections.length === 1 ? '' : 's'}</p>
+          <p>
+            {selectedSections.length} selected section
+            {selectedSections.length === 1 ? '' : 's'}
+          </p>
         </div>
 
         <div className="schedule-actions">
@@ -116,30 +383,107 @@ function Schedule() {
           </label>
 
           {selectedSections.length > 0 && (
-            <button
-              type="button"
-              className="schedule-clear-button"
-              onClick={() => clearSchedule(activeTerm)}
-            >
-              Clear schedule
-            </button>
+            <>
+              <button
+                type="button"
+                className="schedule-apply-button"
+                onClick={handleApplyScheduleToRoadmap}
+              >
+                Apply schedule to roadmap
+              </button>
+
+              <button
+                type="button"
+                className="schedule-clear-button"
+                onClick={() => clearSchedule(activeTerm)}
+              >
+                Clear schedule
+              </button>
+            </>
           )}
         </div>
       </div>
 
+      {applyResult && (
+        <div className="schedule-apply-result">
+          <div className="schedule-apply-result-header">
+            <h3>Schedule applied to roadmap</h3>
+            <button type="button" onClick={() => setApplyResult(null)}>
+              ×
+            </button>
+          </div>
+
+          {applyResult.addedCourses.length > 0 && (
+            <div>
+              <strong>Added to {activeTerm}:</strong>
+              <ul>
+                {applyResult.addedCourses.map(course => (
+                  <li key={course.courseId}>
+                    {course.courseCode} — {course.courseTitle}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {applyResult.skippedCourses.length > 0 && (
+            <div>
+              <strong>Already in this roadmap semester:</strong>
+              <ul>
+                {applyResult.skippedCourses.map(course => (
+                  <li key={course.courseId}>
+                    {course.courseCode} — {course.courseTitle}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {applyResult.unmatchedSections.length > 0 && (
+            <div>
+              <strong>Could not match:</strong>
+              <ul>
+                {applyResult.unmatchedSections.map(section => (
+                  <li key={section.id}>
+                    {section.courseCode}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {applyResult.addedCourses.length === 0 &&
+            applyResult.skippedCourses.length === 0 &&
+            applyResult.unmatchedSections.length === 0 && (
+              <p>No selected sections were found.</p>
+            )}
+
+          {applyResult.addedCourses.length > 0 && (
+            <p className="schedule-apply-note">
+              Go to Roadmap and click Save Changes to persist this update.
+            </p>
+          )}
+        </div>
+      )}
+
       {selectedSections.length === 0 ? (
         <div className="schedule-empty">
-          Add sections from the Catalog to build your {activeTerm} weekly schedule.
+          Choose sections below to build your {activeTerm} weekly schedule.
         </div>
       ) : (
         <>
           <div className="schedule-grid">
             <div className="schedule-time-column">
               <div className="schedule-day-header-spacer" />
-              {Array.from({ length: 15 }, (_, index) => {
+              {Array.from({ length: totalHours }, (_, index) => {
                 const minutes = minTime + index * 60
+
                 return (
-                  <div key={minutes} className="schedule-time-label">
+                  <div
+                    key={minutes}
+                    className="schedule-time-label"
+                    style={{ height: `${HOUR_HEIGHT}px` }}
+                  >
                     {formatMinutes(minutes)}
                   </div>
                 )
@@ -150,28 +494,37 @@ function Schedule() {
               <div key={day} className="schedule-day-column">
                 <div className="schedule-day-header">{DAY_LABELS[day]}</div>
 
-                <div className="schedule-day-body">
+                <div
+                  className="schedule-day-body"
+                  style={{ height: `${calendarHeight}px` }}
+                >
                   {scheduledBlocks
                     .filter(block => block.day === day)
+                    .filter(block => block.end > minTime && block.start < maxTime)
                     .map(block => {
-                      const top = ((block.start - minTime) / totalMinutes) * 100
-                      const height = ((block.end - block.start) / totalMinutes) * 100
+                      const top = ((Math.max(block.start, minTime) - minTime) / 60) * HOUR_HEIGHT
+                      const height = ((Math.min(block.end, maxTime) - Math.max(block.start, minTime)) / 60) * HOUR_HEIGHT
 
                       return (
                         <div
                           key={`${block.id}-${day}`}
                           className="schedule-block"
                           style={{
-                            top: `${Math.max(0, top)}%`,
-                            height: `${Math.max(5, height)}%`,
+                            top: `${top}px`,
+                            height: `${Math.max(52, height)}px`,
                           }}
                         >
+                          <button
+                            type="button"
+                            className="schedule-block-remove"
+                            onClick={() => removeSection(block.id, activeTerm)}
+                            aria-label={`Remove ${block.courseCode}`}
+                          >
+                            ×
+                          </button>
                           <strong>{block.courseCode}</strong>
                           <span>{block.times}</span>
                           <span>{block.location}</span>
-                          <button type="button" onClick={() => removeSection(block.id, activeTerm)}>
-                            Remove
-                          </button>
                         </div>
                       )
                     })}
@@ -198,6 +551,8 @@ function Schedule() {
           )}
         </>
       )}
+
+      {roadmapPanel}
     </div>
   )
 }
