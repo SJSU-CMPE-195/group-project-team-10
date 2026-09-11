@@ -1,13 +1,9 @@
 import { useEffect, useState } from 'react'
 import { ScheduleContext } from './scheduleContextObject'
+import { fetchCatalogTerms } from '../api/catalog'
 
 const STORAGE_KEY = 'coursePlanner.schedulesByTerm'
 const ACTIVE_TERM_KEY = 'coursePlanner.activeScheduleTerm'
-const DEFAULT_TERM = 'spring 2026'
-
-function normalizeTerm(term) {
-  return term || DEFAULT_TERM
-}
 
 function parseDays(days = '') {
   if (!days || days.includes('TBA')) return []
@@ -70,20 +66,46 @@ export function ScheduleProvider({ children }) {
   })
 
   const [activeTerm, setActiveTerm] = useState(() => {
-    return localStorage.getItem(ACTIVE_TERM_KEY) || DEFAULT_TERM
+    return localStorage.getItem(ACTIVE_TERM_KEY) || ''
   })
 
+  const [apiTerms, setApiTerms] = useState([])
   const [scheduleError, setScheduleError] = useState('')
+
+  // uses terms from imported data from the api for dropdown terms
+  useEffect(() => {
+    let cancelled = false
+
+    fetchCatalogTerms()
+      .then(terms => {
+        if (!cancelled) setApiTerms(Array.isArray(terms) ? terms : [])
+      })
+      .catch(() => {
+        if (!cancelled) setApiTerms([])
+      })
+
+    return () => { cancelled = true }
+  }, [])
+
+  const availableTerms = Array.from(
+    new Set([...apiTerms, ...Object.keys(schedulesByTerm)])
+  )
+
+  // unknown saved term falls back to a real term
+  // instead of leaving an empty schedule
+  const resolvedTerm = availableTerms.includes(activeTerm) ? activeTerm : (availableTerms[0] || '')
+
+  const normalizeTerm = (term) => term || resolvedTerm
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(schedulesByTerm))
   }, [schedulesByTerm])
 
   useEffect(() => {
-    localStorage.setItem(ACTIVE_TERM_KEY, activeTerm)
-  }, [activeTerm])
+    if (resolvedTerm) localStorage.setItem(ACTIVE_TERM_KEY, resolvedTerm)
+  }, [resolvedTerm])
 
-  const selectedSections = schedulesByTerm[activeTerm] || []
+  const selectedSections = schedulesByTerm[resolvedTerm] || []
 
   function addSection(section) {
     const term = normalizeTerm(section.term)
@@ -129,7 +151,7 @@ export function ScheduleProvider({ children }) {
     return { ok: true }
   }
 
-  function removeSection(sectionId, term = activeTerm) {
+  function removeSection(sectionId, term = resolvedTerm) {
     setSchedulesByTerm(prev => {
       const existingSections = prev[term] || []
 
@@ -142,7 +164,7 @@ export function ScheduleProvider({ children }) {
     setScheduleError('')
   }
 
-  function clearSchedule(term = activeTerm) {
+  function clearSchedule(term = resolvedTerm) {
     setSchedulesByTerm(prev => ({
       ...prev,
       [term]: [],
@@ -162,7 +184,7 @@ export function ScheduleProvider({ children }) {
     return existingSections.some(section => section.id === sectionId)
   }
 
-  function findConflict(section, term = activeTerm) {
+  function findConflict(section, term = resolvedTerm) {
     const targetTerm = normalizeTerm(term)
     const existingSections = schedulesByTerm[targetTerm] || []
 
@@ -171,12 +193,8 @@ export function ScheduleProvider({ children }) {
       .find(existing => sectionsConflict(existing, section))
   }
 
-  const termsFromSchedules = Object.keys(schedulesByTerm)
-  const defaultTerms = ['spring 2026', 'fall 2026']
-  const availableTerms = Array.from(new Set([...defaultTerms, ...termsFromSchedules]))
-
   const value = {
-    activeTerm,
+    activeTerm: resolvedTerm,
     setActiveTerm,
     availableTerms,
     schedulesByTerm,

@@ -110,8 +110,15 @@ describe('Catalog', () => {
 
     expect(await screen.findByText('Failed to load catalog terms (500)')).toBeDefined()
 
+    // ScheduleProvider also loads terms now, so a global call count is no
+    // longer meaningful. assert the behaviour under test directly: a failed
+    // terms request must not go on to request courses
     await waitFor(() => {
-      expect(globalThis.fetch).toHaveBeenCalledTimes(1)
+      expect(globalThis.fetch).toHaveBeenCalledWith('/api/catalog/terms')
     })
+
+    expect(globalThis.fetch).not.toHaveBeenCalledWith(
+      expect.stringContaining('/api/catalog/courses')
+    )
   })
 })
