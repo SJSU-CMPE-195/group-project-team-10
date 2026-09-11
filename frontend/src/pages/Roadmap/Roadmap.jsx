@@ -465,6 +465,8 @@ function Roadmap() {
           onNodeDragStop = {onNodeDragStop}
           fitView
           nodesDraggable={true}
+          nodesConnectable={false}
+          nodeDragThreshold={8}
           minZoom={0.3}
           maxZoom={1.5}
           proOptions={{ hideAttribution: true }}
