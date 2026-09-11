@@ -22,7 +22,7 @@
   background: var(--card-bg);
   color: var(--text-h);
   font-size: 15px;
-  font-family: var(--sans);
+  font-family: var(--sans), sans-serif;
   box-sizing: border-box;
   transition: border-color 0.15s;
 }
@@ -46,7 +46,7 @@
 .catalog-filters-toggle,
 .catalog-page-button,
 .catalog-clear-filters {
-  font-family: var(--sans);
+  font-family: var(--sans), sans-serif;
   font-size: 13px;
   line-height: 1.3;
 }

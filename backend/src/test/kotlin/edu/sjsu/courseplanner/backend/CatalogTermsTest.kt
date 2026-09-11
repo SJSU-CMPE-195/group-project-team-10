@@ -2,9 +2,14 @@ package edu.sjsu.courseplanner.backend
 
 import edu.sjsu.courseplanner.backend.dto.ScrapedSectionDto
 import edu.sjsu.courseplanner.backend.repository.CatalogRepository
+import edu.sjsu.courseplanner.backend.repository.CourseOfferingsTable
+import edu.sjsu.courseplanner.backend.repository.CoursesTable
+import edu.sjsu.courseplanner.backend.repository.InstructorsTable
 import edu.sjsu.courseplanner.backend.repository.ScheduleDataRepository
 import edu.sjsu.courseplanner.backend.service.ScheduleImportService
-import javax.sql.DataSource
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.deleteAll
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -26,17 +31,15 @@ class CatalogTermsTest {
     private lateinit var scheduleDataRepository: ScheduleDataRepository
 
     @Autowired
-    private lateinit var dataSource: DataSource
+    private lateinit var database: Database
 
     @BeforeEach
     fun clearDatabase() {
         scheduleDataRepository.deleteAll()
-        dataSource.connection.use { connection ->
-            connection.createStatement().use { statement ->
-                statement.executeUpdate("DELETE FROM course_offerings")
-                statement.executeUpdate("DELETE FROM instructors")
-                statement.executeUpdate("DELETE FROM courses")
-            }
+        transaction(database) {
+            CourseOfferingsTable.deleteAll()
+            InstructorsTable.deleteAll()
+            CoursesTable.deleteAll()
         }
     }
 

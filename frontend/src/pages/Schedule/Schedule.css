@@ -42,7 +42,7 @@
   color: var(--text-h);
   border-radius: 8px;
   padding: 8px 10px;
-  font-family: var(--sans);
+  font-family: var(--sans), sans-serif;
 }
 
 .schedule-clear-button {
@@ -131,7 +131,7 @@
   color: var(--text-h);
   border-radius: 8px;
   padding: 8px 10px;
-  font-family: var(--sans);
+  font-family: var(--sans), sans-serif;
 }
 
 .schedule-inline-error {
