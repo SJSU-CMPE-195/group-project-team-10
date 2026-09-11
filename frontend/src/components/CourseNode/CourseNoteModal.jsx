@@ -1,9 +1,12 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
+import { useEscapeKey } from '../../hooks/useEscapeKey'
 import './CourseNoteModal.css'
 
 function CourseNoteModal({ courseCode, note = "", onSave, onClose }) {
   const [draftNote, setDraftNote] = useState(note)
+
+  useEscapeKey(true, onClose)
 
   return createPortal(
     <div className="course-note-modal-backdrop" onClick={onClose}>

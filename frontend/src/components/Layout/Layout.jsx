@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from "../../context/useAuth";
+import { useEscapeKey } from '../../hooks/useEscapeKey'
 import './Layout.css'
 
 const navLinkClass = ({ isActive }) => isActive ? "nav-link active" : "nav-link"
@@ -14,16 +15,7 @@ function Layout() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
 
-  useEffect(() => {
-    if (!menuOpen) return
-
-    function handleKeyDown(event) {
-      if (event.key === 'Escape') setMenuOpen(false)
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [menuOpen])
+  useEscapeKey(menuOpen, () => setMenuOpen(false))
 
   // any link or button inside the drawer dismisses it
   function handleDrawerClick(event) {

@@ -123,4 +123,21 @@ describe('CourseNode', () => {
 
     expect(document.body.querySelector('.course-note-modal')).toBeNull()
   })
+
+  it('closes the note modal on escape, discarding the draft', () => {
+    const { container } = renderCourseNode(defaultData)
+
+    fireEvent.click(container.querySelector('.course-node-note-btn'))
+    fireEvent.change(screen.getByLabelText('Note for CMPE 120'), {
+      target: { value: 'not going to keep this' },
+    })
+
+    fireEvent.keyDown(window, { key: 'Escape' })
+
+    expect(document.body.querySelector('.course-note-modal')).toBeNull()
+
+    // reopening shows the saved note, not the abandoned draft
+    fireEvent.click(container.querySelector('.course-node-note-btn'))
+    expect(screen.getByLabelText('Note for CMPE 120').value).toBe('')
+  })
 })
