@@ -1,41 +1,25 @@
 import { useEffect, useMemo, useState } from 'react'
-import { fetchCatalogCourses, fetchCatalogTerms } from '../../api/catalog'
+import { fetchCatalogCourses } from '../../api/catalog'
 import { fetchSections } from '../../api/sections'
+import { useSchedule } from '../../context/useSchedule'
 import CourseCard from '../../components/CourseCard/CourseCard'
 import './Catalog.css'
 
 function Catalog() {
+  // sharing term with schedule page so its only chosen once
+  const {
+    activeTerm: selectedTerm,
+    setActiveTerm: setSelectedTerm,
+    availableTerms,
+    termsLoaded,
+  } = useSchedule()
+
   const [courses, setCourses] = useState([])
-  const [availableTerms, setAvailableTerms] = useState([])
-  const [selectedTerm, setSelectedTerm] = useState('')
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
   const [activeDept, setActiveDept] = useState(null)
   const [sections, setSections] = useState([])
-
-  useEffect(() => {
-    let cancelled = false
-
-    async function loadTerms() {
-      try {
-        const terms = await fetchCatalogTerms()
-        if (cancelled) return
-        setAvailableTerms(terms)
-        setSelectedTerm(terms[0] || '')
-      } catch (err) {
-        if (!cancelled) {
-          setError(err.message || 'Failed to load catalog terms')
-          setLoading(false)
-        }
-      }
-    }
-
-    loadTerms()
-    return () => {
-      cancelled = true
-    }
-  }, [])
 
   useEffect(() => {
     if (!selectedTerm) {
@@ -117,8 +101,13 @@ function Catalog() {
           value={selectedTerm}
           onChange={e => setSelectedTerm(e.target.value)}
           disabled={availableTerms.length === 0}
+          aria-label="Semester"
         >
-          {availableTerms.length === 0 && <option value="">No imported terms</option>}
+          {availableTerms.length === 0 ? (
+            <option value="">No imported terms</option>
+          ) : (
+            <option value="">Select a semester...</option>
+          )}
           {availableTerms.map(term => (
             <option key={term} value={term}>
               {term}
@@ -144,10 +133,18 @@ function Catalog() {
         </div>
       </div>
 
+      {!selectedTerm && termsLoaded && (
+        <p className="catalog-prompt">
+          {availableTerms.length === 0
+            ? 'No terms have been imported yet.'
+            : 'Choose a semester to browse courses.'}
+        </p>
+      )}
+
       {loading && <p className="catalog-count">Loading catalog from database...</p>}
       {error && <p className="catalog-count">{error}</p>}
 
-      {!loading && !error && (
+      {selectedTerm && !loading && !error && (
       <p className="catalog-count">
         Showing {filtered.length} of {courses.length} courses
       </p>

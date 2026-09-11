@@ -4,12 +4,13 @@ import { ScheduleProvider } from './ScheduleContext'
 import { useSchedule } from './useSchedule'
 
 function Probe() {
-  const { activeTerm, availableTerms, selectedSections } = useSchedule()
+  const { activeTerm, availableTerms, selectedSections, termsLoaded } = useSchedule()
   return (
     <div>
       <span data-testid="active">{activeTerm}</span>
       <span data-testid="available">{availableTerms.join('|')}</span>
       <span data-testid="count">{selectedSections.length}</span>
+      <span data-testid="loaded">{termsLoaded ? 'yes' : 'no'}</span>
     </div>
   )
 }
@@ -50,23 +51,34 @@ describe('ScheduleContext terms', () => {
     expect(screen.getByTestId('available').textContent).not.toContain('fall 2026')
   })
 
-  it('defaults to a real term once the api responds', async () => {
+  it('does not auto-select a term, so the user is asked to choose', async () => {
     renderProbe()
 
     await waitFor(() => {
-      expect(screen.getByTestId('active').textContent).toBe('Spring 2026')
+      expect(screen.getByTestId('loaded').textContent).toBe('yes')
     })
+    expect(screen.getByTestId('active').textContent).toBe('')
   })
 
-  it('heals a stale saved term instead of stranding an empty schedule', async () => {
+  it('clears a saved term that is no longer offered', async () => {
     localStorage.setItem('coursePlanner.activeScheduleTerm', 'spring 2026')
 
     renderProbe()
 
     await waitFor(() => {
+      expect(screen.getByTestId('loaded').textContent).toBe('yes')
+    })
+    expect(screen.getByTestId('active').textContent).toBe('')
+  })
+
+  it('keeps a saved term that is still offered', async () => {
+    localStorage.setItem('coursePlanner.activeScheduleTerm', 'Spring 2026')
+
+    renderProbe()
+
+    await waitFor(() => {
       expect(screen.getByTestId('active').textContent).toBe('Spring 2026')
     })
-    expect(localStorage.getItem('coursePlanner.activeScheduleTerm')).toBe('Spring 2026')
   })
 
   it('keeps a saved term that still has sections', async () => {
@@ -82,6 +94,31 @@ describe('ScheduleContext terms', () => {
     })
     expect(screen.getByTestId('active').textContent).toBe('Fall 2026')
     expect(screen.getByTestId('count').textContent).toBe('1')
+  })
+
+  it('keeps a past term that still holds a saved schedule', async () => {
+    localStorage.setItem('coursePlanner.schedulesByTerm', JSON.stringify({
+      'Fall 2025': [{ id: 9, courseCode: 'CMPE 120', term: 'Fall 2025' }],
+    }))
+
+    renderProbe()
+
+    await waitFor(() => {
+      expect(screen.getByTestId('available').textContent).toContain('Spring 2026')
+    })
+    expect(screen.getByTestId('available').textContent).toContain('Fall 2025')
+  })
+
+  it('drops a saved term once its schedule is empty', async () => {
+    localStorage.setItem('coursePlanner.schedulesByTerm', JSON.stringify({
+      'Fall 2025': [],
+    }))
+
+    renderProbe()
+
+    await waitFor(() => {
+      expect(screen.getByTestId('available').textContent).toBe('Spring 2026')
+    })
   })
 
   it('survives the terms request failing', async () => {

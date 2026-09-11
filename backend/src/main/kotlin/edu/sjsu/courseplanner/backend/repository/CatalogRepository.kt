@@ -8,6 +8,8 @@ import org.jetbrains.exposed.v1.jdbc.andWhere
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.springframework.stereotype.Repository
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 data class CatalogCourseRecord(
     val courseId: Int,
@@ -52,12 +54,44 @@ class CatalogRepository(
             }
     }
 
+    // get available terms that have not ended
     fun findAvailableTerms(): List<String> = transaction(database) {
+        val endByTerm = latestEndDateByTerm()
+        val today = LocalDate.now()
+
         CourseOfferingsTable
             .selectAll()
             .map { it[CourseOfferingsTable.term] }
             .distinct()
+            .filter { term ->
+                val end = endByTerm[term]
+                end == null || !end.isBefore(today)
+            }
             .sortedWith(compareBy<String> { extractYear(it) }.thenBy { seasonOrder(it) })
+    }
+
+    // latest section end date per term
+    private fun latestEndDateByTerm(): Map<String, LocalDate> {
+        return SectionsTable
+            .selectAll()
+            .mapNotNull { row ->
+                val end = parseEndDate(row[SectionsTable.dates]) ?: return@mapNotNull null
+                row[SectionsTable.term] to end
+            }
+            .groupBy({ it.first }, { it.second })
+            .mapValues { (_, ends) -> ends.max() }
+    }
+
+    // "08/19/26-12/07/26" -> 2026-12-07
+    private fun parseEndDate(dates: String?): LocalDate? {
+        val end = dates?.substringAfter('-', "")?.trim()
+        if (end.isNullOrEmpty()) return null
+
+        return try {
+            LocalDate.parse(end, DATE_FORMAT)
+        } catch (_: Exception) {
+            null
+        }
     }
 
     private fun toCatalogCourseRecord(row: ResultRow): CatalogCourseRecord {
@@ -77,11 +111,15 @@ class CatalogRepository(
 
     private fun seasonOrder(term: String): Int {
         return when (term.substringBefore(' ').lowercase()) {
-            "spring" -> 0
-            "summer" -> 1
-            "fall" -> 2
-            "winter" -> 3
+            "winter" -> 0
+            "spring" -> 1
+            "summer" -> 2
+            "fall" -> 3
             else -> 4
         }
+    }
+
+    private companion object {
+        val DATE_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("MM/dd/yy")
     }
 }

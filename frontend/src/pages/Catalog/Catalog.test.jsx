@@ -1,4 +1,4 @@
-import { fireEvent, screen, waitFor } from '@testing-library/react'
+import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { renderWithProviders } from '../../test-utils'
 import Catalog from './Catalog'
@@ -29,6 +29,18 @@ const springCoursesResponse = [
 ]
 
 describe('Catalog', () => {
+  // tests pick a term like a user would
+  async function renderAndPickTerm(term = 'Spring 2026') {
+    const result = renderWithProviders(<Catalog />)
+
+    const picker = await screen.findByLabelText('Semester')
+    await waitFor(() => {
+      expect(within(picker).getByRole('option', { name: term })).toBeDefined()
+    })
+    fireEvent.change(picker, { target: { value: term } })
+
+    return result
+  }
   beforeEach(() => {
     globalThis.fetch = vi.fn(url => {
       if (url === '/api/catalog/terms') {
@@ -60,21 +72,29 @@ describe('Catalog', () => {
     vi.restoreAllMocks()
   })
 
-  it('loads catalog terms and courses from the backend', async () => {
+  it('prompts for a semester before loading anything', async () => {
     renderWithProviders(<Catalog />)
+
+    expect(await screen.findByText('Choose a semester to browse courses.')).toBeDefined()
+    expect(globalThis.fetch).not.toHaveBeenCalledWith(
+      expect.stringContaining('/api/catalog/courses')
+    )
+  })
+
+  it('loads catalog courses once a term is chosen', async () => {
+    await renderAndPickTerm()
 
     expect(await screen.findByText(/Showing 2 of 2 courses/)).toBeDefined()
     expect(screen.getByText('CMPE 195A')).toBeDefined()
     expect(screen.getByText('Senior Design Project I')).toBeDefined()
     expect(screen.getByDisplayValue('Spring 2026')).toBeDefined()
 
-    expect(globalThis.fetch).toHaveBeenCalledWith('/api/catalog/terms')
     expect(globalThis.fetch).toHaveBeenCalledWith('/api/catalog/courses?term=Spring%202026')
     expect(globalThis.fetch).toHaveBeenCalledWith('/api/sections?term=Spring%202026')
   })
 
   it('filters backend-loaded courses by search text', async () => {
-    renderWithProviders(<Catalog />)
+    await renderAndPickTerm()
 
     await screen.findByText(/Showing 2 of 2 courses/)
 
@@ -87,7 +107,7 @@ describe('Catalog', () => {
   })
 
   it('filters backend-loaded courses by department', async () => {
-    renderWithProviders(<Catalog />)
+    await renderAndPickTerm()
 
     await screen.findByText(/Showing 2 of 2 courses/)
 
@@ -97,28 +117,19 @@ describe('Catalog', () => {
     expect(screen.getByText('MATH 42')).toBeDefined()
   })
 
-  it('shows an error when catalog terms fail to load', async () => {
+  // terms request lives in ScheduleContext, so failure is
+  // covered by ScheduleContext.test.jsx
+  it('reports an error when courses fail to load for a term', async () => {
+    await renderAndPickTerm()
+
     globalThis.fetch = vi.fn(() =>
-      Promise.resolve({
-        ok: false,
-        status: 500,
-        json: async () => ({}),
-      })
+      Promise.resolve({ ok: false, status: 500, json: async () => ({}) })
     )
 
-    renderWithProviders(<Catalog />)
-
-    expect(await screen.findByText('Failed to load catalog terms (500)')).toBeDefined()
-
-    // ScheduleProvider also loads terms now, so a global call count is no
-    // longer meaningful. assert the behaviour under test directly: a failed
-    // terms request must not go on to request courses
-    await waitFor(() => {
-      expect(globalThis.fetch).toHaveBeenCalledWith('/api/catalog/terms')
+    fireEvent.change(await screen.findByLabelText('Semester'), {
+      target: { value: 'Fall 2026' },
     })
 
-    expect(globalThis.fetch).not.toHaveBeenCalledWith(
-      expect.stringContaining('/api/catalog/courses')
-    )
+    expect(await screen.findByText(/Failed to load/)).toBeDefined()
   })
 })

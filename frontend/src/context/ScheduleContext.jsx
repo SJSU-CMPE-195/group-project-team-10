@@ -70,6 +70,7 @@ export function ScheduleProvider({ children }) {
   })
 
   const [apiTerms, setApiTerms] = useState([])
+  const [termsLoaded, setTermsLoaded] = useState(false)
   const [scheduleError, setScheduleError] = useState('')
 
   // uses terms from imported data from the api for dropdown terms
@@ -78,22 +79,31 @@ export function ScheduleProvider({ children }) {
 
     fetchCatalogTerms()
       .then(terms => {
-        if (!cancelled) setApiTerms(Array.isArray(terms) ? terms : [])
+        if (cancelled) return
+        setApiTerms(Array.isArray(terms) ? terms : [])
+        setTermsLoaded(true)
       })
       .catch(() => {
-        if (!cancelled) setApiTerms([])
+        if (cancelled) return
+        setApiTerms([])
+        setTermsLoaded(true)
       })
 
     return () => { cancelled = true }
   }, [])
 
-  const availableTerms = Array.from(
-    new Set([...apiTerms, ...Object.keys(schedulesByTerm)])
-  )
+  // api already drops terms that have ended. saved schedules are unioned back
+  // in only while they still hold sections, so an existing schedule for a past
+  // term stays reachable
+  const savedTermsWithSections = Object.keys(schedulesByTerm)
+    .filter(term => schedulesByTerm[term]?.length > 0)
 
-  // unknown saved term falls back to a real term
-  // instead of leaving an empty schedule
-  const resolvedTerm = availableTerms.includes(activeTerm) ? activeTerm : (availableTerms[0] || '')
+  const availableTerms = Array.from(
+    new Set([...apiTerms, ...savedTermsWithSections])
+  )
+  
+  // clears old save term
+  const resolvedTerm = availableTerms.includes(activeTerm) ? activeTerm : ''
 
   const normalizeTerm = (term) => term || resolvedTerm
 
@@ -195,6 +205,7 @@ export function ScheduleProvider({ children }) {
 
   const value = {
     activeTerm: resolvedTerm,
+    termsLoaded,
     setActiveTerm,
     availableTerms,
     schedulesByTerm,
