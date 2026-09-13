@@ -1,41 +1,32 @@
 import { useEffect, useMemo, useState } from 'react'
-import { fetchCatalogCourses, fetchCatalogTerms } from '../../api/catalog'
+import { fetchCatalogCourses } from '../../api/catalog'
 import { fetchSections } from '../../api/sections'
+import { useSchedule } from '../../context/useSchedule'
+import { useEscapeKey } from '../../hooks/useEscapeKey'
 import CourseCard from '../../components/CourseCard/CourseCard'
 import './Catalog.css'
 
+const PAGE_SIZE = 25
+
 function Catalog() {
+  // sharing term with schedule page so its only chosen once
+  const {
+    activeTerm: selectedTerm,
+    setActiveTerm: setSelectedTerm,
+    availableTerms,
+    termsLoaded,
+  } = useSchedule()
+
   const [courses, setCourses] = useState([])
-  const [availableTerms, setAvailableTerms] = useState([])
-  const [selectedTerm, setSelectedTerm] = useState('')
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
-  const [activeDept, setActiveDept] = useState(null)
+  const [selectedDepts, setSelectedDepts] = useState([])
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  const [page, setPage] = useState(1)
   const [sections, setSections] = useState([])
 
-  useEffect(() => {
-    let cancelled = false
-
-    async function loadTerms() {
-      try {
-        const terms = await fetchCatalogTerms()
-        if (cancelled) return
-        setAvailableTerms(terms)
-        setSelectedTerm(terms[0] || '')
-      } catch (err) {
-        if (!cancelled) {
-          setError(err.message || 'Failed to load catalog terms')
-          setLoading(false)
-        }
-      }
-    }
-
-    loadTerms()
-    return () => {
-      cancelled = true
-    }
-  }, [])
+  useEscapeKey(filtersOpen, () => setFiltersOpen(false))
 
   useEffect(() => {
     if (!selectedTerm) {
@@ -82,14 +73,40 @@ function Catalog() {
 
   const filtered = useMemo(() => {
     const query = search.toLowerCase()
+    const deptFilter = new Set(selectedDepts)
     return courses.filter(c => {
       const matchesSearch = !query ||
         c.courseCode.toLowerCase().includes(query) ||
         c.courseTitle.toLowerCase().includes(query)
-      const matchesDept = !activeDept || c.department === activeDept
+      const matchesDept = deptFilter.size === 0 || deptFilter.has(c.department)
       return matchesSearch && matchesDept
     })
-  }, [courses, search, activeDept])
+  }, [courses, search, selectedDepts])
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const safePage = Math.min(page, totalPages)
+  const start = (safePage - 1) * PAGE_SIZE
+  const visible = filtered.slice(start, start + PAGE_SIZE)
+
+  function toggleDept(dept) {
+    setSelectedDepts(current =>
+      current.includes(dept)
+        ? current.filter(d => d !== dept)
+        : [...current, dept]
+    )
+    setPage(1)
+  }
+
+  function clearFilters() {
+    setSelectedDepts([])
+    setPage(1)
+  }
+
+  function countMessage() {
+    if (filtered.length === 0) return 'No courses match your filters.'
+    if (totalPages <= 1) return `Showing ${filtered.length} of ${filtered.length} courses`
+    return `Showing ${start + 1}–${start + visible.length} of ${filtered.length} courses`
+  }
 
   const sectionsByCourseCode = useMemo(() => {
     return sections.reduce((map, section) => {
@@ -110,51 +127,108 @@ function Catalog() {
           className="catalog-search"
           placeholder="Search courses..."
           value={search}
-          onChange={e => setSearch(e.target.value)}
+          onChange={e => {
+            setSearch(e.target.value)
+            setPage(1)
+          }}
         />
         <select
           className="catalog-search"
           value={selectedTerm}
-          onChange={e => setSelectedTerm(e.target.value)}
+          onChange={e => {
+            setSelectedTerm(e.target.value)
+            setPage(1)
+          }}
           disabled={availableTerms.length === 0}
+          aria-label="Semester"
         >
-          {availableTerms.length === 0 && <option value="">No imported terms</option>}
+          {availableTerms.length === 0 ? (
+            <option value="">No imported terms</option>
+          ) : (
+            <option value="">Select a semester...</option>
+          )}
           {availableTerms.map(term => (
             <option key={term} value={term}>
               {term}
             </option>
           ))}
         </select>
-        <div className="catalog-filters">
+        <div className="catalog-filter-bar">
           <button
-            className={`catalog-filter-chip ${activeDept === null ? 'active' : ''}`}
-            onClick={() => setActiveDept(null)}
+            type="button"
+            className="catalog-filters-toggle"
+            aria-expanded={filtersOpen}
+            onClick={() => setFiltersOpen(open => !open)}
           >
-            All
+            Filters{selectedDepts.length > 0 ? ` (${selectedDepts.length})` : ''}
           </button>
-          {departments.map(dept => (
+
+          {selectedDepts.length === 0 ? (
+            // resting state marker, not a control - there is nothing to clear yet
+            <span className="catalog-filter-chip catalog-filter-chip-static active">
+              All
+            </span>
+          ) : (
+            selectedDepts.map(dept => (
+              <button
+                key={dept}
+                type="button"
+                className="catalog-filter-chip active"
+                onClick={() => toggleDept(dept)}
+                aria-label={`Remove ${dept} filter`}
+              >
+                {dept} &times;
+              </button>
+            ))
+          )}
+
+          {selectedDepts.length > 0 && (
             <button
-              key={dept}
-              className={`catalog-filter-chip ${activeDept === dept ? 'active' : ''}`}
-              onClick={() => setActiveDept(activeDept === dept ? null : dept)}
+              type="button"
+              className="catalog-clear-filters"
+              onClick={clearFilters}
             >
-              {dept}
+              Clear filters
             </button>
-          ))}
+          )}
         </div>
+
+        {filtersOpen && (
+          <div className="catalog-filter-panel catalog-filters">
+            {departments.map(dept => (
+              <button
+                key={dept}
+                type="button"
+                className={`catalog-filter-chip ${selectedDepts.includes(dept) ? 'active' : ''}`}
+                aria-pressed={selectedDepts.includes(dept)}
+                onClick={() => toggleDept(dept)}
+              >
+                {dept}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
+
+      {!selectedTerm && termsLoaded && (
+        <p className="catalog-prompt">
+          {availableTerms.length === 0
+            ? 'No terms have been imported yet.'
+            : 'Choose a semester to browse courses.'}
+        </p>
+      )}
 
       {loading && <p className="catalog-count">Loading catalog from database...</p>}
       {error && <p className="catalog-count">{error}</p>}
 
-      {!loading && !error && (
+      {selectedTerm && !loading && !error && (
       <p className="catalog-count">
-        Showing {filtered.length} of {courses.length} courses
+        {countMessage()}
       </p>
       )}
 
       <div className="catalog-grid">
-        {filtered.map(course => (
+        {visible.map(course => (
           <CourseCard
             key={course.courseId}
             course={course}
@@ -163,6 +237,30 @@ function Catalog() {
           />
         ))}
       </div>
+
+      {totalPages > 1 && (
+        <div className="catalog-pagination">
+          <button
+            type="button"
+            className="catalog-page-button"
+            onClick={() => setPage(safePage - 1)}
+            disabled={safePage === 1}
+          >
+            &lsaquo; Prev
+          </button>
+          <span className="catalog-page-status">
+            Page {safePage} of {totalPages}
+          </span>
+          <button
+            type="button"
+            className="catalog-page-button"
+            onClick={() => setPage(safePage + 1)}
+            disabled={safePage === totalPages}
+          >
+            Next &rsaquo;
+          </button>
+        </div>
+      )}
     </div>
   )
 }

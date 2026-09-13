@@ -78,6 +78,7 @@ function Schedule() {
     activeTerm,
     setActiveTerm,
     availableTerms,
+    termsLoaded,
     selectedSections,
     addSection,
     removeSection,
@@ -374,6 +375,11 @@ function Schedule() {
               value={activeTerm}
               onChange={(event) => setActiveTerm(event.target.value)}
             >
+              {availableTerms.length === 0 ? (
+                <option value="">No imported terms</option>
+              ) : (
+                <option value="">Select a semester...</option>
+              )}
               {availableTerms.map(term => (
                 <option key={term} value={term}>
                   {term}
@@ -466,7 +472,13 @@ function Schedule() {
         </div>
       )}
 
-      {selectedSections.length === 0 ? (
+      {!activeTerm ? (
+        <div className="schedule-empty">
+          {termsLoaded && availableTerms.length === 0
+            ? 'No terms have been imported yet.'
+            : 'Choose a semester to view your schedule.'}
+        </div>
+      ) : selectedSections.length === 0 ? (
         <div className="schedule-empty">
           Choose sections below to build your {activeTerm} weekly schedule.
         </div>
@@ -552,7 +564,7 @@ function Schedule() {
         </>
       )}
 
-      {roadmapPanel}
+      {activeTerm && roadmapPanel}
     </div>
   )
 }

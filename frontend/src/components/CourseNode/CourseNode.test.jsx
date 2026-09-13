@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, it, expect } from 'vitest'
 import { ReactFlowProvider } from '@xyflow/react'
 import { RoadmapProvider } from '../../context/RoadmapContext'
@@ -82,5 +82,62 @@ describe('CourseNode', () => {
   it('renders remove button', () => {
     renderCourseNode(defaultData)
     expect(screen.getByTitle('Remove course')).toBeDefined()
+  })
+
+  it('marks interactive controls nodrag', () => {
+    const { container } = renderCourseNode(defaultData)
+
+    for (const selector of [
+      '.course-node-remove',
+      '.course-node-note-btn',
+      '.course-node-status',
+    ]) {
+      expect(container.querySelector(selector).classList.contains('nodrag')).toBe(true)
+    }
+  })
+
+  it('marks the note preview and More button nodrag', () => {
+    const { container } = renderCourseNode({ ...defaultData, note: 'study group thursdays' })
+
+    expect(container.querySelector('.course-node-note-preview').classList.contains('nodrag')).toBe(true)
+    expect(container.querySelector('.course-node-more-btn').classList.contains('nodrag')).toBe(true)
+  })
+
+  it('portals the note modal out of the node subtree', () => {
+    const { container } = renderCourseNode(defaultData)
+
+    fireEvent.click(container.querySelector('.course-node-note-btn'))
+
+    expect(document.body.querySelector('.course-note-modal')).not.toBeNull()
+    expect(container.querySelector('.course-note-modal')).toBeNull()
+  })
+
+  it('saves an edited note and closes the modal', () => {
+    const { container } = renderCourseNode(defaultData)
+
+    fireEvent.click(container.querySelector('.course-node-note-btn'))
+    fireEvent.change(screen.getByLabelText('Note for CMPE 120'), {
+      target: { value: 'bring calculator' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+    expect(document.body.querySelector('.course-note-modal')).toBeNull()
+  })
+
+  it('closes the note modal on escape, discarding the draft', () => {
+    const { container } = renderCourseNode(defaultData)
+
+    fireEvent.click(container.querySelector('.course-node-note-btn'))
+    fireEvent.change(screen.getByLabelText('Note for CMPE 120'), {
+      target: { value: 'not going to keep this' },
+    })
+
+    fireEvent.keyDown(window, { key: 'Escape' })
+
+    expect(document.body.querySelector('.course-note-modal')).toBeNull()
+
+    // reopening shows the saved note, not the abandoned draft
+    fireEvent.click(container.querySelector('.course-node-note-btn'))
+    expect(screen.getByLabelText('Note for CMPE 120').value).toBe('')
   })
 })
