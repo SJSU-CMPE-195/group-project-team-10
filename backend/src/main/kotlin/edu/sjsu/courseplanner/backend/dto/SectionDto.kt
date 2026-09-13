@@ -20,5 +20,6 @@ data class SectionDto(
     val location: String,
     val dates: String,
     val openSeats: Int,
-    val notes: String? = null
+    val notes: String? = null,
+    val gradeDistributions: List<GradeDistributionDto> = emptyList()
 )

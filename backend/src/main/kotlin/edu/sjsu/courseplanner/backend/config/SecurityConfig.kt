@@ -74,7 +74,10 @@ class SecurityConfig(
                 csrf
                     .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                     .csrfTokenRequestHandler(SpaCsrfTokenRequestHandler())
-                    .ignoringRequestMatchers("/api/catalog-programs/import")
+                    .ignoringRequestMatchers(
+                        "/api/catalog-programs/import",
+                        "/api/grade-distributions/import"
+                    )
             }
             .authorizeHttpRequests { auth ->
                 auth
@@ -90,6 +93,10 @@ class SecurityConfig(
                     .requestMatchers(HttpMethod.GET, "/api/sections/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/catalog/**").permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/catalog-programs/import").permitAll()
+                    .requestMatchers(
+                        HttpMethod.POST,
+                        "/api/grade-distributions/import"
+                    ).permitAll()
                     .requestMatchers("/error").permitAll()
                     .anyRequest().authenticated()
             }

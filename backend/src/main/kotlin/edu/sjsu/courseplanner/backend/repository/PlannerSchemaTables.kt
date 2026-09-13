@@ -148,6 +148,24 @@ object SectionsTable : Table("sections") {
     override val primaryKey = PrimaryKey(id)
 }
 
+object GradeDistributionsTable : Table("grade_distributions") {
+    val id = long("id").autoIncrement()
+
+    val academicYear = varchar("academic_year", 50)
+    val semester = varchar("semester", 50)
+    val department = varchar("department", 150)
+    val courseNumber = varchar("course_number", 50)
+    val instructor = varchar("instructor", 255)
+
+    val aCount = integer("a_count")
+    val bCount = integer("b_count")
+    val cCount = integer("c_count")
+    val dCount = integer("d_count")
+    val fCount = integer("f_count")
+
+    override val primaryKey = PrimaryKey(id)
+}
+
 object UsersTable : Table("users") {
     val id = long("id").autoIncrement()
     val email = varchar("email", 255).uniqueIndex()
@@ -174,5 +192,6 @@ val plannerSchemaTables = arrayOf(
     SemestersTable,
     SemesterCoursesTable,
     SectionsTable,
+    GradeDistributionsTable,
     UsersTable
 )

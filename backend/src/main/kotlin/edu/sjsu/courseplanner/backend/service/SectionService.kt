@@ -11,17 +11,22 @@ import org.springframework.transaction.annotation.Transactional
 */
 @Service
 class SectionService(
-    private val sectionRepository: SectionRepository
+    private val sectionRepository: SectionRepository,
+    private val gradeDistributionService: GradeDistributionService
 ) {
 
     // Returns all saved sections.
     fun getAllSections(): List<SectionDto> {
-        return sectionRepository.findAll()
+        return gradeDistributionService.enrichSections(
+            sectionRepository.findAll()
+        )
     }
 
     // Returns saved sections for one term.
     fun getSectionsByTerm(term: String): List<SectionDto> {
-        return sectionRepository.findByTerm(term)
+        return gradeDistributionService.enrichSections(
+            sectionRepository.findByTerm(term)
+        )
     }
 
     // Replaces all saved rows for a term with the latest scraped results.
