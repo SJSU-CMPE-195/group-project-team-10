@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from "../../context/useAuth";
 import { useEscapeKey } from '../../hooks/useEscapeKey'
 import './Layout.css'
+import AnnouncementBanner from '../Announcement/AnnouncementBanner'
 
 const navLinkClass = ({ isActive }) => isActive ? "nav-link active" : "nav-link"
 
@@ -81,6 +82,8 @@ function Layout() {
           </div>
         </div>
       </nav>
+      
+      <AnnouncementBanner />
 
       <main className="main-content">
         <Outlet />

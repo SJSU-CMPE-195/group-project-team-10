@@ -1,0 +1,36 @@
+.announcement-banner {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 24px;
+  background: var(--accent-bg);
+  border-bottom: 1px solid var(--accent-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.announcement-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-h);
+}
+
+.announcement-content strong {
+  white-space: nowrap;
+}
+
+.announcement-close {
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.announcement-close:hover {
+  color: var(--text-h);
+}
