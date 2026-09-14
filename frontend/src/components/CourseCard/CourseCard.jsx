@@ -94,6 +94,7 @@ function getPrereqWarnings({ course, section, roadmapState }) {
 function CourseCard({ course, prereqs, sections = [] }) {
   const [expanded, setExpanded] = useState(false)
   const [showSections, setShowSections] = useState(false)
+  const [expandedGrades, setExpandedGrades] = useState({})
   const [conflictModal, setConflictModal] = useState(null)
   const [prereqModal, setPrereqModal] = useState(null)
 
@@ -155,6 +156,19 @@ function CourseCard({ course, prereqs, sections = [] }) {
     }
 
     addSectionWithoutPrereqCheck(scheduledSection)
+  }
+
+  function toggleGrades(sectionId) {
+    setExpandedGrades(current => ({
+      ...current,
+      [sectionId]: !current[sectionId],
+    }))
+  }
+
+  function formatGradePercent(count, total) {
+    if (!total) return '0.0%'
+
+    return `${((Number(count || 0) / Number(total)) * 100).toFixed(1)}%`
   }
 
   function closeConflictModal() {
@@ -243,6 +257,61 @@ function CourseCard({ course, prereqs, sections = [] }) {
                         <div className="course-section-meta">
                           {section.instructor || 'Instructor TBA'} · {section.openSeats} open seats
                         </div>
+
+                        {section.gradeDistributions?.length > 0 && (
+                          <div className="grade-distribution-area">
+                            <button
+                              type="button"
+                              className="grade-distribution-toggle"
+                              onClick={() => toggleGrades(section.id)}
+                            >
+                              {expandedGrades[section.id]
+                                ? 'Hide Grade Distribution'
+                                : 'View Grade Distribution'}
+                            </button>
+
+                            {expandedGrades[section.id] && (
+                              <div className="grade-distribution-panel">
+                                {section.gradeDistributions.map((distribution, index) => (
+                                  <div
+                                    className="grade-distribution-semester"
+                                    key={`${distribution.semester}-${index}`}
+                                  >
+                                    <div className="grade-distribution-title">
+                                      {distribution.semester}
+                                    </div>
+
+                                    <div className="grade-distribution-grades">
+                                      <span>
+                                        A: {formatGradePercent(distribution.aCount, distribution.total)}
+                                      </span>
+
+                                      <span>
+                                        B: {formatGradePercent(distribution.bCount, distribution.total)}
+                                      </span>
+
+                                      <span>
+                                        C: {formatGradePercent(distribution.cCount, distribution.total)}
+                                      </span>
+
+                                      <span>
+                                        D: {formatGradePercent(distribution.dCount, distribution.total)}
+                                      </span>
+
+                                      <span>
+                                        F: {formatGradePercent(distribution.fCount, distribution.total)}
+                                      </span>
+                                    </div>
+
+                                    <div className="grade-distribution-total">
+                                      Based on {distribution.total} grades
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
 
                       <button
