@@ -12,8 +12,8 @@ import java.io.File
 class ScheduleScraperService {
 
     private val scheduleFiles = mapOf(
-        "spring 2026" to "data/spring-2026.html",
-        "fall 2026" to "data/fall-2026.html"
+        "spring 2026" to "../data/spring-2026.html",
+        "fall 2026" to "../data/fall-2026.html"
     )
     private val sectionPattern = Regex("""^(.*?) \(Section ([^)]+)\)$""")
     private val classNumberPattern = Regex("""\d{5}""")
