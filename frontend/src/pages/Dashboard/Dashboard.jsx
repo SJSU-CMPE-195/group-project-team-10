@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useRoadmap } from '../../context/RoadmapContext'
 import { validateSemesterPlan } from '../../utils/prerequisiteValidator'
@@ -13,8 +14,32 @@ function Dashboard() {
     isLoadingRoadmap,
     roadmapError,
   } = useRoadmap()
+  const [selectedRequirementId, setSelectedRequirementId] = useState(null)
   const courseMap = new Map(courses.map(c => [c.courseId, c]))
   const violations = validateSemesterPlan(semesters, prerequisites)
+
+  const courseStatusById = useMemo(() => {
+    const statusMap = new Map()
+    for (const sem of semesters) {
+      for (const course of sem.courses) {
+        if (!statusMap.has(course.courseId)) {
+          statusMap.set(course.courseId, course.status)
+        }
+      }
+    }
+    return statusMap
+  }, [semesters])
+
+  const selectedRequirement = degreeRequirements.find(req => req.requirementId === selectedRequirementId) || null
+  const selectedRequirementCourses = selectedRequirement
+    ? [...new Set(selectedRequirement.courseIds)]
+        .map(courseId => courseMap.get(courseId))
+        .filter(Boolean)
+        .sort((a, b) => a.courseCode.localeCompare(b.courseCode))
+    : []
+
+  const completedSelectedCourses = selectedRequirementCourses.filter(course => courseStatusById.get(course.courseId) === 'completed')
+  const missingSelectedCourses = selectedRequirementCourses.filter(course => courseStatusById.get(course.courseId) !== 'completed')
 
   if (isLoadingRoadmap && !majorInfo) {
     return (
@@ -91,18 +116,96 @@ function Dashboard() {
             : 0
 
           return (
-            <div key={req.requirementId} className="requirement-card">
-              <div className="requirement-name">{req.categoryName}</div>
+            <button
+              key={req.requirementId}
+              type="button"
+              className="requirement-card"
+              onClick={() => setSelectedRequirementId(req.requirementId)}
+            >
+              <div className="requirement-card-header">
+                <span className="requirement-name">{req.categoryName}</span>
+                <span className="requirement-card-chevron" aria-hidden="true">›</span>
+              </div>
               <div className="requirement-progress">
                 {categoryUnits} / {req.requiredUnits} units
               </div>
               <div className="progress-bar-track small">
                 <div className="progress-bar-fill" style={{ width: `${catPct}%` }} />
               </div>
-            </div>
+            </button>
           )
         })}
       </div>
+
+      {selectedRequirement && (
+        <div className="requirement-detail-backdrop" onClick={() => setSelectedRequirementId(null)}>
+          <div className="requirement-detail-modal" role="dialog" aria-modal="true" onClick={(event) => event.stopPropagation()}>
+            <div className="requirement-detail-header">
+              <div>
+                <div className="requirement-detail-label">Requirement</div>
+                <h2>{selectedRequirement.categoryName}</h2>
+              </div>
+              <button type="button" className="requirement-detail-close" onClick={() => setSelectedRequirementId(null)} aria-label="Close requirement details">
+                Close
+              </button>
+            </div>
+
+            <div className="requirement-detail-meta">
+              <span>{selectedRequirement.requiredUnits} units required</span>
+              <span>{completedSelectedCourses.length} completed</span>
+            </div>
+
+            <div className="requirement-detail-stats">
+              <div>
+                <div className="requirement-detail-stat-label">Completed units</div>
+                <div className="requirement-detail-stat-value">
+                  {completedSelectedCourses.reduce((sum, course) => sum + course.units, 0)} / {selectedRequirement.requiredUnits}
+                </div>
+              </div>
+              <div>
+                <div className="requirement-detail-stat-label">Courses</div>
+                <div className="requirement-detail-stat-value">{selectedRequirementCourses.length}</div>
+              </div>
+            </div>
+
+            <div className="requirement-detail-list-wrap">
+              <div className="requirement-detail-list">
+                <h3>Completed</h3>
+                {completedSelectedCourses.length > 0 ? (
+                  completedSelectedCourses.map(course => (
+                    <div key={course.courseId} className="requirement-course-row completed">
+                      <div className="requirement-course-main">
+                        <span className="requirement-course-code">✓ {course.courseCode}</span>
+                        <span className="requirement-course-title">{course.courseTitle}</span>
+                      </div>
+                      <span className="requirement-course-units">{course.units} units</span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="requirement-course-empty">No completed courses in this requirement yet.</div>
+                )}
+              </div>
+
+              <div className="requirement-detail-list">
+                <h3>Missing</h3>
+                {missingSelectedCourses.length > 0 ? (
+                  missingSelectedCourses.map(course => (
+                    <div key={course.courseId} className="requirement-course-row missing">
+                      <div className="requirement-course-main">
+                        <span className="requirement-course-code">○ {course.courseCode}</span>
+                        <span className="requirement-course-title">{course.courseTitle}</span>
+                      </div>
+                      <span className="requirement-course-units">{course.units} units</span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="requirement-course-empty">No missing courses in this requirement.</div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {violations.length > 0 && (
         <div className="dashboard-warning">
