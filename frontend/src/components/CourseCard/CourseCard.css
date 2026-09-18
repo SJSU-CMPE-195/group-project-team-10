@@ -306,3 +306,17 @@
   color: var(--text);
   opacity: 0.75;
 }
+
+.course-section-rmp {
+  margin-top: 4px;
+  font-size: 12px;
+}
+
+.course-section-rmp a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.course-section-rmp a:hover {
+  text-decoration: underline;
+}
