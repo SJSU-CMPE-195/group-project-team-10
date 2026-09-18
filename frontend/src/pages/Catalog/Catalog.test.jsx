@@ -146,6 +146,56 @@ describe('Catalog', () => {
     expect(screen.getByRole('button', { name: 'CMPE' })).toBeDefined()
   })
 
+  it('narrows the subject list with the subject search', async () => {
+    await renderAndPickTerm()
+
+    await screen.findByText(/Showing 2 of 2 courses/)
+
+    fireEvent.click(screen.getByRole('button', { name: /Filters/ }))
+    fireEvent.change(screen.getByLabelText('Search subjects'), {
+      target: { value: 'mat' },
+    })
+
+    expect(screen.getByRole('button', { name: 'MATH' })).toBeDefined()
+    expect(screen.queryByRole('button', { name: 'CMPE' })).toBeNull()
+
+    // narrowing the list must not narrow the results on its own
+    expect(screen.getByText(/Showing 2 of 2 courses/)).toBeDefined()
+
+    fireEvent.click(screen.getByRole('button', { name: 'MATH' }))
+    expect(screen.getByText(/Showing 1 of 1 courses/)).toBeDefined()
+  })
+
+  it('says so when no subject matches the subject search', async () => {
+    await renderAndPickTerm()
+
+    await screen.findByText(/Showing 2 of 2 courses/)
+
+    fireEvent.click(screen.getByRole('button', { name: /Filters/ }))
+    fireEvent.change(screen.getByLabelText('Search subjects'), {
+      target: { value: 'zzz' },
+    })
+
+    expect(screen.getByText(/No subjects match "zzz"/)).toBeDefined()
+    expect(screen.queryByRole('button', { name: 'MATH' })).toBeNull()
+  })
+
+  it('drops the subject search when the panel is closed', async () => {
+    await renderAndPickTerm()
+
+    await screen.findByText(/Showing 2 of 2 courses/)
+
+    fireEvent.click(screen.getByRole('button', { name: /Filters/ }))
+    fireEvent.change(screen.getByLabelText('Search subjects'), {
+      target: { value: 'mat' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: /Filters/ }))
+    fireEvent.click(screen.getByRole('button', { name: /Filters/ }))
+
+    expect(screen.getByLabelText('Search subjects').value).toBe('')
+    expect(screen.getByRole('button', { name: 'CMPE' })).toBeDefined()
+  })
+
   it('filters backend-loaded courses by department', async () => {
     await renderAndPickTerm()
 

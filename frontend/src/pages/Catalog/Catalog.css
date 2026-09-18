@@ -40,6 +40,7 @@
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
+  overflow-y: auto;
 }
 
 .catalog-filter-chip,
@@ -121,12 +122,44 @@
 }
 
 .catalog-filter-panel {
+  display: flex;
+  flex-direction: column;
   border: 1px solid var(--border);
   background: var(--card-bg);
   border-radius: 10px;
   padding: 12px;
   max-height: 220px;
-  overflow-y: auto;
+  overflow: hidden;
+}
+
+.catalog-subject-search {
+  width: 100%;
+  padding: 6px 12px;
+  margin-bottom: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card-bg);
+  color: var(--text-h);
+  font-size: 13px;
+  font-family: var(--sans), sans-serif;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+  flex-shrink: 0;
+}
+
+.catalog-subject-search:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.catalog-subject-search::placeholder {
+  color: var(--text);
+}
+
+.catalog-subject-empty {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text);
 }
 
 .catalog-clear-filters {
