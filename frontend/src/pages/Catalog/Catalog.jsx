@@ -22,11 +22,15 @@ function Catalog() {
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
   const [selectedDepts, setSelectedDepts] = useState([])
+  const [deptSearch, setDeptSearch] = useState('')
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [page, setPage] = useState(1)
   const [sections, setSections] = useState([])
 
-  useEscapeKey(filtersOpen, () => setFiltersOpen(false))
+  useEscapeKey(filtersOpen, () => {
+    setFiltersOpen(false)
+    setDeptSearch('')
+  })
 
   useEffect(() => {
     if (!selectedTerm) {
@@ -71,6 +75,11 @@ function Catalog() {
     [courses]
   )
 
+  const deptQuery = deptSearch.trim().toLowerCase()
+  const visibleDepartments = deptQuery
+    ? departments.filter(dept => dept.toLowerCase().includes(deptQuery))
+    : departments
+
   const filtered = useMemo(() => {
     const query = search.toLowerCase()
     const deptFilter = new Set(selectedDepts)
@@ -100,6 +109,14 @@ function Catalog() {
   function clearFilters() {
     setSelectedDepts([])
     setPage(1)
+  }
+
+  function toggleFilters() {
+    setFiltersOpen(open => {
+      // clears subject search state when reopening
+      if (open) setDeptSearch('')
+      return !open
+    })
   }
 
   function countMessage() {
@@ -158,7 +175,7 @@ function Catalog() {
             type="button"
             className="catalog-filters-toggle"
             aria-expanded={filtersOpen}
-            onClick={() => setFiltersOpen(open => !open)}
+            onClick={toggleFilters}
           >
             Filters{selectedDepts.length > 0 ? ` (${selectedDepts.length})` : ''}
           </button>
@@ -194,18 +211,32 @@ function Catalog() {
         </div>
 
         {filtersOpen && (
-          <div className="catalog-filter-panel catalog-filters">
-            {departments.map(dept => (
-              <button
-                key={dept}
-                type="button"
-                className={`catalog-filter-chip ${selectedDepts.includes(dept) ? 'active' : ''}`}
-                aria-pressed={selectedDepts.includes(dept)}
-                onClick={() => toggleDept(dept)}
-              >
-                {dept}
-              </button>
-            ))}
+          <div className="catalog-filter-panel">
+            <input
+              type="text"
+              className="catalog-subject-search"
+              placeholder="Search subjects..."
+              value={deptSearch}
+              onChange={e => setDeptSearch(e.target.value)}
+              aria-label="Search subjects"
+            />
+            {visibleDepartments.length === 0 ? (
+              <p className="catalog-subject-empty">No subjects match "{deptSearch.trim()}".</p>
+            ) : (
+              <div className="catalog-filters">
+                {visibleDepartments.map(dept => (
+                  <button
+                    key={dept}
+                    type="button"
+                    className={`catalog-filter-chip ${selectedDepts.includes(dept) ? 'active' : ''}`}
+                    aria-pressed={selectedDepts.includes(dept)}
+                    onClick={() => toggleDept(dept)}
+                  >
+                    {dept}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
