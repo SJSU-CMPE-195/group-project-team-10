@@ -258,6 +258,21 @@ function CourseCard({ course, prereqs, sections = [] }) {
                           {section.instructor || 'Instructor TBA'} · {section.openSeats} open seats
                         </div>
 
+                        {section.instructor &&
+                          !section.instructor.toLowerCase().includes('tba') && (
+                            <div className="course-section-rmp">
+                              <a
+                                href={`https://www.ratemyprofessors.com/search/professors/881?q=${encodeURIComponent(
+                                  section.instructor
+                                )}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                Search professor on Rate My Professors ↗
+                              </a>
+                            </div>
+                        )}
+
                         {section.gradeDistributions?.length > 0 && (
                           <div className="grade-distribution-area">
                             <button
