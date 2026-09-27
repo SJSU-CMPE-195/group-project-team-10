@@ -174,6 +174,7 @@ object UsersTable : Table("users") {
     val provider = varchar("provider", 50)
     val googleSub = varchar("google_sub", 255).uniqueIndex().nullable()
     val ssoSubject = varchar("sso_subject", 255).uniqueIndex().nullable()
+    val role = varchar("role", 20).default("USER")
 
     override val primaryKey = PrimaryKey(id)
 }

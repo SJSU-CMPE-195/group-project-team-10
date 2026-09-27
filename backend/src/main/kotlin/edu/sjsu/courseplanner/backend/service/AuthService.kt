@@ -1,5 +1,6 @@
 package edu.sjsu.courseplanner.backend.service
 
+import edu.sjsu.courseplanner.backend.config.AdminProperties
 import edu.sjsu.courseplanner.backend.dto.AuthUserResponse
 import edu.sjsu.courseplanner.backend.dto.RegisterRequest
 import edu.sjsu.courseplanner.backend.dto.UserDto
@@ -10,7 +11,8 @@ import org.springframework.stereotype.Service
 @Service
 class AuthService(
     private val userRepository: UserRepository,
-    private val passwordEncoder: PasswordEncoder
+    private val passwordEncoder: PasswordEncoder,
+    private val adminProperties: AdminProperties
 ) {
 
     fun register(request: RegisterRequest): AuthUserResponse {
@@ -34,7 +36,8 @@ class AuthService(
                 email = email,
                 passwordHash = encodedPassword,
                 fullName = fullName,
-                provider = "local"
+                provider = "local",
+                role = adminProperties.roleFor(email)
             )
         )
 
@@ -45,12 +48,23 @@ class AuthService(
         return userRepository.findByEmail(email.trim().lowercase())
     }
 
+    // keeps the stored role in line with the ADMIN_EMAILS allowlist
+    fun syncRole(user: UserDto): UserDto {
+        val expectedRole = adminProperties.roleFor(user.email)
+        if (user.role == expectedRole) {
+            return user
+        }
+        user.role = expectedRole
+        return userRepository.save(user)
+    }
+
     fun mapToAuthUserResponse(user: UserDto): AuthUserResponse {
         return AuthUserResponse(
             id = requireNotNull(user.id),
             email = user.email,
             fullName = user.fullName,
-            provider = user.provider
+            provider = user.provider,
+            role = user.role
         )
     }
 }

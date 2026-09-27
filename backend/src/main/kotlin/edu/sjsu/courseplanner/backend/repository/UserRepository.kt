@@ -49,6 +49,7 @@ class UserRepository(
                 statement[provider] = user.provider
                 statement[googleSub] = user.googleSub
                 statement[ssoSubject] = user.ssoSubject
+                statement[role] = user.role
             } get UsersTable.id
             user.id = generatedId
         } else {
@@ -59,6 +60,7 @@ class UserRepository(
                 statement[provider] = user.provider
                 statement[googleSub] = user.googleSub
                 statement[ssoSubject] = user.ssoSubject
+                statement[role] = user.role
             }
         }
         user
@@ -71,6 +73,7 @@ class UserRepository(
         fullName = row[UsersTable.fullName],
         provider = row[UsersTable.provider],
         googleSub = row[UsersTable.googleSub],
-        ssoSubject = row[UsersTable.ssoSubject]
+        ssoSubject = row[UsersTable.ssoSubject],
+        role = row[UsersTable.role]
     )
 }
