@@ -10,6 +10,16 @@
   gap: 20px;
 }
 
+.announcement-banner--warning {
+  background: var(--announce-warning-bg);
+  border-bottom-color: var(--announce-warning-border);
+}
+
+.announcement-banner--critical {
+  background: var(--announce-critical-bg);
+  border-bottom-color: var(--announce-critical-border);
+}
+
 .announcement-content {
   display: flex;
   align-items: center;
@@ -19,6 +29,18 @@
 
 .announcement-content strong {
   white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .announcement-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+
+  .announcement-content strong {
+    white-space: normal;
+  }
 }
 
 .announcement-close {
