@@ -16,6 +16,7 @@ class DatabaseSchemaTest {
     @Test
     fun `schema initializer creates all planner tables`() {
         val expectedTables = setOf(
+            "ANNOUNCEMENTS",
             "COURSES",
             "COURSE_OFFERINGS",
             "DEGREE_REQUIREMENTS",

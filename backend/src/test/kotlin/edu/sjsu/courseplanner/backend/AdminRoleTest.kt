@@ -48,6 +48,7 @@ class AdminRoleTest {
     fun clearUsers() {
         dataSource.connection.use { connection ->
             connection.createStatement().use { statement ->
+                statement.executeUpdate("DELETE FROM announcements")
                 statement.executeUpdate("DELETE FROM users")
             }
         }

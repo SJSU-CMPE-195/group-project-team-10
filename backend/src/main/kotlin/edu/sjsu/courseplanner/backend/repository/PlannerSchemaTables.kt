@@ -1,5 +1,6 @@
 package edu.sjsu.courseplanner.backend.repository
 
+import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.javatime.CurrentTimestamp
 import org.jetbrains.exposed.v1.javatime.timestamp
@@ -179,6 +180,22 @@ object UsersTable : Table("users") {
     override val primaryKey = PrimaryKey(id)
 }
 
+object AnnouncementsTable : Table("announcements") {
+    const val MAX_TITLE_LENGTH = 120
+    const val MAX_MESSAGE_LENGTH = 1000
+
+    val id = long("id").autoIncrement()
+    val title = varchar("title", MAX_TITLE_LENGTH)
+    val message = varchar("message", MAX_MESSAGE_LENGTH)
+    val severity = varchar("severity", 20).default("INFO")
+    val active = bool("active").default(true)
+    val createdAt = timestamp("created_at")
+    val expiresAt = timestamp("expires_at").nullable()
+    val createdBy = reference("created_by", UsersTable.id, onDelete = ReferenceOption.SET_NULL).nullable()
+
+    override val primaryKey = PrimaryKey(id)
+}
+
 val plannerSchemaTables = arrayOf(
     MajorsTable,
     StudentsTable,
@@ -194,5 +211,6 @@ val plannerSchemaTables = arrayOf(
     SemesterCoursesTable,
     SectionsTable,
     GradeDistributionsTable,
-    UsersTable
+    UsersTable,
+    AnnouncementsTable
 )

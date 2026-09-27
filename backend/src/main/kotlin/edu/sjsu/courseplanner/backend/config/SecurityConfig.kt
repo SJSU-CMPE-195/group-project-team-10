@@ -1,12 +1,15 @@
 package edu.sjsu.courseplanner.backend.config
 
 import edu.sjsu.courseplanner.backend.repository.UserRepository
+import edu.sjsu.courseplanner.backend.service.CurrentUserService
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpMethod
+import org.springframework.http.HttpStatus
 import org.springframework.security.authentication.AuthenticationManager
+import org.springframework.security.authorization.AuthorizationDecision
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.Customizer
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration
@@ -18,6 +21,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.SecurityFilterChain
+import org.springframework.security.web.authentication.HttpStatusEntryPoint
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository
 import org.springframework.security.web.csrf.CsrfToken
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler
@@ -29,7 +34,8 @@ import java.util.function.Supplier
 @Configuration
 class SecurityConfig(
     private val userRepository: UserRepository,
-    private val oAuth2LoginSuccessHandler: OAuth2LoginSuccessHandler
+    private val oAuth2LoginSuccessHandler: OAuth2LoginSuccessHandler,
+    private val currentUserService: CurrentUserService
 ) {
 
     @Bean
@@ -92,13 +98,27 @@ class SecurityConfig(
                     .requestMatchers(HttpMethod.GET, "/api/db/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/sections/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/catalog/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/announcements/**").permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/catalog-programs/import").permitAll()
                     .requestMatchers(
                         HttpMethod.POST,
                         "/api/grade-distributions/import"
                     ).permitAll()
                     .requestMatchers("/error").permitAll()
+                    // role is in users table (OAuth sessions have no ROLE_) so look it up
+                    .requestMatchers("/api/admin/**").access { authentication, _ ->
+                        AuthorizationDecision(
+                            currentUserService.currentUser(authentication.get())?.role == AdminProperties.ROLE_ADMIN
+                        )
+                    }
                     .anyRequest().authenticated()
+            }
+            .exceptionHandling { exceptions ->
+                // API calls get a plain 401 instead of the OAuth2 redirect to Google
+                exceptions.defaultAuthenticationEntryPointFor(
+                    HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
+                    PathPatternRequestMatcher.withDefaults().matcher("/api/**")
+                )
             }
             .oauth2Login { oauth2 ->
                 oauth2.successHandler(oAuth2LoginSuccessHandler)
