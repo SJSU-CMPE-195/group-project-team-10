@@ -1,9 +1,13 @@
 package edu.sjsu.courseplanner.backend
 
 import edu.sjsu.courseplanner.backend.dto.UserDto
+import edu.sjsu.courseplanner.backend.repository.AnnouncementsTable
 import edu.sjsu.courseplanner.backend.repository.UserRepository
+import edu.sjsu.courseplanner.backend.repository.UsersTable
 import edu.sjsu.courseplanner.backend.service.CurrentUserService
-import javax.sql.DataSource
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.deleteAll
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -42,15 +46,13 @@ class AdminRoleTest {
     private lateinit var passwordEncoder: PasswordEncoder
 
     @Autowired
-    private lateinit var dataSource: DataSource
+    private lateinit var database: Database
 
     @BeforeEach
     fun clearUsers() {
-        dataSource.connection.use { connection ->
-            connection.createStatement().use { statement ->
-                statement.executeUpdate("DELETE FROM announcements")
-                statement.executeUpdate("DELETE FROM users")
-            }
+        transaction(database) {
+            AnnouncementsTable.deleteAll()
+            UsersTable.deleteAll()
         }
     }
 

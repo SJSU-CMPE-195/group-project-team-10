@@ -3,11 +3,15 @@ package edu.sjsu.courseplanner.backend
 import edu.sjsu.courseplanner.backend.config.AdminProperties
 import edu.sjsu.courseplanner.backend.dto.UserDto
 import edu.sjsu.courseplanner.backend.repository.AnnouncementRepository
+import edu.sjsu.courseplanner.backend.repository.AnnouncementsTable
 import edu.sjsu.courseplanner.backend.repository.UserRepository
+import edu.sjsu.courseplanner.backend.repository.UsersTable
 import java.time.Instant
 import java.time.temporal.ChronoUnit
-import javax.sql.DataSource
 import org.hamcrest.Matchers.hasSize
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.deleteAll
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
@@ -39,17 +43,15 @@ class AnnouncementControllerTest {
     private lateinit var announcementRepository: AnnouncementRepository
 
     @Autowired
-    private lateinit var dataSource: DataSource
+    private lateinit var database: Database
 
     private var adminId: Long = 0
 
     @BeforeEach
     fun seedUsers() {
-        dataSource.connection.use { connection ->
-            connection.createStatement().use { statement ->
-                statement.executeUpdate("DELETE FROM announcements")
-                statement.executeUpdate("DELETE FROM users")
-            }
+        transaction(database) {
+            AnnouncementsTable.deleteAll()
+            UsersTable.deleteAll()
         }
         adminId = userRepository.save(
             UserDto(email = ADMIN, fullName = "Ada Admin", provider = "google", role = AdminProperties.ROLE_ADMIN)

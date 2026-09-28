@@ -6,7 +6,6 @@ import edu.sjsu.courseplanner.backend.dto.RegisterRequest
 import edu.sjsu.courseplanner.backend.service.AuthService
 import edu.sjsu.courseplanner.backend.service.CurrentUserService
 import jakarta.servlet.http.HttpServletRequest
-import jakarta.servlet.http.HttpServletResponse
 import jakarta.validation.ValidationException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -79,10 +78,7 @@ class AuthController(
     }
 
     @PostMapping("/logout")
-    fun logout(
-        request: HttpServletRequest,
-        response: HttpServletResponse
-    ): ResponseEntity<Map<String, String>> {
+    fun logout(request: HttpServletRequest): ResponseEntity<Map<String, String>> {
         request.session.invalidate()
         SecurityContextHolder.clearContext()
         return ResponseEntity.ok(mapOf("message" to "Logged out"))

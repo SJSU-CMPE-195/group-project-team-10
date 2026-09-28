@@ -44,10 +44,6 @@ class AuthService(
         return mapToAuthUserResponse(user)
     }
 
-    fun getByEmail(email: String): UserDto? {
-        return userRepository.findByEmail(email.trim().lowercase())
-    }
-
     // keeps the stored role in line with the ADMIN_EMAILS allowlist
     fun syncRole(user: UserDto): UserDto {
         val expectedRole = adminProperties.roleFor(user.email)

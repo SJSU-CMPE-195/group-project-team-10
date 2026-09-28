@@ -1,3 +1,6 @@
+// columns exist so SchemaUtils creates them; not every one is read or written in code yet
+@file:Suppress("unused")
+
 package edu.sjsu.courseplanner.backend.repository
 
 import org.jetbrains.exposed.v1.core.ReferenceOption
