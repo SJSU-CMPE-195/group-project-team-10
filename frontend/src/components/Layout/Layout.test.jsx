@@ -1,11 +1,13 @@
 import { screen, fireEvent } from '@testing-library/react'
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import App from '../../App'
 import { renderWithProviders } from '../../test-utils'
 
+const auth = vi.hoisted(() => ({ user: null }))
+
 vi.mock('../../context/useAuth', () => ({
   useAuth: () => ({
-    user: null,
+    user: auth.user,
     authLoading: false,
     isAuthenticated: false,
     login: vi.fn(),
@@ -15,6 +17,21 @@ vi.mock('../../context/useAuth', () => ({
 }))
 
 describe('Layout', () => {
+  beforeEach(() => {
+    auth.user = null
+  })
+
+  it('hides the Admin link from non-admins', () => {
+    renderWithProviders(<App />)
+    expect(screen.queryByRole('link', { name: 'Admin' })).toBeNull()
+  })
+
+  it('shows the Admin link to admins', () => {
+    auth.user = { id: 1, fullName: 'Ada Admin', email: 'admin@sjsu.edu', role: 'ADMIN' }
+    renderWithProviders(<App />)
+    expect(screen.getByRole('link', { name: 'Admin' }).getAttribute('href')).toBe('/admin/announcements')
+  })
+
   it('renders the brand link', () => {
     renderWithProviders(<App />)
     const brandLinks = screen.getAllByText('Course Planner Plus')

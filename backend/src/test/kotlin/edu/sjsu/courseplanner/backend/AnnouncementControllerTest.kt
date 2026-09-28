@@ -105,7 +105,9 @@ class AnnouncementControllerTest {
 
     @Test
     fun `create rejects invalid input`() {
-        createAs(ADMIN, """{"title":"  ","message":"Body"}""").andExpect(status().isBadRequest)
+        createAs(ADMIN, """{"title":"  ","message":"Body"}""")
+            .andExpect(status().isBadRequest)
+            .andExpect(jsonPath("$.message").value("Title is required"))
         createAs(ADMIN, """{"title":"Title","message":"Body","severity":"URGENT"}""").andExpect(status().isBadRequest)
         createAs(ADMIN, """{"title":"Title","message":"Body","expiresAt":"2020-01-01T00:00:00Z"}""")
             .andExpect(status().isBadRequest)

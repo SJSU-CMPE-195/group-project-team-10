@@ -9,6 +9,7 @@ import Schedule from './pages/Schedule/Schedule'
 import Login from './pages/Login/Login'
 import Signup from './pages/Signup/Signup'
 import Profile from "./pages/Profile/Profile";
+import AdminAnnouncements from "./pages/Admin/AdminAnnouncements";
 import './App.css'
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
             <Route path="login" element={<Login />} />
             <Route path="signup" element={<Signup />} />
             <Route path="profile" element={<Profile />} />
+            <Route path="admin/announcements" element={<AdminAnnouncements />} />
           </Route>
         </Routes>
       </ScheduleProvider>

@@ -24,6 +24,7 @@ describe('AnnouncementBanner', () => {
 
   afterEach(() => {
     globalThis.fetch = originalFetch
+    vi.restoreAllMocks()
   })
 
   it('renders every active announcement from the API', async () => {
@@ -56,6 +57,29 @@ describe('AnnouncementBanner', () => {
     expect(screen.queryByText('Maintenance')).toBeNull()
     expect(screen.getByText('Outage')).toBeDefined()
     expect(screen.getByText('Welcome')).toBeDefined()
+  })
+
+  it('offers Show more only for messages longer than two lines', async () => {
+    vi.spyOn(Element.prototype, 'scrollHeight', 'get').mockImplementation(function () {
+      return this.textContent === 'Down Friday 6-8 PM' ? 72 : 24
+    })
+    vi.spyOn(Element.prototype, 'clientHeight', 'get').mockReturnValue(48)
+
+    render(<AnnouncementBanner />)
+    await screen.findByText('Maintenance')
+
+    const toggles = await screen.findAllByRole('button', { name: 'Show more' })
+    expect(toggles).toHaveLength(1)
+    const message = screen.getByText('Down Friday 6-8 PM')
+    expect(message.className).not.toContain('is-expanded')
+
+    fireEvent.click(toggles[0])
+    expect(message.className).toContain('is-expanded')
+    const showLess = screen.getByRole('button', { name: 'Show less' })
+    expect(showLess.getAttribute('aria-expanded')).toBe('true')
+
+    fireEvent.click(showLess)
+    expect(message.className).not.toContain('is-expanded')
   })
 
   it('renders nothing when there are no announcements', async () => {

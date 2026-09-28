@@ -21,14 +21,49 @@
 }
 
 .announcement-content {
+  flex: 1;
+  min-width: 0;
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 12px;
   color: var(--text-h);
 }
 
+/* warps long title to a third of the banner*/
 .announcement-content strong {
-  white-space: nowrap;
+  max-width: 33%;
+  overflow-wrap: anywhere;
+}
+
+.announcement-body {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.announcement-message {
+  overflow-wrap: anywhere;
+}
+
+/* show at most 2 lines*/
+.announcement-message:not(.is-expanded) {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+
+.announcement-toggle {
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin-top: 2px;
+  font: inherit;
+  font-size: 0.85em;
+  font-weight: 600;
+  color: var(--text-h);
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 @media (max-width: 640px) {
@@ -39,7 +74,12 @@
   }
 
   .announcement-content strong {
-    white-space: normal;
+    max-width: none;
+  }
+
+  .announcement-body {
+    flex: none;
+    width: 100%;
   }
 }
 
@@ -51,6 +91,8 @@
   line-height: 1;
   cursor: pointer;
   padding: 4px 8px;
+  flex-shrink: 0;
+  align-self: flex-start;
 }
 
 .announcement-close:hover {

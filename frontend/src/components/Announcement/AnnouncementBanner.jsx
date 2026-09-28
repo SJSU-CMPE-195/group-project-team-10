@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { fetchActiveAnnouncements } from '../../api/announcements'
 import './AnnouncementBanner.css'
 
@@ -48,6 +48,23 @@ function AnnouncementBanner() {
 // also used by admin page to preview an announcement before sending it
 export function AnnouncementItem({ announcement, onDismiss }) {
   const severity = (announcement.severity || 'INFO').toLowerCase()
+  const messageId = useId()
+  const messageRef = useRef(null)
+  const [expanded, setExpanded] = useState(false)
+  const [overflowing, setOverflowing] = useState(false)
+
+  // "Show more" when text is cut off
+  useEffect(() => {
+    const element = messageRef.current
+    if (!element || expanded) return
+
+    const measure = () => setOverflowing(element.scrollHeight > element.clientHeight + 1)
+    measure()
+
+    const observer = new ResizeObserver(measure)
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [announcement.message, expanded])
 
   return (
     <div
@@ -56,7 +73,26 @@ export function AnnouncementItem({ announcement, onDismiss }) {
     >
       <div className="announcement-content">
         <strong>{announcement.title}</strong>
-        <span>{announcement.message}</span>
+        <div className="announcement-body">
+          <p
+            ref={messageRef}
+            id={messageId}
+            className={`announcement-message${expanded ? ' is-expanded' : ''}`}
+          >
+            {announcement.message}
+          </p>
+          {overflowing && (
+            <button
+              type="button"
+              className="announcement-toggle"
+              aria-expanded={expanded}
+              aria-controls={messageId}
+              onClick={() => setExpanded((open) => !open)}
+            >
+              {expanded ? 'Show less' : 'Show more'}
+            </button>
+          )}
+        </div>
       </div>
 
       {onDismiss && (
