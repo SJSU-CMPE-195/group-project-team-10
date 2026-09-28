@@ -7,5 +7,6 @@ data class UserDto(
     var fullName: String = "",
     var provider: String = "local",
     var googleSub: String? = null,
-    var ssoSubject: String? = null
+    var ssoSubject: String? = null,
+    var role: String = "USER"
 )

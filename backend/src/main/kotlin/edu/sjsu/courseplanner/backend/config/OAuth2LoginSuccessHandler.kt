@@ -11,7 +11,8 @@ import org.springframework.stereotype.Component
 
 @Component
 class OAuth2LoginSuccessHandler(
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val adminProperties: AdminProperties
 ) : AuthenticationSuccessHandler {
 
     override fun onAuthenticationSuccess(
@@ -45,6 +46,7 @@ class OAuth2LoginSuccessHandler(
         user.fullName = fullName
         user.provider = "google"
         user.googleSub = googleSub
+        user.role = adminProperties.roleFor(email)
 
         userRepository.save(user)
 

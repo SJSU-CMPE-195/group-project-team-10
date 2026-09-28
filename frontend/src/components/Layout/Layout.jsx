@@ -59,6 +59,9 @@ function Layout() {
             <NavLink to="/roadmap" className={navLinkClass}>Roadmap</NavLink>
             <NavLink to="/catalog" className={navLinkClass}>Catalog</NavLink>
             <NavLink to="/schedule" className={navLinkClass}>Schedule</NavLink>
+            {user?.role === 'ADMIN' && (
+              <NavLink to="/admin/announcements" className={navLinkClass}>Admin</NavLink>
+            )}
           </div>
 
           <div className="nav-auth">
