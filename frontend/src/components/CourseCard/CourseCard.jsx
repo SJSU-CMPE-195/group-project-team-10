@@ -102,6 +102,13 @@ function CourseCard({ course, prereqs, sections = [] }) {
   const { addSection, removeSection, isSelected, findConflict } = useSchedule()
   const availableTerms = course.availableTerms || []
 
+  const geAreas = [
+    ...new Set(
+      sections
+        .map(section => section.satisfies?.trim())
+        .filter(Boolean)
+    )
+  ]
   const prereqNames = prereqs.map(p => {
     const c = courseMap.get(p.prereqCourseId)
     return c ? c.courseCode : `Course ${p.prereqCourseId}`
@@ -196,6 +203,12 @@ function CourseCard({ course, prereqs, sections = [] }) {
 
         <div className="course-card-title">{course.courseTitle}</div>
         <div className="course-card-units">{course.units} units</div>
+
+        {geAreas.length > 0 && (
+          <div className="course-card-ge">
+            {geAreas.join(', ')}
+          </div>
+        )}
 
         {typeof course.offeringCount === 'number' && (
           <div className="course-card-offerings">
