@@ -1,9 +1,20 @@
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/useAuth";
+import { useRoadmap } from '../../context/RoadmapContext'
 import "./Profile.css";
 
 function Profile() {
   const { user, authLoading } = useAuth();
+  const { semesters } = useRoadmap()
+
+  const latestTerm = semesters[semesters.length - 1]?.term || 'Not available'
+
+  function getGraduationDate(term) {
+    if (term === 'Not available') return term
+
+    const [season, year] = term.split(' ')
+    return season === 'Fall' ? `Fall ${year}` : `Spring ${year}`
+  }
 
   if (authLoading) {
     return (
@@ -65,7 +76,7 @@ function Profile() {
 
           <div className="profile-row">
             <span>Expected graduation</span>
-            <strong>{user.expectedGraduationDate || "Not set yet"}</strong>
+            <strong>{user.expectedGraduationDate || getGraduationDate(latestTerm)}</strong>
           </div>
         </div>
       </div>
