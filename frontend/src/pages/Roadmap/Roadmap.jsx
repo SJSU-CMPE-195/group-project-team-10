@@ -460,6 +460,7 @@ function Roadmap() {
           nodesDraggable={true}
           nodesConnectable={false}
           nodeDragThreshold={8}
+          panOnScroll
           minZoom={0.3}
           maxZoom={1.5}
           proOptions={{ hideAttribution: true }}
