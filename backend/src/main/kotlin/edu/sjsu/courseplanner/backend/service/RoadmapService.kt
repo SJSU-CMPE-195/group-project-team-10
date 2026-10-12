@@ -13,10 +13,13 @@ import edu.sjsu.courseplanner.backend.repository.RequirementRecord
 import edu.sjsu.courseplanner.backend.repository.RequirementCourseRecord
 import edu.sjsu.courseplanner.backend.repository.RoadmapPrerequisiteRecord
 import edu.sjsu.courseplanner.backend.repository.RoadmapRepository
+import edu.sjsu.courseplanner.backend.dto.SageCourseDto
+import edu.sjsu.courseplanner.backend.dto.SageProgramDto
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.server.ResponseStatusException
+import edu.sjsu.courseplanner.backend.dto.SageRequirementDto
 
 @Service
 class RoadmapService(
@@ -61,6 +64,8 @@ class RoadmapService(
             .mapValues { (_, requirementIds) ->
                 requirementIds.mapNotNull { requirementsById[it]?.categoryName }
             }
+        val sagePrograms =
+            roadmapRepository.findSageProgramsForMajor(majorId)
 
         return MajorRoadmapDto(
             major = toMajorDto(major),
@@ -94,7 +99,72 @@ class RoadmapService(
                         .map { it.courseId }
                 )
             },
-            semesters = buildSemesters(courses, prerequisites, roadmapRequirementCourses)
+
+            semesters = buildSemesters(
+                courses,
+                prerequisites,
+                roadmapRequirementCourses
+            ),
+
+            sagePrograms = sagePrograms.map { sage ->
+
+                val sageRequirements =
+                    roadmapRepository.findSageRequirements(
+                        sage.sageProgramId
+                    )
+
+                SageProgramDto(
+                    sageProgramId = sage.sageProgramId,
+                    undergraduateMajorId =
+                        sage.undergraduateMajorId,
+                    graduateProgramName =
+                        sage.graduateProgramName,
+                    minimumGpa =
+                        sage.minimumGpa,
+                    minimumUndergradUnits =
+                        sage.minimumUndergradUnits,
+                    maximumUndergradUnits =
+                        sage.maximumUndergradUnits,
+                    totalProgramUnits =
+                        sage.totalProgramUnits,
+
+                    requirements = sageRequirements.map { requirement ->
+
+                        val requirementCourses =
+                            roadmapRepository.findSageCourses(
+                                requirement.requirementId
+                            )
+
+                        SageRequirementDto(
+                            requirementId =
+                                requirement.requirementId,
+                            requirementName =
+                                requirement.requirementName,
+                            requiredUnits =
+                                requirement.requiredUnits,
+                            description =
+                                requirement.description,
+
+                            courses = requirementCourses.map { course ->
+                                SageCourseDto(
+                                    courseId =
+                                        course.courseId,
+                                    courseCode =
+                                        course.courseCode,
+                                    courseTitle =
+                                        course.courseTitle,
+                                    units =
+                                        course.units,
+                                    courseRole =
+                                        course.courseRole,
+                                    doubleCountEligible =
+                                        course.doubleCountEligible
+                                )
+                            }
+                        )
+                    }
+                )
+            }
         )
     }
 

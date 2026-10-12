@@ -316,3 +316,190 @@
 .action-button.primary:hover {
   opacity: 0.9;
 }
+
+.sage-card {
+  margin-top: 24px;
+  margin-bottom: 24px;
+  padding: 20px;
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  background: var(--card-bg);
+}
+
+.sage-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.sage-card-label {
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.sage-card-title {
+  margin-top: 4px;
+  color: var(--text-h);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.sage-card-count {
+  color: var(--text);
+  font-size: 13px;
+}
+
+.sage-card-description {
+  margin: 10px 0 16px;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.sage-program-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sage-program-option {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 14px;
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sage-program-option:hover {
+  background: var(--card-bg);
+}
+
+.sage-program-name {
+  color: var(--text-h);
+  font-weight: 600;
+}
+
+.sage-program-meta {
+  margin-top: 4px;
+  color: var(--text);
+  font-size: 12px;
+}
+
+.sage-detail-requirements {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin: 18px 0;
+}
+
+.sage-detail-requirements > div {
+  padding: 12px;
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+}
+
+.sage-detail-requirements strong,
+.sage-detail-requirements span {
+  display: block;
+}
+
+.sage-detail-requirements span {
+  margin-top: 4px;
+  color: var(--text);
+}
+
+.sage-course-section {
+  margin-top: 20px;
+}
+
+.sage-course-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.sage-course-code {
+  color: var(--text-h);
+  font-weight: 600;
+}
+
+.sage-course-title {
+  margin-top: 3px;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.sage-course-info {
+  text-align: right;
+  font-size: 12px;
+}
+
+.sage-course-role {
+  display: block;
+  margin-top: 4px;
+  color: var(--accent);
+}
+
+.sage-note {
+  margin-top: 18px;
+  color: var(--text);
+  font-size: 12px;
+}
+.sage-requirement-block {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--card-border);
+}
+
+.sage-requirement-block:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.sage-requirement-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+
+.sage-requirement-name {
+  color: var(--text-h);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.sage-requirement-description {
+  margin-top: 4px;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.sage-requirement-units {
+  white-space: nowrap;
+  color: var(--accent);
+  font-size: 13px;
+}
+.sage-specialization-group {
+  margin-top: 16px;
+}
+
+.sage-specialization-name {
+  margin-bottom: 6px;
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 600;
+}
