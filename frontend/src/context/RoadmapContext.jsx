@@ -23,6 +23,7 @@ function buildInitialState(initialState) {
     roadmapError: '',
     savedState: { majorId: '', semesters: [] },
     hasUnsavedChanges: false,
+    sagePrograms: [],
   }
 }
 
@@ -148,6 +149,9 @@ export function roadmapReducer(state, action) {
         courses: structuredClone(action.roadmap.courses),
         prerequisites: structuredClone(action.roadmap.prerequisites),
         degreeRequirements: structuredClone(action.roadmap.degreeRequirements),
+        sagePrograms: structuredClone(
+          action.roadmap.sagePrograms || []
+        ),
         semesters: structuredClone(action.roadmap.semesters),
         savedState: nextRoadmap,
         hasUnsavedChanges: false,
