@@ -5,6 +5,9 @@ import { useEscapeKey } from '../../hooks/useEscapeKey'
 import './Layout.css'
 import AnnouncementBanner from '../Announcement/AnnouncementBanner'
 
+// TEMP: tester feedback form
+const FEEDBACK_FORM_URL = 'https://forms.gle/xrkiyJ9ZwWwL81jm7'
+
 const navLinkClass = ({ isActive }) => isActive ? "nav-link active" : "nav-link"
 
 const loginLinkClass = ({ isActive }) =>
@@ -91,6 +94,16 @@ function Layout() {
       <main className="main-content">
         <Outlet />
       </main>
+
+      {/* TEMP: opening feedback in new tab*/}
+      <a
+        href={FEEDBACK_FORM_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="feedback-button"
+      >
+        Feedback
+      </a>
 
       {showLogoutConfirm && (
         <div className="modal-backdrop" onClick={() => setShowLogoutConfirm(false)}>
