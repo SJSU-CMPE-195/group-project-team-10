@@ -296,3 +296,17 @@
 .modal-logout-button:hover {
   opacity: 0.9;
 }
+
+/* TEMP: feedback button link*/
+.feedback-button {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 40;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--accent-border);
+  background: var(--card-bg);
+  color: var(--accent);
+  text-decoration: none;
+}
