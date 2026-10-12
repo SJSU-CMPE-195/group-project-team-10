@@ -49,8 +49,12 @@ class RoadmapService(
         val requirements = roadmapRepository.findRequirements(majorId)
         val requirementCourses = roadmapRepository.findRequirementCourses(requirements.map { it.requirementId })
         val courseIds = requirementCourses.map { it.courseId }.distinct()
-        val courses = roadmapRepository.findCourses(courseIds)
         val prerequisites = roadmapRepository.findPrerequisites(courseIds)
+        val prerequisiteCourseIds = prerequisites.map { it.prereqCourseId }.distinct()
+        val courses = (
+            roadmapRepository.findCourses(courseIds) +
+                roadmapRepository.findCourses(prerequisiteCourseIds)
+            ).distinctBy { it.courseId }
         val roadmapRequirementCourses = selectRoadmapCourses(requirements, requirementCourses, courses)
 
         val requirementsById = requirements.associateBy { it.requirementId }
