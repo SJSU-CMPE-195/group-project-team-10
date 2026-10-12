@@ -91,6 +91,22 @@ cd ..
 
 Backend dependencies are resolved automatically by Gradle the first time you run `./gradlew bootRun` or `./gradlew build`.
 
+### Importing SWE/CMPE prerequisites
+
+The backend reads `data/prereq/cmpe_prereq.csv` and `data/prereq/swe_prereq.csv` from the project root (or `planner.catalog-prerequisites.directory` if configured). Once the backend is running, import either file or both into the existing course catalog:
+
+```bash
+curl -X POST 'http://localhost:8080/api/catalog-programs/import-prerequisites?program=cmpe'
+curl -X POST 'http://localhost:8080/api/catalog-programs/import-prerequisites?program=swe'
+curl -X POST 'http://localhost:8080/api/catalog-programs/import-prerequisites?program=all'
+```
+
+The import uses the existing `courses` and `prerequisites` tables and their database IDs. Courses absent from the database are created only when a CSV row provides a title and an official `catalog.sjsu.edu` URL; missing prerequisite courses are reported rather than synthesized. Because these CSVs do not contain unit counts and the existing schema requires one, newly created course rows use `0` units and the API response warns about this; existing unit counts are never overwritten. The original prerequisite/corequisite wording is stored in `prerequisite_csv_conditions`. Clear prerequisite alternatives (OR/equivalent expressions) remain in that source text and are not emitted as mandatory roadmap edges. The source-specific edge records make repeated imports idempotent and allow CSV-managed relationships to be synchronized without deleting edges owned by another import source.
+
+The roadmap API includes resolved prerequisite courses even when they are outside the selected major's requirement groups. Such courses remain optional and do not alter required units or generated degree requirements.
+
+The endpoint writes to the configured application database; use a development database when trying the import. Its response reports matched/created records, relationship counts, unresolved codes, invalid rows, and expressions needing review.
+
 ### Running Locally
 
 Run the backend and frontend in separate terminals.

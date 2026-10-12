@@ -50,6 +50,7 @@ object CoursesTable : Table("courses") {
     val difficultyScore = double("difficulty_score").nullable()
     val avgWorkload = double("avg_workload").nullable()
     val syllabusUrl = text("syllabus_url").nullable()
+    val officialCatalogUrl = text("official_catalog_url").nullable()
 
     override val primaryKey = PrimaryKey(id)
 }
@@ -82,7 +83,28 @@ object PrerequisitesTable : Table("prerequisites") {
     val prereqCourseId = reference("prereq_course_id", CoursesTable.id)
     val prereqType = varchar("prereq_type", 20)
 
-    override val primaryKey = PrimaryKey(courseId, prereqCourseId)
+    override val primaryKey = PrimaryKey(courseId, prereqCourseId, prereqType)
+}
+
+object PrerequisiteCsvConditionsTable : Table("prerequisite_csv_conditions") {
+    val courseId = reference("course_id", CoursesTable.id)
+    val relationshipType = varchar("relationship_type", 20)
+    val sourceKey = varchar("source_key", 100)
+    val originalText = text("original_text")
+    val expressionJson = text("expression_json").nullable()
+    val officialCourseUrl = text("official_course_url").nullable()
+
+    override val primaryKey = PrimaryKey(courseId, relationshipType, sourceKey)
+}
+
+object PrerequisiteCsvEdgesTable : Table("prerequisite_csv_edges") {
+    val courseId = reference("course_id", CoursesTable.id)
+    val prereqCourseId = reference("prereq_course_id", CoursesTable.id)
+    val relationshipType = varchar("relationship_type", 20)
+    val sourceKey = varchar("source_key", 100)
+    val importerCreatedEdge = bool("importer_created_edge")
+
+    override val primaryKey = PrimaryKey(courseId, prereqCourseId, relationshipType, sourceKey)
 }
 
 object RequirementCoursesTable : Table("requirement_courses") {
@@ -207,6 +229,8 @@ val plannerSchemaTables = arrayOf(
     InstructorsTable,
     CourseOfferingsTable,
     PrerequisitesTable,
+    PrerequisiteCsvConditionsTable,
+    PrerequisiteCsvEdgesTable,
     RequirementCoursesTable,
     StudentHistoryTable,
     StudentRoadmapsTable,
