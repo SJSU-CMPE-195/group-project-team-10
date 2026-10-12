@@ -1,11 +1,13 @@
 import {useEffect, useMemo, useState} from 'react'
-import {useNavigate} from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import {ReactFlow, Background, Controls, MarkerType,applyEdgeChanges, applyNodeChanges} from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import {useRoadmap, useRoadmapDispatch} from '../../context/RoadmapContext'
 import {validateSemesterPlan} from '../../utils/prerequisiteValidator'
 import CourseNode from '../../components/CourseNode/CourseNode'
 import ValidationAlert from '../../components/ValidationAlert/ValidationAlert'
+import LeaveConfirmModal from '../../components/LeaveConfirmModal/LeaveConfirmModal'
+import { useLeaveGuard } from '../../hooks/useLeaveGuard'
 import { fetchRoadmapByMajor } from '../../api/roadmap'
 import './Roadmap.css'
 
@@ -264,17 +266,8 @@ function Roadmap() {
     setHoverSemesterIndex(null)
   }
   
-  const handleBack = () => {
-    if (hasUnsavedChanges) {
-      const choice = window.confirm("You have unsaved changes. Press OK to discard, or Cancel to stay.")
-      if (choice) {
-        dispatch({ type: "DISCARD_CHANGES" })
-        navigate("/")
-      }
-    } else {
-      navigate("/")
-    }
-  }
+  // any navigation off /roadmap with unsaved edits waits on the leave dialog
+  const blocker = useLeaveGuard(hasUnsavedChanges)
 
   const handleSave = () => {
     dispatch({ type: "SAVE_CHANGES" })
@@ -325,7 +318,7 @@ function Roadmap() {
   return (
     <div className="roadmap-page">
       <div className="roadmap-toolbar">
-        <button className="roadmap-back-btn" onClick={handleBack}>
+        <button className="roadmap-back-btn" onClick={() => navigate("/")}>
           &larr; Back
         </button>
 
@@ -481,6 +474,29 @@ function Roadmap() {
               <ValidationAlert violations={violations} courseMap={courseMap} />
         </div>
       )}
+
+      <LeaveConfirmModal
+        blocker={blocker}
+        title="Unsaved roadmap changes"
+        message={<p>You have changes to your roadmap that haven't been saved.</p>}
+        actions={[
+          {
+            label: 'Discard and leave',
+            onClick: () => {
+              handleDiscardChanges()
+              blocker.proceed()
+            },
+          },
+          {
+            label: 'Save and leave',
+            onClick: () => {
+              handleSave()
+              blocker.proceed()
+            },
+            variant: 'primary',
+          },
+        ]}
+      />
     </div>
   )
 }
