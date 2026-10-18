@@ -27,6 +27,7 @@ dependencies {
 	implementation("org.jetbrains.exposed:exposed-java-time:1.2.0")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jsoup:jsoup:1.17.2")
+	implementation("org.apache.commons:commons-csv:1.14.1")
 	implementation("org.apache.poi:poi-ooxml:5.4.1")
 	implementation("tools.jackson.module:jackson-module-kotlin")
 	implementation("org.springframework.boot:spring-boot-starter-security")

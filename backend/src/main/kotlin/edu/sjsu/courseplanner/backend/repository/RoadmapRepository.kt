@@ -2,7 +2,6 @@ package edu.sjsu.courseplanner.backend.repository
 
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
-import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.jdbc.Database
@@ -136,10 +135,7 @@ class RoadmapRepository(
 
         PrerequisitesTable
             .selectAll()
-            .where {
-                (PrerequisitesTable.courseId inList courseIds)
-                    .and(PrerequisitesTable.prereqCourseId inList courseIds)
-            }
+            .where { PrerequisitesTable.courseId inList courseIds }
             .map { row ->
                 RoadmapPrerequisiteRecord(
                     courseId = row[PrerequisitesTable.courseId],

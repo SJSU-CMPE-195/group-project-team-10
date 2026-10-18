@@ -84,6 +84,7 @@ class SecurityConfig(
                         "/api/catalog-programs/import",
                         "/api/grade-distributions/import",
                         "/api/sage/seed"
+                        "/api/catalog-programs/import-prerequisites",
                     )
             }
             .authorizeHttpRequests { auth ->
@@ -102,6 +103,7 @@ class SecurityConfig(
                     .requestMatchers(HttpMethod.GET, "/api/announcements/**").permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/catalog-programs/import").permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/sage/seed").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/api/catalog-programs/import-prerequisites").permitAll()
                     .requestMatchers(
                         HttpMethod.POST,
                         "/api/grade-distributions/import"

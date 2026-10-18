@@ -445,6 +445,20 @@ export function roadmapReducer(state, action) {
 export function RoadmapProvider({ children, initialState, disableAutoLoad = false }) {
   const [state, dispatch] = useReducer(roadmapReducer, initialState, buildInitialState)
 
+  // roadmap edits live in memory only, so refresh/close with unsaved changes gets
+  // the browser's leave prompt. in-app navigation keeps them (see Roadmap's useBlocker)
+  useEffect(() => {
+    if (!state.hasUnsavedChanges) return undefined
+
+    function handleBeforeUnload(event) {
+      event.preventDefault()
+      event.returnValue = ''
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [state.hasUnsavedChanges])
+
   useEffect(() => {
     if (disableAutoLoad) return undefined
 
