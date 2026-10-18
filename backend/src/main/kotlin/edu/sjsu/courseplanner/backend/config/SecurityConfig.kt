@@ -83,7 +83,7 @@ class SecurityConfig(
                     .ignoringRequestMatchers(
                         "/api/catalog-programs/import",
                         "/api/grade-distributions/import",
-                        "/api/sage/seed"
+                        "/api/sage/seed",
                         "/api/catalog-programs/import-prerequisites",
                     )
             }
