@@ -1,0 +1,917 @@
+{
+  "catalogYear": "2026-2027",
+  "programs": [
+    {
+      "undergraduateMajor": "Software Engineering, BS",
+      "graduateProgram": "Artificial Intelligence, MS",
+      "minimumGpa": 3.0,
+      "minimumUndergradUnits": 75,
+      "maximumUndergradUnits": 120,
+      "totalProgramUnits": 141,
+      "requirements": [
+        {
+          "name": "Core Courses",
+          "requiredUnits": 9,
+          "description": "Complete all AI MS core courses.",
+          "courses": [
+            {
+              "courseCode": "CMPE 252",
+              "courseTitle": "Artificial Intelligence and Data Engineering",
+              "role": "CORE",
+              "doubleCountEligible": true
+            },
+            {
+              "courseCode": "CMPE 257",
+              "courseTitle": "Machine Learning",
+              "role": "CORE",
+              "doubleCountEligible": true
+            },
+            {
+              "courseCode": "ISE 201",
+              "courseTitle": "Math Foundations for Decision and Data Sciences",
+              "role": "CORE_REPLACEMENT",
+              "doubleCountEligible": true
+            }
+          ]
+        },
+        {
+          "name": "Campus Graduate GWAR",
+          "requiredUnits": 3,
+          "description": "Complete CMPE 294.",
+          "courses": [
+            {
+              "courseCode": "CMPE 294",
+              "courseTitle": "Computer Engineering Seminar",
+              "role": "GWAR",
+              "doubleCountEligible": false
+            }
+          ]
+        },
+        {
+          "name": "Specialization Courses",
+          "requiredUnits": 6,
+          "description": "Complete at least 6 units from the same specialization.",
+          "courses": [
+            {
+              "courseCode": "CMPE 256",
+              "courseTitle": "Recommender Systems",
+              "role": "SPECIALIZATION_INTELLIGENT_DATA",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 258",
+              "courseTitle": "Deep Learning",
+              "role": "SPECIALIZATION_INTELLIGENT_DATA",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 259",
+              "courseTitle": "Natural Language Processing",
+              "role": "SPECIALIZATION_INTELLIGENT_DATA",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 266",
+              "courseTitle": "Big Data Engineering and Analytics",
+              "role": "SPECIALIZATION_INTELLIGENT_DATA",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 249",
+              "courseTitle": "Intelligent Autonomous Systems",
+              "role": "SPECIALIZATION_AUTONOMOUS",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 258",
+              "courseTitle": "Deep Learning",
+              "role": "SPECIALIZATION_AUTONOMOUS",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 260",
+              "courseTitle": "Reinforcement Learning",
+              "role": "SPECIALIZATION_AUTONOMOUS",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 209",
+              "courseTitle": "Network Security and Applications",
+              "role": "SPECIALIZATION_CYBERSECURITY_AI",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 219",
+              "courseTitle": "Cybersecurity Clinics with HCI",
+              "role": "SPECIALIZATION_CYBERSECURITY_AI",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 253",
+              "courseTitle": "AI Threat Intelligence",
+              "role": "SPECIALIZATION_CYBERSECURITY_AI",
+              "doubleCountEligible": false
+            }
+          ]
+        },
+        {
+          "name": "Approved Electives",
+          "requiredUnits": 9,
+          "description": "Complete one 3-unit 200-level CMPE course in a specialization other than the first-choice specialization, plus two additional eligible 200-level CMPE courses. CMPE 295, 299, 298, and 298I are excluded as specified by the catalog.",
+          "courses": []
+        },
+        {
+          "name": "Culminating Experience",
+          "requiredUnits": 6,
+          "description": "Complete either Plan A (Thesis) or Plan B (Project).",
+          "courses": [
+            {
+              "courseCode": "CMPE 299A",
+              "courseTitle": "Master Thesis I",
+              "role": "THESIS_OPTION",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 299B",
+              "courseTitle": "Master Thesis II",
+              "role": "THESIS_OPTION",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 295A",
+              "courseTitle": "Master Project I",
+              "role": "PROJECT_OPTION",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 295B",
+              "courseTitle": "Master Project II",
+              "role": "PROJECT_OPTION",
+              "doubleCountEligible": false
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "undergraduateMajor": "Computer Engineering, BS",
+      "graduateProgram": "Artificial Intelligence, MS",
+      "minimumGpa": 3.0,
+      "minimumUndergradUnits": 75,
+      "maximumUndergradUnits": 120,
+      "totalProgramUnits": 141,
+      "requirements": [
+        {
+          "name": "Core Courses",
+          "requiredUnits": 9,
+          "description": "Complete all AI MS core courses.",
+          "courses": [
+            {
+              "courseCode": "CMPE 252",
+              "courseTitle": "Artificial Intelligence and Data Engineering",
+              "role": "CORE",
+              "doubleCountEligible": true
+            },
+            {
+              "courseCode": "CMPE 257",
+              "courseTitle": "Machine Learning",
+              "role": "CORE",
+              "doubleCountEligible": true
+            },
+            {
+              "courseCode": "ISE 201",
+              "courseTitle": "Math Foundations for Decision and Data Sciences",
+              "role": "CORE_REPLACEMENT",
+              "doubleCountEligible": true
+            }
+          ]
+        },
+        {
+          "name": "Campus Graduate GWAR",
+          "requiredUnits": 3,
+          "description": "Complete CMPE 294.",
+          "courses": [
+            {
+              "courseCode": "CMPE 294",
+              "courseTitle": "Computer Engineering Seminar",
+              "role": "GWAR",
+              "doubleCountEligible": false
+            }
+          ]
+        },
+        {
+          "name": "Specialization Courses",
+          "requiredUnits": 6,
+          "description": "Complete at least 6 units from the same specialization.",
+          "courses": [
+            {
+              "courseCode": "CMPE 256",
+              "courseTitle": "Recommender Systems",
+              "role": "SPECIALIZATION_INTELLIGENT_DATA",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 258",
+              "courseTitle": "Deep Learning",
+              "role": "SPECIALIZATION_INTELLIGENT_DATA",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 259",
+              "courseTitle": "Natural Language Processing",
+              "role": "SPECIALIZATION_INTELLIGENT_DATA",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 266",
+              "courseTitle": "Big Data Engineering and Analytics",
+              "role": "SPECIALIZATION_INTELLIGENT_DATA",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 249",
+              "courseTitle": "Intelligent Autonomous Systems",
+              "role": "SPECIALIZATION_AUTONOMOUS",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 258",
+              "courseTitle": "Deep Learning",
+              "role": "SPECIALIZATION_AUTONOMOUS",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 260",
+              "courseTitle": "Reinforcement Learning",
+              "role": "SPECIALIZATION_AUTONOMOUS",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 209",
+              "courseTitle": "Network Security and Applications",
+              "role": "SPECIALIZATION_CYBERSECURITY_AI",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 219",
+              "courseTitle": "Cybersecurity Clinics with HCI",
+              "role": "SPECIALIZATION_CYBERSECURITY_AI",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 253",
+              "courseTitle": "AI Threat Intelligence",
+              "role": "SPECIALIZATION_CYBERSECURITY_AI",
+              "doubleCountEligible": false
+            }
+          ]
+        },
+        {
+          "name": "Approved Electives",
+          "requiredUnits": 9,
+          "description": "Complete one 3-unit 200-level CMPE course in a specialization other than the first-choice specialization, plus two additional eligible 200-level CMPE courses. CMPE 295, 299, 298, and 298I are excluded as specified by the catalog.",
+          "courses": []
+        },
+        {
+          "name": "Culminating Experience",
+          "requiredUnits": 6,
+          "description": "Complete either Plan A (Thesis) or Plan B (Project).",
+          "courses": [
+            {
+              "courseCode": "CMPE 299A",
+              "courseTitle": "Master Thesis I",
+              "role": "THESIS_OPTION",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 299B",
+              "courseTitle": "Master Thesis II",
+              "role": "THESIS_OPTION",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 295A",
+              "courseTitle": "Master Project I",
+              "role": "PROJECT_OPTION",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 295B",
+              "courseTitle": "Master Project II",
+              "role": "PROJECT_OPTION",
+              "doubleCountEligible": false
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "undergraduateMajor": "Software Engineering, BS",
+      "graduateProgram": "Software Engineering, MS",
+      "minimumGpa": 3.0,
+      "minimumUndergradUnits": 75,
+      "maximumUndergradUnits": 120,
+      "totalProgramUnits": 141,
+      "requirements": [
+        {
+          "name": "Core Courses",
+          "requiredUnits": 6,
+          "description": "Complete both Software Engineering MS core courses.",
+          "courses": [
+            {
+              "courseCode": "CMPE 202",
+              "courseTitle": "Software Systems Engineering",
+              "role": "CORE",
+              "doubleCountEligible": true
+            },
+            {
+              "courseCode": "CMPE 272",
+              "courseTitle": "Enterprise Software Platforms",
+              "role": "CORE_REPLACEMENT",
+              "doubleCountEligible": true
+            }
+          ]
+        },
+        {
+          "name": "Campus Graduate GWAR",
+          "requiredUnits": 3,
+          "description": "Complete CMPE 294 or CMPE 295W.",
+          "courses": [
+            {
+              "courseCode": "CMPE 294",
+              "courseTitle": "Computer Engineering Seminar",
+              "role": "GWAR_OPTION",
+              "doubleCountEligible": true
+            },
+            {
+              "courseCode": "CMPE 295W",
+              "courseTitle": "Master's Project",
+              "role": "GWAR_OPTION",
+              "doubleCountEligible": true
+            }
+          ]
+        },
+        {
+          "name": "Specialization Courses",
+          "requiredUnits": 6,
+          "description": "Complete two courses from one specialization area.",
+          "courses": [
+            {
+              "courseCode": "CMPE 273",
+              "courseTitle": "Enterprise Distributed Systems",
+              "role": "SPECIALIZATION_ENTERPRISE",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 275",
+              "courseTitle": "Enterprise Application Development",
+              "role": "SPECIALIZATION_ENTERPRISE",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 281",
+              "courseTitle": "Intelligent Cloud Platform",
+              "role": "SPECIALIZATION_CLOUD",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 283",
+              "courseTitle": "Virtualization Technologies",
+              "role": "SPECIALIZATION_CLOUD",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 285",
+              "courseTitle": "Software Engineering Processes",
+              "role": "SPECIALIZATION_SOFTWARE_SYSTEMS",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 287",
+              "courseTitle": "Intelligent System Quality Validation",
+              "role": "SPECIALIZATION_SOFTWARE_SYSTEMS",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 206",
+              "courseTitle": "Computer Network Design",
+              "role": "SPECIALIZATION_NETWORKING",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 210",
+              "courseTitle": "Software-defined Networks and Network Functions Virtualization",
+              "role": "SPECIALIZATION_NETWORKING",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 257",
+              "courseTitle": "Machine Learning",
+              "role": "SPECIALIZATION_DATA_SCIENCE",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 258",
+              "courseTitle": "Deep Learning",
+              "role": "SPECIALIZATION_DATA_SCIENCE",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 209",
+              "courseTitle": "Network Security and Applications",
+              "role": "SPECIALIZATION_CYBERSECURITY",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 219",
+              "courseTitle": "Cybersecurity Clinics with HCI",
+              "role": "SPECIALIZATION_CYBERSECURITY",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 279",
+              "courseTitle": "Software Security Technologies",
+              "role": "SPECIALIZATION_CYBERSECURITY",
+              "doubleCountEligible": false
+            }
+          ]
+        },
+        {
+          "name": "Approved Electives",
+          "requiredUnits": 12,
+          "description": "Eligible electives include permitted 200-level CMPE courses and approved Engineering or Science courses selected with the MSSE Graduate Advisor. One elective must be a specialization core course outside the student's declared specialization.",
+          "courses": []
+        },
+        {
+          "name": "Culminating Experience",
+          "requiredUnits": 6,
+          "description": "Complete Plan A thesis or Plan B project.",
+          "courses": [
+            {
+              "courseCode": "CMPE 299A",
+              "courseTitle": "Master Thesis I",
+              "role": "THESIS_OPTION",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 299B",
+              "courseTitle": "Master Thesis II",
+              "role": "THESIS_OPTION",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 295A",
+              "courseTitle": "Master Project I",
+              "role": "PROJECT_OPTION",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 295W",
+              "courseTitle": "Master's Project",
+              "role": "PROJECT_OPTION",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 295B",
+              "courseTitle": "Master Project II",
+              "role": "PROJECT_OPTION",
+              "doubleCountEligible": false
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "undergraduateMajor": "Computer Engineering, BS",
+      "graduateProgram": "Software Engineering, MS",
+      "minimumGpa": 3.0,
+      "minimumUndergradUnits": 75,
+      "maximumUndergradUnits": 120,
+      "totalProgramUnits": 141,
+      "requirements": [
+        {
+          "name": "Core Courses",
+          "requiredUnits": 6,
+          "description": "Complete both Software Engineering MS core courses.",
+          "courses": [
+            {
+              "courseCode": "CMPE 202",
+              "courseTitle": "Software Systems Engineering",
+              "role": "CORE_REPLACEMENT",
+              "doubleCountEligible": true
+            },
+            {
+              "courseCode": "CMPE 272",
+              "courseTitle": "Enterprise Software Platforms",
+              "role": "CORE",
+              "doubleCountEligible": true
+            }
+          ]
+        },
+        {
+          "name": "Campus Graduate GWAR",
+          "requiredUnits": 3,
+          "description": "Complete CMPE 294 or CMPE 295W.",
+          "courses": [
+            {
+              "courseCode": "CMPE 294",
+              "courseTitle": "Computer Engineering Seminar",
+              "role": "GWAR_OPTION",
+              "doubleCountEligible": true
+            },
+            {
+              "courseCode": "CMPE 295W",
+              "courseTitle": "Master's Project",
+              "role": "GWAR_OPTION",
+              "doubleCountEligible": true
+            }
+          ]
+        },
+        {
+          "name": "Specialization Courses",
+          "requiredUnits": 6,
+          "description": "Complete two courses from one specialization area.",
+          "courses": [
+            {
+              "courseCode": "CMPE 273",
+              "courseTitle": "Enterprise Distributed Systems",
+              "role": "SPECIALIZATION_ENTERPRISE",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 275",
+              "courseTitle": "Enterprise Application Development",
+              "role": "SPECIALIZATION_ENTERPRISE",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 281",
+              "courseTitle": "Intelligent Cloud Platform",
+              "role": "SPECIALIZATION_CLOUD",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 283",
+              "courseTitle": "Virtualization Technologies",
+              "role": "SPECIALIZATION_CLOUD",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 285",
+              "courseTitle": "Software Engineering Processes",
+              "role": "SPECIALIZATION_SOFTWARE_SYSTEMS",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 287",
+              "courseTitle": "Intelligent System Quality Validation",
+              "role": "SPECIALIZATION_SOFTWARE_SYSTEMS",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 206",
+              "courseTitle": "Computer Network Design",
+              "role": "SPECIALIZATION_NETWORKING",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 210",
+              "courseTitle": "Software-defined Networks and Network Functions Virtualization",
+              "role": "SPECIALIZATION_NETWORKING",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 257",
+              "courseTitle": "Machine Learning",
+              "role": "SPECIALIZATION_DATA_SCIENCE",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 258",
+              "courseTitle": "Deep Learning",
+              "role": "SPECIALIZATION_DATA_SCIENCE",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 209",
+              "courseTitle": "Network Security and Applications",
+              "role": "SPECIALIZATION_CYBERSECURITY",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 219",
+              "courseTitle": "Cybersecurity Clinics with HCI",
+              "role": "SPECIALIZATION_CYBERSECURITY",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 279",
+              "courseTitle": "Software Security Technologies",
+              "role": "SPECIALIZATION_CYBERSECURITY",
+              "doubleCountEligible": false
+            }
+          ]
+        },
+        {
+          "name": "Approved Electives",
+          "requiredUnits": 12,
+          "description": "Eligible electives include permitted 200-level CMPE courses and approved Engineering or Science courses selected with the MSSE Graduate Advisor. One elective must be a specialization core course outside the student's declared specialization.",
+          "courses": []
+        },
+        {
+          "name": "Culminating Experience",
+          "requiredUnits": 6,
+          "description": "Complete Plan A thesis or Plan B project.",
+          "courses": [
+            {
+              "courseCode": "CMPE 299A",
+              "courseTitle": "Master Thesis I",
+              "role": "THESIS_OPTION",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 299B",
+              "courseTitle": "Master Thesis II",
+              "role": "THESIS_OPTION",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 295A",
+              "courseTitle": "Master Project I",
+              "role": "PROJECT_OPTION",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 295W",
+              "courseTitle": "Master's Project",
+              "role": "PROJECT_OPTION",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 295B",
+              "courseTitle": "Master Project II",
+              "role": "PROJECT_OPTION",
+              "doubleCountEligible": false
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "undergraduateMajor": "Computer Engineering, BS",
+      "graduateProgram": "Computer Engineering, MS",
+      "minimumGpa": 3.0,
+      "minimumUndergradUnits": 75,
+      "maximumUndergradUnits": 120,
+      "totalProgramUnits": 141,
+      "requirements": [
+        {
+          "name": "Core Courses",
+          "requiredUnits": 9,
+          "description": "Complete all Computer Engineering MS core courses.",
+          "courses": [
+            {
+              "courseCode": "CMPE 200",
+              "courseTitle": "Computer Architecture",
+              "role": "CORE_REPLACEMENT",
+              "doubleCountEligible": true
+            },
+            {
+              "courseCode": "CMPE 220",
+              "courseTitle": "System Software",
+              "role": "CORE",
+              "doubleCountEligible": true
+            },
+            {
+              "courseCode": "CMPE 240",
+              "courseTitle": "Advanced Computer Design",
+              "role": "CORE",
+              "doubleCountEligible": true
+            }
+          ]
+        },
+        {
+          "name": "Campus Graduate GWAR",
+          "requiredUnits": 3,
+          "description": "Complete CMPE 294.",
+          "courses": [
+            {
+              "courseCode": "CMPE 294",
+              "courseTitle": "Computer Engineering Seminar",
+              "role": "GWAR",
+              "doubleCountEligible": false
+            }
+          ]
+        },
+        {
+          "name": "Specialization Courses",
+          "requiredUnits": 6,
+          "description": "Complete two courses from one specialization area.",
+          "courses": [
+            {
+              "courseCode": "CMPE 213",
+              "courseTitle": "Parallel Computing",
+              "role": "SPECIALIZATION_SYSTEM_SOFTWARE",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 214",
+              "courseTitle": "GPU Architecture and Programming",
+              "role": "SPECIALIZATION_SYSTEM_SOFTWARE",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 249",
+              "courseTitle": "Intelligent Autonomous Systems",
+              "role": "SPECIALIZATION_SYSTEM_SOFTWARE",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 281",
+              "courseTitle": "Intelligent Cloud Platform",
+              "role": "SPECIALIZATION_SYSTEM_SOFTWARE",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 283",
+              "courseTitle": "Virtualization Technologies",
+              "role": "SPECIALIZATION_SYSTEM_SOFTWARE",
+              "doubleCountEligible": false
+            },
+
+            {
+              "courseCode": "CMPE 206",
+              "courseTitle": "Computer Network Design",
+              "role": "SPECIALIZATION_NETWORK_SYSTEMS",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 207",
+              "courseTitle": "Network Programming and Application",
+              "role": "SPECIALIZATION_NETWORK_SYSTEMS",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 208",
+              "courseTitle": "Network Architecture and Protocols",
+              "role": "SPECIALIZATION_NETWORK_SYSTEMS",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 209",
+              "courseTitle": "Network Security and Applications",
+              "role": "SPECIALIZATION_NETWORK_SYSTEMS",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 210",
+              "courseTitle": "Software-defined Networks and Network Functions Virtualization",
+              "role": "SPECIALIZATION_NETWORK_SYSTEMS",
+              "doubleCountEligible": false
+            },
+
+            {
+              "courseCode": "CMPE 242",
+              "courseTitle": "Embedded Hardware Design",
+              "role": "SPECIALIZATION_EMBEDDED",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 243",
+              "courseTitle": "Embedded Systems Applications",
+              "role": "SPECIALIZATION_EMBEDDED",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 244",
+              "courseTitle": "Embedded Software",
+              "role": "SPECIALIZATION_EMBEDDED",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 245",
+              "courseTitle": "Embedded Wireless Architecture",
+              "role": "SPECIALIZATION_EMBEDDED",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 265",
+              "courseTitle": "High Speed Digital System Design",
+              "role": "SPECIALIZATION_EMBEDDED",
+              "doubleCountEligible": false
+            },
+
+            {
+              "courseCode": "CMPE 209",
+              "courseTitle": "Network Security and Applications",
+              "role": "SPECIALIZATION_CYBERSECURITY",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 211",
+              "courseTitle": "Advanced Network Security in IoT",
+              "role": "SPECIALIZATION_CYBERSECURITY",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 219",
+              "courseTitle": "Cybersecurity Clinics with HCI",
+              "role": "SPECIALIZATION_CYBERSECURITY",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 279",
+              "courseTitle": "Software Security Technologies",
+              "role": "SPECIALIZATION_CYBERSECURITY",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 287",
+              "courseTitle": "Intelligent System Quality Validation",
+              "role": "SPECIALIZATION_CYBERSECURITY",
+              "doubleCountEligible": false
+            },
+
+            {
+              "courseCode": "CMPE 214",
+              "courseTitle": "GPU Architecture and Programming",
+              "role": "SPECIALIZATION_MACHINE_LEARNING",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 249",
+              "courseTitle": "Intelligent Autonomous Systems",
+              "role": "SPECIALIZATION_MACHINE_LEARNING",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 257",
+              "courseTitle": "Machine Learning",
+              "role": "SPECIALIZATION_MACHINE_LEARNING",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 258",
+              "courseTitle": "Deep Learning",
+              "role": "SPECIALIZATION_MACHINE_LEARNING",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 260",
+              "courseTitle": "Reinforcement Learning",
+              "role": "SPECIALIZATION_MACHINE_LEARNING",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 281",
+              "courseTitle": "Intelligent Cloud Platform",
+              "role": "SPECIALIZATION_MACHINE_LEARNING",
+              "doubleCountEligible": false
+            }
+          ]
+        },
+        {
+          "name": "Approved Electives",
+          "requiredUnits": 9,
+          "description": "Complete one 3-unit 200-level CMPE course from a specialization other than the first-choice specialization and two additional eligible 200-level CMPE courses. Culminating experience courses and CMPE 298/298I are excluded as specified by the catalog.",
+          "courses": []
+        },
+        {
+          "name": "Culminating Experience",
+          "requiredUnits": 6,
+          "description": "Complete either Plan A (Thesis) or Plan B (Project).",
+          "courses": [
+            {
+              "courseCode": "CMPE 299A",
+              "courseTitle": "Master Thesis I",
+              "role": "THESIS_OPTION",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 299B",
+              "courseTitle": "Master Thesis II",
+              "role": "THESIS_OPTION",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 295A",
+              "courseTitle": "Master Project I",
+              "role": "PROJECT_OPTION",
+              "doubleCountEligible": false
+            },
+            {
+              "courseCode": "CMPE 295B",
+              "courseTitle": "Master Project II",
+              "role": "PROJECT_OPTION",
+              "doubleCountEligible": false
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

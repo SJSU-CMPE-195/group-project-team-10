@@ -82,8 +82,9 @@ class SecurityConfig(
                     .csrfTokenRequestHandler(SpaCsrfTokenRequestHandler())
                     .ignoringRequestMatchers(
                         "/api/catalog-programs/import",
+                        "/api/grade-distributions/import",
+                        "/api/sage/seed",
                         "/api/catalog-programs/import-prerequisites",
-                        "/api/grade-distributions/import"
                     )
             }
             .authorizeHttpRequests { auth ->
@@ -100,11 +101,9 @@ class SecurityConfig(
                     .requestMatchers(HttpMethod.GET, "/api/sections/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/catalog/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/announcements/**").permitAll()
-                    .requestMatchers(
-                        HttpMethod.POST,
-                        "/api/catalog-programs/import",
-                        "/api/catalog-programs/import-prerequisites"
-                    ).permitAll()
+                    .requestMatchers(HttpMethod.POST, "/api/catalog-programs/import").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/api/sage/seed").permitAll()
+                    .requestMatchers(HttpMethod.POST, "/api/catalog-programs/import-prerequisites").permitAll()
                     .requestMatchers(
                         HttpMethod.POST,
                         "/api/grade-distributions/import"
