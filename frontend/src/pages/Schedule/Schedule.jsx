@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { useRoadmap, useRoadmapDispatch } from '../../context/RoadmapContext'
 import { useSchedule } from '../../context/useSchedule'
 import { fetchSections } from '../../api/sections'
+import LeaveConfirmModal from '../../components/LeaveConfirmModal/LeaveConfirmModal'
+import { useLeaveGuard } from '../../hooks/useLeaveGuard'
 import './Schedule.css'
 
 const DAYS = ['M', 'T', 'W', 'R', 'F']
@@ -205,7 +207,9 @@ function Schedule() {
     )
   }
 
-  function handleApplyScheduleToRoadmap() {
+  // returns: courses to add to the term's roadmap,
+  // ones already there, and sections with no matching course
+  function getApplyPlan() {
     const uniqueCoursesById = new Map()
     const unmatchedSections = []
 
@@ -240,20 +244,32 @@ function Schedule() {
       course => existingRoadmapCourseIds.has(course.courseId)
     )
 
-    if (addedCourses.length > 0) {
-      roadmapDispatch({
-        type: 'APPLY_SCHEDULE_TO_ROADMAP',
-        term: activeTerm,
-        courses: addedCourses,
-      })
-    }
+    return { addedCourses, skippedCourses, unmatchedSections }
+  }
 
-    setApplyResult({
-      addedCourses,
-      skippedCourses,
-      unmatchedSections,
+  function applyCoursesToRoadmap(addedCourses) {
+    if (addedCourses.length === 0) return
+
+    roadmapDispatch({
+      type: 'APPLY_SCHEDULE_TO_ROADMAP',
+      term: activeTerm,
+      courses: addedCourses,
     })
   }
+
+  function handleApplyScheduleToRoadmap() {
+    const plan = getApplyPlan()
+    applyCoursesToRoadmap(plan.addedCourses)
+    setApplyResult(plan)
+  }
+
+  // only compare when ready since every selected course would look new
+  const roadmapReady =
+    !roadmapState.isLoadingRoadmap && !roadmapState.roadmapError && Boolean(roadmapState.majorInfo)
+  const pendingCourses = roadmapReady && activeTerm ? getApplyPlan().addedCourses : []
+
+  // leaving /schedule with courses not on the roadmap will ask to apply changes
+  const blocker = useLeaveGuard(pendingCourses.length > 0)
 
   const roadmapPanel = (
     <section className="roadmap-schedule-panel">
@@ -565,6 +581,31 @@ function Schedule() {
       )}
 
       {activeTerm && roadmapPanel}
+
+      <LeaveConfirmModal
+        blocker={blocker}
+        title="Apply schedule to roadmap?"
+        message={
+          <>
+            <p>
+              Your {activeTerm} schedule has {pendingCourses.length} course
+              {pendingCourses.length === 1 ? '' : 's'} that {pendingCourses.length === 1 ? "isn't" : "aren't"} on your roadmap:
+            </p>
+            <p><strong>{pendingCourses.map(course => course.courseCode).join(', ')}</strong></p>
+          </>
+        }
+        actions={[
+          { label: 'Leave without applying', onClick: () => blocker.proceed() },
+          {
+            label: 'Apply and leave',
+            onClick: () => {
+              applyCoursesToRoadmap(pendingCourses)
+              blocker.proceed()
+            },
+            variant: 'primary',
+          },
+        ]}
+      />
     </div>
   )
 }
