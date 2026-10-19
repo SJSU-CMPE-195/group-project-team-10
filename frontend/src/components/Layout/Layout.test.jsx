@@ -1,7 +1,8 @@
 import { screen, fireEvent } from '@testing-library/react'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import App from '../../App'
 import { renderWithProviders } from '../../test-utils'
+import { VARIANT_KEY } from '../../lib/experiment'
 
 const auth = vi.hoisted(() => ({ user: null }))
 
@@ -19,6 +20,19 @@ vi.mock('../../context/useAuth', () => ({
 describe('Layout', () => {
   beforeEach(() => {
     auth.user = null
+  })
+
+  afterEach(() => {
+    localStorage.clear()
+  })
+
+  it.each([
+    ['warning', 'https://forms.gle/XcnSJ3aA5s18AJP6A'],
+    ['autosave', 'https://forms.gle/mWMvNHEa4ffryTaK9'],
+  ])('links the %s variant to its feedback form', (variant, formUrl) => {
+    localStorage.setItem(VARIANT_KEY, variant)
+    renderWithProviders(<App />)
+    expect(screen.getByRole('link', { name: 'Feedback' }).getAttribute('href')).toBe(formUrl)
   })
 
   it('hides the Admin link from non-admins', () => {

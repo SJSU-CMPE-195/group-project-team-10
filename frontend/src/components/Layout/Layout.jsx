@@ -4,9 +4,8 @@ import { useAuth } from "../../context/useAuth";
 import { useEscapeKey } from '../../hooks/useEscapeKey'
 import './Layout.css'
 import AnnouncementBanner from '../Announcement/AnnouncementBanner'
-
-// TEMP: tester feedback form
-const FEEDBACK_FORM_URL = 'https://forms.gle/xrkiyJ9ZwWwL81jm7'
+import { FEEDBACK_FORM_URLS } from '../../lib/experiment'
+import { useRoadmap } from '../../context/RoadmapContext'
 
 const navLinkClass = ({ isActive }) => isActive ? "nav-link active" : "nav-link"
 
@@ -18,6 +17,8 @@ function Layout() {
   const navigate = useNavigate()
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  // TEMP: tester feedback form
+  const { variant } = useRoadmap()
 
   useEscapeKey(menuOpen, () => setMenuOpen(false))
 
@@ -97,7 +98,7 @@ function Layout() {
 
       {/* TEMP: opening feedback in new tab*/}
       <a
-        href={FEEDBACK_FORM_URL}
+        href={FEEDBACK_FORM_URLS[variant]}
         target="_blank"
         rel="noopener noreferrer"
         className="feedback-button"
