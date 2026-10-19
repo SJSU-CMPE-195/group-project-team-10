@@ -187,12 +187,6 @@ function CourseCard({ course, prereqs, sections = [] }) {
     )
   }
 
-  function formatGradePercent(count, total) {
-    if (!total) return '0.0%'
-
-    return `${((Number(count || 0) / Number(total)) * 100).toFixed(1)}%`
-  }
-
   function closeConflictModal() {
     setConflictModal(null)
   }
