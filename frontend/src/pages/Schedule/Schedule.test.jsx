@@ -51,23 +51,23 @@ describe('Schedule leave prompt', () => {
     return result
   }
 
-  // schedules one section in Fall 2023, then tries to leave for the dashboard
-  async function leaveWith(courseCode) {
-    seedSchedule([makeSection(courseCode)])
+  // schedules sections in Fall 2023, then tries to leave for the dashboard
+  async function leaveWith(...sections) {
+    seedSchedule(sections)
     const result = await renderSchedule()
     await act(() => result.router.navigate('/'))
     return result
   }
 
   it('asks to apply courses that are not on the roadmap yet', async () => {
-    await leaveWith('CMPE 131')
+    await leaveWith(makeSection('CMPE 131'))
 
     const dialog = screen.getByRole('dialog', { name: 'Apply schedule to roadmap?' })
     expect(within(dialog).getByText('CMPE 131')).toBeDefined()
   })
 
   it('adds the courses to the roadmap on Apply and leave', async () => {
-    const { router } = await leaveWith('CMPE 131')
+    const { router } = await leaveWith(makeSection('CMPE 131'))
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'Apply and leave' }))
     })
@@ -76,8 +76,21 @@ describe('Schedule leave prompt', () => {
     expect(screen.getByTestId('fall-courses').textContent.split(',')).toContain('6')
   })
 
+  it('removes only the unapplied sections on Discard changes', async () => {
+    const { router } = await leaveWith(makeSection('CMPE 120'), { ...makeSection('CMPE 131'), days: 'TR' })
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }))
+    })
+
+    expect(router.state.location.pathname).toBe('/')
+    const saved = JSON.parse(localStorage.getItem('coursePlanner.schedulesByTerm'))
+    expect(saved['Fall 2023'].map(section => section.courseCode)).toEqual(['CMPE 120'])
+    expect(screen.getByTestId('fall-courses').textContent.split(',')).not.toContain('6')
+  })
+
   it('stays on the page on Stay', async () => {
-    const { router } = await leaveWith('CMPE 131')
+    const { router } = await leaveWith(makeSection('CMPE 131'))
     fireEvent.click(screen.getByRole('button', { name: 'Stay' }))
 
     expect(screen.queryByRole('dialog')).toBeNull()
@@ -85,7 +98,7 @@ describe('Schedule leave prompt', () => {
   })
 
   it('leaves without a prompt when the roadmap already has every course', async () => {
-    const { router } = await leaveWith('CMPE 120')
+    const { router } = await leaveWith(makeSection('CMPE 120'))
 
     expect(screen.queryByRole('dialog')).toBeNull()
     expect(router.state.location.pathname).toBe('/')

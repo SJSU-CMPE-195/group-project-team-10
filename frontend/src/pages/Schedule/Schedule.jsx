@@ -84,6 +84,7 @@ function Schedule() {
     selectedSections,
     addSection,
     removeSection,
+    removeSections,
     clearSchedule,
     isSelected,
     findConflict,
@@ -255,6 +256,19 @@ function Schedule() {
       term: activeTerm,
       courses: addedCourses,
     })
+  }
+
+  // drops sections if courses were never applied to stay consistent
+  // with roadmap
+  function discardPendingSections(courses) {
+    const pendingIds = new Set(courses.map(course => course.courseId))
+
+    removeSections(
+      selectedSections
+        .filter(section => pendingIds.has(getCourseForSelectedSection(section)?.courseId))
+        .map(section => section.id),
+      activeTerm
+    )
   }
 
   function handleApplyScheduleToRoadmap() {
@@ -595,7 +609,13 @@ function Schedule() {
           </>
         }
         actions={[
-          { label: 'Leave without applying', onClick: () => blocker.proceed() },
+          {
+            label: 'Discard changes',
+            onClick: () => {
+              discardPendingSections(pendingCourses)
+              blocker.proceed()
+            },
+          },
           {
             label: 'Apply and leave',
             onClick: () => {
