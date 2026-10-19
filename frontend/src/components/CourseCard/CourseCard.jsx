@@ -91,7 +91,7 @@ function getPrereqWarnings({ course, section, roadmapState }) {
     }))
 }
 
-function CourseCard({ course, prereqs, sections = [] }) {
+function CourseCard({ course, prereqs, sections = [], onSectionAdded }) {
   const [expanded, setExpanded] = useState(false)
   const [showSections, setShowSections] = useState(false)
   const [expandedGrades, setExpandedGrades] = useState({})
@@ -133,6 +133,8 @@ function CourseCard({ course, prereqs, sections = [] }) {
         section,
         conflict: result.conflict,
       })
+    } else if (result?.ok) {
+      onSectionAdded?.(section)
     }
   }
 

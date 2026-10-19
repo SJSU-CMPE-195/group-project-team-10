@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { fetchCatalogCourses } from '../../api/catalog'
 import { fetchSections } from '../../api/sections'
 import { useSchedule } from '../../context/useSchedule'
@@ -16,6 +17,7 @@ function Catalog() {
     availableTerms,
     termsLoaded,
   } = useSchedule()
+  const navigate = useNavigate()
 
   const [courses, setCourses] = useState([])
   const [loading, setLoading] = useState(false)
@@ -265,6 +267,8 @@ function Catalog() {
             course={course}
             prereqs={[]}
             sections={sectionsByCourseCode[course.courseCode] || []}
+            // schedule page will apply to roadmap
+            onSectionAdded={() => navigate('/schedule')}
           />
         ))}
       </div>
