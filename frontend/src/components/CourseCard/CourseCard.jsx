@@ -94,7 +94,7 @@ function getPrereqWarnings({ course, section, roadmapState }) {
 function CourseCard({ course, prereqs, sections = [] }) {
   const [expanded, setExpanded] = useState(false)
   const [showSections, setShowSections] = useState(false)
-  const [expandedGrades, setExpandedGrades] = useState({})
+  const [gradeModal, setGradeModal] = useState(null)
   const [conflictModal, setConflictModal] = useState(null)
   const [prereqModal, setPrereqModal] = useState(null)
 
@@ -158,11 +158,33 @@ function CourseCard({ course, prereqs, sections = [] }) {
     addSectionWithoutPrereqCheck(scheduledSection)
   }
 
-  function toggleGrades(sectionId) {
-    setExpandedGrades(current => ({
-      ...current,
-      [sectionId]: !current[sectionId],
-    }))
+  function openGradeModal(section) {
+    setGradeModal(section)
+  }
+
+  function closeGradeModal() {
+    setGradeModal(null)
+  }
+
+  function getCombinedDistribution(distributions = []) {
+    return distributions.reduce(
+      (totals, distribution) => ({
+        aCount: totals.aCount + Number(distribution.aCount || 0),
+        bCount: totals.bCount + Number(distribution.bCount || 0),
+        cCount: totals.cCount + Number(distribution.cCount || 0),
+        dCount: totals.dCount + Number(distribution.dCount || 0),
+        fCount: totals.fCount + Number(distribution.fCount || 0),
+        total: totals.total + Number(distribution.total || 0),
+      }),
+      {
+        aCount: 0,
+        bCount: 0,
+        cCount: 0,
+        dCount: 0,
+        fCount: 0,
+        total: 0,
+      }
+    )
   }
 
   function formatGradePercent(count, total) {
@@ -278,53 +300,10 @@ function CourseCard({ course, prereqs, sections = [] }) {
                             <button
                               type="button"
                               className="grade-distribution-toggle"
-                              onClick={() => toggleGrades(section.id)}
+                              onClick={() => openGradeModal(section)}
                             >
-                              {expandedGrades[section.id]
-                                ? 'Hide Grade Distribution'
-                                : 'View Grade Distribution'}
+                              View Grade Distribution
                             </button>
-
-                            {expandedGrades[section.id] && (
-                              <div className="grade-distribution-panel">
-                                {section.gradeDistributions.map((distribution, index) => (
-                                  <div
-                                    className="grade-distribution-semester"
-                                    key={`${distribution.semester}-${index}`}
-                                  >
-                                    <div className="grade-distribution-title">
-                                      {distribution.semester}
-                                    </div>
-
-                                    <div className="grade-distribution-grades">
-                                      <span>
-                                        A: {formatGradePercent(distribution.aCount, distribution.total)}
-                                      </span>
-
-                                      <span>
-                                        B: {formatGradePercent(distribution.bCount, distribution.total)}
-                                      </span>
-
-                                      <span>
-                                        C: {formatGradePercent(distribution.cCount, distribution.total)}
-                                      </span>
-
-                                      <span>
-                                        D: {formatGradePercent(distribution.dCount, distribution.total)}
-                                      </span>
-
-                                      <span>
-                                        F: {formatGradePercent(distribution.fCount, distribution.total)}
-                                      </span>
-                                    </div>
-
-                                    <div className="grade-distribution-total">
-                                      Based on {distribution.total} grades
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
                           </div>
                         )}
                       </div>
@@ -350,6 +329,113 @@ function CourseCard({ course, prereqs, sections = [] }) {
           </div>
         )}
       </div>
+
+      {gradeModal && (() => {
+        const combined = getCombinedDistribution(
+          gradeModal.gradeDistributions
+        )
+
+        const grades = [
+          { grade: 'A', count: combined.aCount },
+          { grade: 'B', count: combined.bCount },
+          { grade: 'C', count: combined.cCount },
+          { grade: 'D', count: combined.dCount },
+          { grade: 'F', count: combined.fCount },
+        ]
+
+        return (
+          <div
+            className="grade-modal-backdrop"
+            role="presentation"
+            onClick={closeGradeModal}
+          >
+            <div
+              className="grade-modal"
+              role="dialog"
+              aria-modal="true"
+              onClick={event => event.stopPropagation()}
+            >
+              <div className="grade-modal-header">
+                <div>
+                  <h3>Grade Distribution</h3>
+
+                  <div className="grade-modal-subtitle">
+                    {course.courseCode} · {gradeModal.instructor || 'Instructor TBA'}
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  className="grade-modal-close"
+                  onClick={closeGradeModal}
+                  aria-label="Close grade distribution"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="grade-chart">
+                {grades.map(item => {
+                  const percentage =
+                    combined.total > 0
+                      ? (item.count / combined.total) * 100
+                      : 0
+
+                  return (
+                    <div
+                      className="grade-chart-row"
+                      key={item.grade}
+                    >
+                      <div className="grade-chart-label">
+                        {item.grade}
+                      </div>
+
+                      <div className="grade-chart-track">
+                        <div
+                          className="grade-chart-bar"
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
+
+                      <div className="grade-chart-value">
+                        {percentage.toFixed(1)}%
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+
+              <div className="grade-modal-total">
+                Based on {combined.total} grades
+              </div>
+
+              <div className="grade-history">
+                <h4>Semester History</h4>
+
+                {gradeModal.gradeDistributions.map(
+                  (distribution, index) => (
+                    <div
+                      className="grade-history-row"
+                      key={`${distribution.academicYear}-${distribution.semester}-${index}`}
+                    >
+                      <span>
+                        {distribution.semester}
+                        {distribution.academicYear
+                          ? ` ${distribution.academicYear}`
+                          : ''}
+                      </span>
+
+                      <span>
+                        {distribution.total} grades
+                      </span>
+                    </div>
+                  )
+                )}
+              </div>
+            </div>
+          </div>
+        )
+      })()}
 
       {conflictModal && (
         <div className="section-conflict-backdrop" role="presentation">
