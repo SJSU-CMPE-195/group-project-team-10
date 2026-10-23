@@ -97,6 +97,10 @@ class SecurityConfig(
                         HttpMethod.POST,
                         "/api/grade-distributions/import"
                     ).permitAll()
+                    .requestMatchers(
+                        HttpMethod.GET,
+                        "/api/grade-distributions/course"
+                    ).permitAll()
                     .requestMatchers("/error").permitAll()
                     .anyRequest().authenticated()
             }

@@ -95,6 +95,8 @@ function CourseCard({ course, prereqs, sections = [] }) {
   const [expanded, setExpanded] = useState(false)
   const [showSections, setShowSections] = useState(false)
   const [gradeModal, setGradeModal] = useState(null)
+  const [gradeView, setGradeView] = useState('professor')
+  const [courseGradeDistribution, setCourseGradeDistribution] = useState(null)
   const [conflictModal, setConflictModal] = useState(null)
   const [prereqModal, setPrereqModal] = useState(null)
 
@@ -158,8 +160,23 @@ function CourseCard({ course, prereqs, sections = [] }) {
     addSectionWithoutPrereqCheck(scheduledSection)
   }
 
-  function openGradeModal(section) {
+  async function openGradeModal(section) {
     setGradeModal(section)
+    setGradeView('professor')
+    setCourseGradeDistribution(null)
+
+    try {
+      const response = await fetch(
+        `/api/grade-distributions/course?courseNumber=${encodeURIComponent(course.courseCode)}`
+      )
+
+      if (response.ok) {
+        const data = await response.json()
+        setCourseGradeDistribution(data)
+      }
+    } catch (error) {
+      console.error('Failed to load overall course grade distribution', error)
+    }
   }
 
   function closeGradeModal() {
@@ -325,9 +342,14 @@ function CourseCard({ course, prereqs, sections = [] }) {
       </div>
 
       {gradeModal && (() => {
-        const combined = getCombinedDistribution(
+        const professorDistribution = getCombinedDistribution(
           gradeModal.gradeDistributions
         )
+
+        const combined =
+          gradeView === 'course' && courseGradeDistribution
+            ? courseGradeDistribution
+            : professorDistribution
 
         const grades = [
           { grade: 'A', count: combined.aCount },
@@ -354,7 +376,9 @@ function CourseCard({ course, prereqs, sections = [] }) {
                   <h3>Grade Distribution</h3>
 
                   <div className="grade-modal-subtitle">
-                    {course.courseCode} · {gradeModal.instructor || 'Instructor TBA'}
+                    {gradeView === 'course'
+                      ? `${course.courseCode} · All Professors`
+                      : `${course.courseCode} · ${gradeModal.instructor || 'Instructor TBA'}`}
                   </div>
                 </div>
 
@@ -368,6 +392,23 @@ function CourseCard({ course, prereqs, sections = [] }) {
                 </button>
               </div>
 
+              <div className="grade-view-toggle">
+                <button
+                  type="button"
+                  className={gradeView === 'course' ? 'active' : ''}
+                  onClick={() => setGradeView('course')}
+                >
+                  Overall Course
+                </button>
+
+                <button
+                  type="button"
+                  className={gradeView === 'professor' ? 'active' : ''}
+                  onClick={() => setGradeView('professor')}
+                >
+                  This Professor
+                </button>
+              </div>
               <div className="grade-chart">
                 {grades.map(item => {
                   const percentage =
@@ -403,29 +444,31 @@ function CourseCard({ course, prereqs, sections = [] }) {
                 Based on {combined.total} grades
               </div>
 
-              <div className="grade-history">
-                <h4>Semester History</h4>
+              {gradeView === 'professor' && (
+                <div className="grade-history">
+                  <h4>Semester History</h4>
 
-                {gradeModal.gradeDistributions.map(
-                  (distribution, index) => (
-                    <div
-                      className="grade-history-row"
-                      key={`${distribution.academicYear}-${distribution.semester}-${index}`}
-                    >
-                      <span>
-                        {distribution.semester}
-                        {distribution.academicYear
-                          ? ` ${distribution.academicYear}`
-                          : ''}
-                      </span>
+                  {gradeModal.gradeDistributions.map(
+                    (distribution, index) => (
+                      <div
+                        className="grade-history-row"
+                        key={`${distribution.academicYear}-${distribution.semester}-${index}`}
+                      >
+                        <span>
+                          {distribution.semester}
+                          {distribution.academicYear
+                            ? ` ${distribution.academicYear}`
+                            : ''}
+                        </span>
 
-                      <span>
-                        {distribution.total} grades
-                      </span>
-                    </div>
-                  )
-                )}
-              </div>
+                        <span>
+                          {distribution.total} grades
+                        </span>
+                      </div>
+                    )
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )
