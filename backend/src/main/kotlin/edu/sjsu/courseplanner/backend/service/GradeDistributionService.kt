@@ -7,6 +7,7 @@ import edu.sjsu.courseplanner.backend.repository.GradeDistributionRepository
 import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
+import edu.sjsu.courseplanner.backend.dto.CourseGradeDistributionDto
 
 @Service
 class GradeDistributionService(
@@ -200,4 +201,18 @@ class GradeDistributionService(
         val course: String,
         val instructor: String
     )
+
+    fun getCourseDistribution(courseNumber: String): CourseGradeDistributionDto {
+        val distributions =
+            gradeDistributionRepository.findByCourse(courseNumber)
+
+        return CourseGradeDistributionDto(
+            courseNumber = courseNumber,
+            aCount = distributions.sumOf { it.aCount },
+            bCount = distributions.sumOf { it.bCount },
+            cCount = distributions.sumOf { it.cCount },
+            dCount = distributions.sumOf { it.dCount },
+            fCount = distributions.sumOf { it.fCount }
+        )
+    }
 }

@@ -108,6 +108,10 @@ class SecurityConfig(
                         HttpMethod.POST,
                         "/api/grade-distributions/import"
                     ).permitAll()
+                    .requestMatchers(
+                        HttpMethod.GET,
+                        "/api/grade-distributions/course"
+                    ).permitAll()
                     .requestMatchers("/error").permitAll()
                     // role is in users table (OAuth sessions have no ROLE_) so look it up
                     .requestMatchers("/api/admin/**").access { authentication, _ ->

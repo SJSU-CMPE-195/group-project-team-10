@@ -54,6 +54,32 @@ class GradeDistributionRepository(
 
             distributions.size
         }
+
+    fun findByCourse(courseNumber: String): List<GradeDistributionDto> =
+        findAll().filter { distribution ->
+            normalizeCourseCode(distribution.courseNumber) ==
+                    normalizeCourseCode(courseNumber)
+        }
+
+    private fun normalizeCourseCode(value: String): String {
+        val cleaned = value
+            .uppercase()
+            .trim()
+            .replace(Regex("\\s+"), " ")
+
+        val match = Regex("^([A-Z0-9]+)\\s+0*([0-9]+)([A-Z]*)$")
+            .matchEntire(cleaned)
+
+        if (match != null) {
+            val department = match.groupValues[1]
+            val number = match.groupValues[2]
+            val suffix = match.groupValues[3]
+
+            return "$department $number$suffix"
+        }
+
+        return cleaned
+    }
 }
 
 data class GradeDistributionImportRecord(
