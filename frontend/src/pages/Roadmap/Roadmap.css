@@ -245,3 +245,8 @@
   box-shadow: none !important;
   border: none !important;
 }
+.roadmap-modal-note {
+  font-size: 13px;
+  color: var(--text);
+  margin-bottom: 14px;
+}

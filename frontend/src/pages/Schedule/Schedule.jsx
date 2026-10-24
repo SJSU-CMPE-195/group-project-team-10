@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useRoadmap, useRoadmapDispatch } from '../../context/RoadmapContext'
+import { toRoadmapCourse, useRoadmap, useRoadmapDispatch } from '../../context/RoadmapContext'
 import { useSchedule } from '../../context/useSchedule'
 import { fetchSections } from '../../api/sections'
 import LeaveConfirmModal from '../../components/LeaveConfirmModal/LeaveConfirmModal'
@@ -193,14 +193,7 @@ function Schedule() {
 
       if (existingCourse) return existingCourse
 
-      return {
-        courseId: section.courseId,
-        courseCode: section.courseCode,
-        courseTitle: section.courseTitle || section.title || section.courseCode,
-        units: section.units || 0,
-        department: section.department || section.courseCode?.split(' ')[0] || '',
-        description: section.description || '',
-      }
+      return toRoadmapCourse(section)
     }
 
     return roadmapState.courses.find(

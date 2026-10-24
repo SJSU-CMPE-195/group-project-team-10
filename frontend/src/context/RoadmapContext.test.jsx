@@ -126,6 +126,28 @@ describe('roadmapReducer', () => {
     })
   })
 
+  describe('ADD_COURSE_TO_SEMESTER', () => {
+    it('registers a course from outside the major so it can render', () => {
+      const state = { ...makeState([{ semesterId: 1, courses: [] }]), courses: [] }
+      const course = { courseId: 101, courseCode: "CS 46A", courseTitle: "Introduction to Programming", units: 4 }
+
+      const next = roadmapReducer(state, { type: "ADD_COURSE_TO_SEMESTER", semesterId: 1, courseId: 101, course })
+
+      expect(next.semesters[0].courses).toEqual([{ courseId: 101, status: "planned", note: "" }])
+      expect(next.courses).toHaveLength(1)
+      expect(next.courses[0]).toMatchObject({ courseId: 101, courseCode: "CS 46A", department: "CS" })
+    })
+
+    it('does not duplicate a course the roadmap already knows', () => {
+      const known = { courseId: 1, courseCode: "CMPE 30", courseTitle: "Programming", units: 3 }
+      const state = { ...makeState([{ semesterId: 1, courses: [] }]), courses: [known] }
+
+      const next = roadmapReducer(state, { type: "ADD_COURSE_TO_SEMESTER", semesterId: 1, courseId: 1, course: known })
+
+      expect(next.courses).toEqual([known])
+    })
+  })
+
   describe('SAVE_CHANGES', () => {
     it('saves current state and clears unsaved flag', () => {
       const state = makeState([

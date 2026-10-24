@@ -1,5 +1,5 @@
 import { act, fireEvent, screen } from '@testing-library/react'
-import { describe, it, expect } from 'vitest'
+import { afterEach, describe, it, expect, vi } from 'vitest'
 import { buildTestRoadmapState, renderWithProviders } from '../../test-utils'
 import Roadmap from './Roadmap'
 
@@ -85,5 +85,46 @@ describe('Roadmap leave guard', () => {
     })
 
     expect(screen.getByRole('dialog', { name: 'Unsaved roadmap changes' })).toBeDefined()
+  })
+})
+
+describe('Roadmap add course', () => {
+  const realFetch = globalThis.fetch
+
+  afterEach(() => {
+    globalThis.fetch = realFetch
+  })
+
+  it('filters by subject and lists that subject in course number order', async () => {
+    globalThis.fetch = vi.fn(() => Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve([
+        { courseId: 102, courseCode: "CS 146", courseTitle: "Data Structures and Algorithms", units: 3, department: "CS" },
+        { courseId: 101, courseCode: "CS 46A", courseTitle: "Introduction to Programming", units: 4, department: "CS" },
+        { courseId: 103, courseCode: "BIOL 10", courseTitle: "The Living World", units: 3, department: "BIOL" },
+      ]),
+    }))
+
+    renderWithProviders(<Roadmap />, { route: '/roadmap' })
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Add Course' }))
+    })
+
+    const courseSelect = screen.getByLabelText('Course')
+    expect(courseSelect.disabled).toBe(true)
+
+    const optionValues = select => [...select.options].map(o => o.value).filter(Boolean)
+    const subjects = optionValues(screen.getByLabelText('Subject'))
+    // every sample-major course is already placed, so only the fetched subjects remain, in order
+    expect(subjects).toEqual(['BIOL', 'CS'])
+
+    fireEvent.change(screen.getByLabelText('Subject'), { target: { value: 'CS' } })
+
+    // CS 46B is already on the sample roadmap, so it is not offered
+    const courseOptions = [...courseSelect.options].filter(o => o.value).map(o => o.textContent)
+    expect(courseOptions).toEqual([
+      'CS 46A — Introduction to Programming',
+      'CS 146 — Data Structures and Algorithms',
+    ])
   })
 })

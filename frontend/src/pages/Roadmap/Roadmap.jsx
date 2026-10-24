@@ -9,6 +9,7 @@ import ValidationAlert from '../../components/ValidationAlert/ValidationAlert'
 import LeaveConfirmModal from '../../components/LeaveConfirmModal/LeaveConfirmModal'
 import { useLeaveGuard } from '../../hooks/useLeaveGuard'
 import { fetchRoadmapByMajor } from '../../api/roadmap'
+import { fetchCatalogCourses } from '../../api/catalog'
 import './Roadmap.css'
 
 function SemesterNode({ data }) {
@@ -52,6 +53,27 @@ const snapToRow = (y) => {
 
 const snapToColumn = (x) => {
   return LEFT_PADDING + HEADER_WIDTH + getInsertIndexFromX(x) * COURSE_WIDTH
+}
+
+// "CS 46A" -> subject "CS", number "46A"
+const parseCourseCode = (courseCode) => {
+  const [subject, ...number] = courseCode.trim().split(/\s+/)
+  return { subject: subject.toUpperCase(), number: number.join(' ') }
+}
+
+// subject -> courses in number order
+const groupCoursesBySubject = (courses) => {
+  const bySubject = new Map()
+  for (const course of courses) {
+    const { subject, number } = parseCourseCode(course.courseCode)
+    if (!bySubject.has(subject)) bySubject.set(subject, [])
+    bySubject.get(subject).push({ course, number })
+  }
+  for (const [subject, entries] of bySubject) {
+    entries.sort((a, b) => a.number.localeCompare(b.number, undefined, { numeric: true, sensitivity: 'base' }))
+    bySubject.set(subject, entries.map(entry => entry.course))
+  }
+  return bySubject
 }
 
 function buildNodesAndEdges(semesters, violations, courseMap, prerequisites) {
@@ -167,7 +189,10 @@ function Roadmap() {
   const navigate = useNavigate()
   const [showAddCourseModal, setShowAddCourseModal] = useState(false)
   const [addSemesterId, setAddSemesterId] = useState("")
+  const [addSubject, setAddSubject] = useState("")
   const [addCourseId, setAddCourseId] = useState("")
+  const [allCourses, setAllCourses] = useState([])
+  const [allCoursesStatus, setAllCoursesStatus] = useState("idle")
   const [addCourseStatus, setAddCourseStatus] = useState("planned")
   const [hoverSemesterIndex, setHoverSemesterIndex] = useState(null)
 
@@ -280,13 +305,23 @@ function Roadmap() {
     dispatch({ type: "ADD_GAP_SEMESTER", afterSemesterId: lastId })
   }
 
-  const openAddCourseModal = () => {
+  const openAddCourseModal = async () => {
     setShowAddCourseModal(true)
+    if (allCoursesStatus === "loading" || allCoursesStatus === "loaded") return
+
+    setAllCoursesStatus("loading")
+    try {
+      setAllCourses(await fetchCatalogCourses())
+      setAllCoursesStatus("loaded")
+    } catch {
+      setAllCoursesStatus("failed")
+    }
   }
 
   const closeAddCourseModal = () => {
     setShowAddCourseModal(false)
     setAddSemesterId("")
+    setAddSubject("")
     setAddCourseId("")
     setAddCourseStatus("planned")
   }
@@ -305,6 +340,7 @@ function Roadmap() {
       semesterId,
       courseId,
       status: addCourseStatus,
+      course: courseMap.has(courseId) ? undefined : allCourses.find(c => c.courseId === courseId),
     })
 
     closeAddCourseModal()
@@ -314,7 +350,13 @@ function Roadmap() {
     semesters.flatMap(s => s.courses.map(c => c.courseId))
   )
 
-  const addableCourses = courses.filter(course => !existingCourseIds.has(course.courseId))
+  // every course in the database
+  const addableCoursesBySubject = groupCoursesBySubject(
+    [...courses, ...allCourses.filter(c => !courseMap.has(c.courseId))]
+      .filter(course => !existingCourseIds.has(course.courseId))
+  )
+  const addSubjects = [...addableCoursesBySubject.keys()].sort()
+  const subjectCourses = addableCoursesBySubject.get(addSubject) ?? []
 
   return (
     <div className="roadmap-page">
@@ -407,15 +449,45 @@ function Roadmap() {
               </select>
             </div>
 
+            {allCoursesStatus === "failed" && (
+              <div className="roadmap-modal-note">
+                Could not load the full course list. Showing this major's courses only.
+              </div>
+            )}
+
             <div className="roadmap-modal-field">
-              <label>Course</label>
+              <label htmlFor="add-course-subject">Subject</label>
               <select
+                id="add-course-subject"
+                value={addSubject}
+                onChange={e => {
+                  setAddSubject(e.target.value)
+                  setAddCourseId("")
+                }}
+                className="roadmap-select"
+              >
+                <option value="">
+                  {allCoursesStatus === "loading" ? "Loading subjects..." : "Select subject..."}
+                </option>
+                {addSubjects.map(subject => (
+                  <option key={subject} value={subject}>
+                    {subject}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="roadmap-modal-field">
+              <label htmlFor="add-course-course">Course</label>
+              <select
+                id="add-course-course"
                 value={addCourseId}
                 onChange={e => setAddCourseId(e.target.value)}
                 className="roadmap-select"
+                disabled={!addSubject}
               >
-                <option value="">Select course...</option>
-                {addableCourses.map(course => (
+                <option value="">{addSubject ? "Select course..." : "Pick a subject first"}</option>
+                {subjectCourses.map(course => (
                   <option key={course.courseId} value={course.courseId}>
                     {course.courseCode} — {course.courseTitle}
                   </option>
