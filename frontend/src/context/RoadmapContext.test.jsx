@@ -1,5 +1,7 @@
+import { useEffect } from 'react'
+import { act } from '@testing-library/react'
 import { describe, it, expect } from 'vitest'
-import { roadmapReducer } from './RoadmapContext'
+import { roadmapReducer, useRoadmap, useRoadmapDispatch } from './RoadmapContext'
 import { buildTestRoadmapState, renderWithProviders } from '../test-utils'
 
 function makeState(semesters, hasUnsavedChanges = false) {
@@ -175,12 +177,13 @@ describe('roadmapReducer', () => {
   })
 })
 
+function fireBeforeUnload() {
+  const event = new Event('beforeunload', { cancelable: true })
+  window.dispatchEvent(event)
+  return event
+}
+
 describe('RoadmapProvider beforeunload guard', () => {
-  function fireBeforeUnload() {
-    const event = new Event('beforeunload', { cancelable: true })
-    window.dispatchEvent(event)
-    return event
-  }
 
   it('asks the browser to confirm unload while there are unsaved changes', () => {
     renderWithProviders(<p>page</p>, {
@@ -193,6 +196,34 @@ describe('RoadmapProvider beforeunload guard', () => {
   it('lets the page unload when everything is saved', () => {
     renderWithProviders(<p>page</p>)
 
+    expect(fireBeforeUnload().defaultPrevented).toBe(false)
+  })
+})
+
+describe('RoadmapProvider autosave variant', () => {
+  it('saves edits in the same dispatch', () => {
+    const probe = {}
+    function Probe() {
+      const roadmap = useRoadmap()
+      const dispatch = useRoadmapDispatch()
+      useEffect(() => {
+        probe.roadmap = roadmap
+        probe.dispatch = dispatch
+      })
+      return null
+    }
+
+    renderWithProviders(<Probe />, { variant: 'autosave' })
+    const before = probe.roadmap.semesters.length
+
+    act(() => probe.dispatch({
+      type: 'ADD_GAP_SEMESTER',
+      afterSemesterId: probe.roadmap.semesters.at(-1).semesterId,
+    }))
+
+    expect(probe.roadmap.semesters).toHaveLength(before + 1)
+    expect(probe.roadmap.savedState.semesters).toHaveLength(before + 1)
+    expect(probe.roadmap.hasUnsavedChanges).toBe(false)
     expect(fireBeforeUnload().defaultPrevented).toBe(false)
   })
 })

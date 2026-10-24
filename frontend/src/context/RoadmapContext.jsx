@@ -1,7 +1,8 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useEffect, useReducer } from 'react'
+import { createContext, useContext, useEffect, useReducer, useState } from 'react'
 import { fetchMajors, fetchRoadmapByMajor } from '../api/roadmap'
 import { getBlockedCourses } from '../utils/prerequisiteValidator'
+import { getRoadmapVariant } from '../lib/experiment'
 
 const RoadmapContext = createContext(null)
 const RoadmapDispatchContext = createContext(null)
@@ -442,8 +443,21 @@ export function roadmapReducer(state, action) {
   }
 }
 
-export function RoadmapProvider({ children, initialState, disableAutoLoad = false }) {
-  const [state, dispatch] = useReducer(roadmapReducer, initialState, buildInitialState)
+// autosave A B variant: every edit is saved so hasUnsavedChanges
+// never stays true and nothing is prompted
+function autosaveReducer(state, action) {
+  const next = roadmapReducer(state, action)
+  return next.hasUnsavedChanges ? roadmapReducer(next, { type: 'SAVE_CHANGES' }) : next
+}
+
+// `variant` overrides the A B assignment, for testing
+export function RoadmapProvider({ children, initialState, disableAutoLoad = false, variant: variantOverride }) {
+  const [variant] = useState(() => variantOverride ?? getRoadmapVariant())
+  const [state, dispatch] = useReducer(
+    variant === 'autosave' ? autosaveReducer : roadmapReducer,
+    initialState,
+    buildInitialState
+  )
 
   // roadmap edits live in memory only, so refresh/close with unsaved changes gets
   // the browser's leave prompt. in-app navigation keeps them (see Roadmap's useBlocker)
@@ -510,7 +524,7 @@ export function RoadmapProvider({ children, initialState, disableAutoLoad = fals
   }, [disableAutoLoad])
 
   return (
-    <RoadmapContext.Provider value={state}>
+    <RoadmapContext.Provider value={{ ...state, variant }}>
       <RoadmapDispatchContext.Provider value={dispatch}>
         {children}
       </RoadmapDispatchContext.Provider>

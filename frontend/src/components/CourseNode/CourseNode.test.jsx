@@ -6,7 +6,7 @@ import CourseNode from './CourseNode'
 
 function renderCourseNode(data) {
   return render(
-    <RoadmapProvider>
+    <RoadmapProvider variant="warning">
       <ReactFlowProvider>
         <CourseNode data={data} />
       </ReactFlowProvider>

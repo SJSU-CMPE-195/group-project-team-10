@@ -174,6 +174,7 @@ function Roadmap() {
   const {
     semesters,
     hasUnsavedChanges,
+    variant,
     courses,
     prerequisites,
     majors,
@@ -351,21 +352,25 @@ function Roadmap() {
             Add Gap Semester
           </button>
 
-          <button
-            onClick={handleSave}
-            disabled={!hasUnsavedChanges}
-            className={`roadmap-btn primary ${hasUnsavedChanges ? '' : 'disabled'}`}
-          >
-            Save Changes
-          </button>
+          {variant !== 'autosave' && (
+            <>
+              <button
+                onClick={handleSave}
+                disabled={!hasUnsavedChanges}
+                className={`roadmap-btn primary ${hasUnsavedChanges ? '' : 'disabled'}`}
+              >
+                Save Changes
+              </button>
 
-          <button
-            onClick={handleDiscardChanges}
-            disabled={!hasUnsavedChanges}
-            className="roadmap-btn"
-          >
-            Cancel Changes
-          </button>
+              <button
+                onClick={handleDiscardChanges}
+                disabled={!hasUnsavedChanges}
+                className="roadmap-btn"
+              >
+                Cancel Changes
+              </button>
+            </>
+          )}
         </div>
       </div>
 

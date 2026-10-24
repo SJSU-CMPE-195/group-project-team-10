@@ -22,14 +22,17 @@ export function buildTestRoadmapState() {
   }
 }
 
-export function renderWithProviders(ui, { route = '/', roadmapState = buildTestRoadmapState() } = {}) {
+export function renderWithProviders(
+  ui,
+  { route = '/', roadmapState = buildTestRoadmapState(), variant = 'warning' } = {}
+) {
   // data router to match main.jsx, so useBlocker works in tests
   const router = createMemoryRouter(
     [
       {
         path: '*',
         element: (
-          <RoadmapProvider initialState={roadmapState} disableAutoLoad>
+          <RoadmapProvider initialState={roadmapState} disableAutoLoad variant={variant}>
             <ScheduleProvider>
               {ui}
             </ScheduleProvider>

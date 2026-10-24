@@ -65,6 +65,18 @@ describe('Roadmap leave guard', () => {
     expect(router.state.location.pathname).toBe('/catalog')
   })
 
+  it('shows no Save button or prompt in the autosave variant', async () => {
+    const { router } = renderWithProviders(<Roadmap />, { route: '/roadmap', variant: 'autosave' })
+
+    expect(screen.queryByText('Save Changes')).toBeNull()
+    expect(screen.queryByText('Cancel Changes')).toBeNull()
+
+    fireEvent.click(screen.getByText('Add Gap Semester'))
+    await act(() => router.navigate('/catalog'))
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(router.state.location.pathname).toBe('/catalog')
+  })
+
   it('routes the Back button through the same prompt', async () => {
     renderDirty()
 
