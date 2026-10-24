@@ -98,7 +98,6 @@ The backend reads `data/prereq/cmpe_prereq.csv` and `data/prereq/swe_prereq.csv`
 ```bash
 curl -X POST 'http://localhost:8080/api/catalog-programs/import-prerequisites?program=cmpe'
 curl -X POST 'http://localhost:8080/api/catalog-programs/import-prerequisites?program=swe'
-curl -X POST 'http://localhost:8080/api/catalog-programs/import-prerequisites?program=all'
 ```
 
 The import uses the existing `courses` and `prerequisites` tables and their database IDs. Courses absent from the database are created only when a CSV row provides a title and an official `catalog.sjsu.edu` URL; missing prerequisite courses are reported rather than synthesized. Because these CSVs do not contain unit counts and the existing schema requires one, newly created course rows use `0` units and the API response warns about this; existing unit counts are never overwritten. The original prerequisite/corequisite wording is stored in `prerequisite_csv_conditions`. Clear prerequisite alternatives (OR/equivalent expressions) remain in that source text and are not emitted as mandatory roadmap edges. The source-specific edge records make repeated imports idempotent and allow CSV-managed relationships to be synchronized without deleting edges owned by another import source.
