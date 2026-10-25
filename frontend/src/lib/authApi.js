@@ -21,7 +21,9 @@ async function request(path, { authErrorMessage, ...options } = {}) {
 
   if (!response.ok) {
     if (authErrorMessage && (response.status === 401 || response.status === 403)) {
-      throw new Error(authErrorMessage);
+      const error = new Error(authErrorMessage);
+      error.status = response.status;
+      throw error;
     }
 
     // read the body once, it can be JSON ({ message }), plain text, or empty
@@ -34,7 +36,9 @@ async function request(path, { authErrorMessage, ...options } = {}) {
       // not JSON, keep the raw text
     }
 
-    throw new Error(message || "Request failed");
+    const error = new Error(message || "Request failed");
+    error.status = response.status;
+    throw error;
   }
 
   if (response.status === 204) {
@@ -53,7 +57,7 @@ export async function getCsrfToken() {
 }
 
 // state changing calls send XSRF-TOKEN cookie back in header, fetch only if it isn't set
-async function requestWithCsrf(path, options = {}) {
+export async function requestWithCsrf(path, options = {}) {
   const csrfToken = getCsrfTokenFromCookie() ?? (await getCsrfToken());
 
   return request(path, {

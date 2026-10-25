@@ -24,6 +24,7 @@ function CourseNode({ data }) {
     hasIssue,
     issueTypes = [],
     requirementNames = [],
+    prerequisiteConditions = [],
   } = data
   const [showNoteModal, setShowNoteModal] = useState(false)
 
@@ -94,6 +95,32 @@ function CourseNode({ data }) {
             <span key={name}>{name}</span>
           ))}
         </div>
+      )}
+
+      {prerequisiteConditions.length > 0 && (
+        <details className="course-node-prerequisite-details nodrag">
+          <summary>
+            {prerequisiteConditions.some(condition => !condition.expressionJson)
+              ? 'Prerequisite needs review'
+              : 'Prerequisite details'}
+          </summary>
+          <ul>
+            {prerequisiteConditions.map((condition, index) => (
+              <li key={`${condition.relationshipType}-${condition.sourceUrl || index}`}>
+                <strong>{condition.relationshipType === 'coreq' ? 'Corequisite' : 'Prerequisite'}:</strong>{' '}
+                {condition.originalText}
+                {condition.sourceUrl && (
+                  <>
+                    {' '}
+                    <a href={condition.sourceUrl} target="_blank" rel="noreferrer">
+                      source
+                    </a>
+                  </>
+                )}
+              </li>
+            ))}
+          </ul>
+        </details>
       )}
 
       {note && (

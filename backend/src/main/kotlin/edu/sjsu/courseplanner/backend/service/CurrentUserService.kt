@@ -37,4 +37,8 @@ class CurrentUserService(
         }
         return user
     }
+
+    fun requireUser(authentication: Authentication?): UserDto =
+        currentUser(authentication)
+            ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Sign in required")
 }

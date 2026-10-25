@@ -1,16 +1,24 @@
-import {useEffect, useMemo, useState} from 'react'
-import { useNavigate } from 'react-router-dom'
-import {ReactFlow, Background, Controls, MarkerType,applyEdgeChanges, applyNodeChanges} from '@xyflow/react'
+import { useContext, useEffect, useMemo, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import {
+  ReactFlow,
+  Background,
+  Controls,
+  MarkerType,
+  applyEdgeChanges,
+  applyNodeChanges
+} from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import {useRoadmap, useRoadmapDispatch} from '../../context/RoadmapContext'
-import {validateSemesterPlan} from '../../utils/prerequisiteValidator'
+import { useRoadmap, useRoadmapDispatch } from '../../context/RoadmapContext'
+import { validateSemesterPlan } from '../../utils/prerequisiteValidator'
 import { getConnectedNodeIds, getVisibleEdges } from '../../utils/roadmapEdges'
 import CourseNode from '../../components/CourseNode/CourseNode'
 import ValidationAlert from '../../components/ValidationAlert/ValidationAlert'
+import { fetchRoadmapByMajor, saveAccountRoadmap } from '../../api/roadmap'
+import { fetchCatalogCourses } from '../../api/catalog'
+import { AuthContext } from '../../context/authContextObject'
 import LeaveConfirmModal from '../../components/LeaveConfirmModal/LeaveConfirmModal'
 import { useLeaveGuard } from '../../hooks/useLeaveGuard'
-import { fetchRoadmapByMajor } from '../../api/roadmap'
-import { fetchCatalogCourses } from '../../api/catalog'
 import './Roadmap.css'
 
 const SHOW_ARROWS_KEY = 'coursePlanner.showRoadmapArrows'
@@ -71,6 +79,7 @@ const COURSE_Y_OFFSET = (SEMESTER_ROW_HEIGHT - COURSE_CARD_HEIGHT) / 2
 const HEADER_WIDTH = 140
 const LEFT_PADDING = 40
 const TOP_PADDING = 40
+const EMPTY_PREREQUISITE_CONDITIONS = []
 
 const getSemesterWidth = (sem) => {
   const courseCount = sem.courses.length
@@ -117,7 +126,7 @@ const groupCoursesBySubject = (courses) => {
   return bySubject
 }
 
-function buildNodesAndEdges(semesters, violations, courseMap, prerequisites) {
+function buildNodesAndEdges(semesters, violations, courseMap, prerequisites, prerequisiteConditions) {
   const nodes = []
   const edges = []
   const coursePositions = new Map()
@@ -181,6 +190,7 @@ function buildNodesAndEdges(semesters, violations, courseMap, prerequisites) {
           courseTitle: course.courseTitle,
           units: course.units,
           requirementNames: course.requirementNames || [],
+          prerequisiteConditions: prerequisiteConditions.filter(condition => condition.courseId === sc.courseId),
           status: sc.status,
           note: sc.note || "",
           hasIssue: issueTypes.length > 0,
@@ -211,7 +221,7 @@ function buildNodesAndEdges(semesters, violations, courseMap, prerequisites) {
     else if (satisfied) strokeColor = 'var(--edge-satisfied)'
 
     edges.push({
-      id: `edge-${prereq.prereqCourseId}-${prereq.courseId}`,
+      id: `edge-${prereq.prereqType}-${prereq.prereqCourseId}-${prereq.courseId}`,
       source: sourceId,
       target: targetId,
       type: 'default',
@@ -235,7 +245,10 @@ function Roadmap() {
   const state = useRoadmap()
   const dispatch = useRoadmapDispatch()
   const navigate = useNavigate()
+  const { isAuthenticated = false } = useContext(AuthContext) || {}
   const [showAddCourseModal, setShowAddCourseModal] = useState(false)
+  const [accountSaving, setAccountSaving] = useState(false)
+  const [accountError, setAccountError] = useState('')
   const [addSemesterId, setAddSemesterId] = useState("")
   const [addSubject, setAddSubject] = useState("")
   const [addCourseId, setAddCourseId] = useState("")
@@ -252,12 +265,16 @@ function Roadmap() {
     variant,
     courses,
     prerequisites,
+    prerequisiteConditions: roadmapPrerequisiteConditions,
     majors,
     majorInfo,
     majorId,
     isLoadingRoadmap,
     roadmapError,
+    accountRoadmapPrompt,
+    localStorageError,
   } = state
+  const prerequisiteConditions = roadmapPrerequisiteConditions || EMPTY_PREREQUISITE_CONDITIONS
   const courseMap = useMemo(() => new Map(courses.map(c => [c.courseId, c])), [courses])
   const violations = useMemo(
     () => validateSemesterPlan(semesters, prerequisites),
@@ -305,13 +322,17 @@ function Roadmap() {
     setNodes((nds) => applyNodeChanges(changes, nds))
   }
 
-  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
-    const { nodes: newNodes, edges: newEdges } = buildNodesAndEdges(semesters, violations, courseMap, prerequisites)
+    const { nodes: newNodes, edges: newEdges } = buildNodesAndEdges(
+      semesters,
+      violations,
+      courseMap,
+      prerequisites,
+      prerequisiteConditions
+    )
     setNodes(newNodes)
     setEdges(newEdges)
-  }, [semesters, violations, courseMap, prerequisites])
-  /* eslint-enable react-hooks/set-state-in-effect */
+  }, [semesters, violations, courseMap, prerequisites, prerequisiteConditions])
 
   const handleMajorChange = async (event) => {
     const nextMajorId = parseInt(event.target.value)
@@ -369,7 +390,53 @@ function Roadmap() {
   const blocker = useLeaveGuard(hasUnsavedChanges)
 
   const handleSave = () => {
-    dispatch({ type: "SAVE_CHANGES" })
+    setAccountError('')
+    if (!isAuthenticated) {
+      dispatch({
+        type: 'ACCOUNT_ROADMAP_PROMPT',
+        prompt: { kind: 'reauthenticate', message: 'Create an account or log in to save this roadmap across devices.' },
+      })
+      return
+    }
+    saveRoadmapToAccount()
+  }
+
+  const saveRoadmapToAccount = async () => {
+    setAccountSaving(true)
+    setAccountError('')
+    try {
+      await saveAccountRoadmap({ majorId, semesters })
+      dispatch({ type: 'SAVE_CHANGES' })
+      dispatch({ type: 'CLEAR_ACCOUNT_ROADMAP_PROMPT' })
+    } catch (error) {
+      if (error.status === 401) {
+        dispatch({
+          type: 'ACCOUNT_ROADMAP_PROMPT',
+          prompt: { kind: 'reauthenticate', message: 'Your login session expired. Log in again to save; your local roadmap is preserved.' },
+        })
+      } else {
+        setAccountError(error.message || 'Unable to save your roadmap. Your local changes are still saved.')
+      }
+    } finally {
+      setAccountSaving(false)
+    }
+  }
+
+  const loadSavedAccountRoadmap = async () => {
+    if (!accountRoadmapPrompt?.roadmap) return
+    dispatch({ type: 'SET_ROADMAP_LOADING' })
+    try {
+      const roadmap = await fetchRoadmapByMajor(accountRoadmapPrompt.roadmap.majorId)
+      dispatch({ type: 'SET_ROADMAP_DATA', roadmap, restoreDraft: false })
+      dispatch({
+        type: 'LOAD_ACCOUNT_ROADMAP',
+        majorId: accountRoadmapPrompt.roadmap.majorId,
+        semesters: accountRoadmapPrompt.roadmap.semesters,
+        courses: accountRoadmapPrompt.roadmap.courses,
+      })
+    } catch (error) {
+      dispatch({ type: 'SET_ROADMAP_ERROR', error: error.message })
+    }
   }
 
   const handleAddGap = () => {
@@ -481,10 +548,10 @@ function Roadmap() {
             <>
               <button
                 onClick={handleSave}
-                disabled={!hasUnsavedChanges}
+                disabled={!hasUnsavedChanges || accountSaving}
                 className={`roadmap-btn primary ${hasUnsavedChanges ? '' : 'disabled'}`}
               >
-                Save Changes
+                {accountSaving ? 'Saving...' : 'Save Changes'}
               </button>
 
               <button
@@ -502,6 +569,87 @@ function Roadmap() {
       {roadmapError && (
         <div className="roadmap-error">
           {roadmapError}
+        </div>
+      )}
+
+      {localStorageError && (
+        <div className="roadmap-error" role="alert">
+          {localStorageError}
+        </div>
+      )}
+
+      {accountError && (
+        <div className="roadmap-error" role="alert">
+          {accountError}
+        </div>
+      )}
+
+      {accountRoadmapPrompt && (
+        <div className="roadmap-modal-backdrop">
+          <section
+            className="roadmap-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="account-roadmap-title"
+          >
+            <h3 id="account-roadmap-title">
+              {accountRoadmapPrompt.kind === 'account-conflict'
+                ? 'Choose which roadmap to keep'
+                : 'Save your roadmap to an account'}
+            </h3>
+            {accountRoadmapPrompt.kind === 'account-conflict' ? (
+              <>
+                <p>Your account already has a saved roadmap. Choose which version to use; neither version is replaced until you confirm.</p>
+                <div className="roadmap-modal-actions">
+                  <button className="roadmap-btn" onClick={() => dispatch({ type: 'CLEAR_ACCOUNT_ROADMAP_PROMPT' })}>
+                    Keep this device’s roadmap
+                  </button>
+                  <button className="roadmap-btn" onClick={loadSavedAccountRoadmap}>
+                    Load account roadmap
+                  </button>
+                  <button className="roadmap-btn primary" onClick={saveRoadmapToAccount} disabled={accountSaving}>
+                    Replace account with this roadmap
+                  </button>
+                </div>
+              </>
+            ) : accountRoadmapPrompt.kind === 'account-error' ? (
+              <>
+                <p>{accountRoadmapPrompt.message}</p>
+                <div className="roadmap-modal-actions">
+                  <button className="roadmap-btn" onClick={() => dispatch({ type: 'CLEAR_ACCOUNT_ROADMAP_PROMPT' })}>
+                    Continue with this device
+                  </button>
+                </div>
+              </>
+            ) : accountRoadmapPrompt.kind === 'save-local' ? (
+              <>
+                <p>Your account has no saved roadmap yet. Save your current local roadmap to this account, or keep planning only on this device.</p>
+                <div className="roadmap-modal-actions">
+                  <button className="roadmap-btn" onClick={() => dispatch({ type: 'CLEAR_ACCOUNT_ROADMAP_PROMPT' })}>
+                    Keep this device’s roadmap
+                  </button>
+                  <button className="roadmap-btn primary" onClick={saveRoadmapToAccount} disabled={accountSaving}>
+                    {accountSaving ? 'Saving...' : 'Save to account'}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p>{accountRoadmapPrompt.message || 'An account is required to save this roadmap across devices. Your current plan remains saved on this device.'}</p>
+                <div className="roadmap-modal-actions">
+                  <button className="roadmap-btn" onClick={() => dispatch({ type: 'CLEAR_ACCOUNT_ROADMAP_PROMPT' })}>
+                    Continue as guest
+                  </button>
+                  <Link className="roadmap-btn" to="/login" state={{ from: { pathname: '/roadmap' } }}>
+                    Log In
+                  </Link>
+                  <Link className="roadmap-btn primary" to="/signup" state={{ from: { pathname: '/roadmap' } }}>
+                    Create Account
+                  </Link>
+                </div>
+              </>
+            )}
+          </section>
         </div>
       )}
 

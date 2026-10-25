@@ -13,6 +13,9 @@ object MajorsTable : Table("majors") {
     val majorName = varchar("major_name", 100)
     val department = varchar("department", 100)
     val totalUnits = integer("total_units")
+    val catalogProgramKey = varchar("catalog_program_key", 30).nullable()
+    val catalogSourceUrl = text("catalog_source_url").nullable()
+    val catalogYear = integer("catalog_year").nullable()
 
     override val primaryKey = PrimaryKey(id)
 }
@@ -36,6 +39,8 @@ object DegreeRequirementsTable : Table("degree_requirements") {
     val majorId = reference("major_id", MajorsTable.id)
     val categoryName = varchar("category_name", 100)
     val requiredUnits = integer("required_units")
+    val notes = text("notes").nullable()
+    val sourceUrl = text("source_url").nullable()
 
     override val primaryKey = PrimaryKey(id)
 }
@@ -205,6 +210,14 @@ object UsersTable : Table("users") {
     override val primaryKey = PrimaryKey(id)
 }
 
+object UserRoadmapsTable : Table("user_roadmaps") {
+    val userId = reference("user_id", UsersTable.id, onDelete = ReferenceOption.CASCADE)
+    val roadmapJson = text("roadmap_json")
+    val updatedAt = timestamp("updated_at").defaultExpression(CurrentTimestamp)
+
+    override val primaryKey = PrimaryKey(userId)
+}
+
 object AnnouncementsTable : Table("announcements") {
     const val MAX_TITLE_LENGTH = 120
     const val MAX_MESSAGE_LENGTH = 1000
@@ -304,5 +317,6 @@ val plannerSchemaTables = arrayOf(
     SageRequirementsTable,
     SageCoursesTable,
     UsersTable,
+    UserRoadmapsTable,
     AnnouncementsTable
 )

@@ -89,7 +89,14 @@ npm install
 cd ..
 ```
 
-Backend dependencies are resolved automatically by Gradle the first time you run `./gradlew bootRun` or `./gradlew build`.
+Backend dependencies are resolved automatically by Gradle the first time you run `./gradlew bootRun` or `./gradlew build`. The program scraper parses the saved SJSU catalog HTML files in `data/major_requirements`.
+
+Import the supported degree programs before importing CSV prerequisite relationships:
+
+```bash
+curl -X POST 'http://localhost:8080/api/catalog-programs/import?program=cmpe'
+curl -X POST 'http://localhost:8080/api/catalog-programs/import?program=swe'
+```
 
 ### Importing SWE/CMPE prerequisites
 
@@ -105,6 +112,8 @@ The import uses the existing `courses` and `prerequisites` tables and their data
 The roadmap API includes resolved prerequisite courses even when they are outside the selected major's requirement groups. Such courses remain optional and do not alter required units or generated degree requirements.
 
 The endpoint writes to the configured application database; use a development database when trying the import. Its response reports matched/created records, relationship counts, unresolved codes, invalid rows, and expressions needing review.
+
+`GET /api/roadmaps/majors` and `GET /api/roadmaps/majors/{majorId}` expose the imported CMPE/SWE default plans, including requirement source notes, safe prerequisite edges, and original prerequisite expressions retained for review. Roadmap edits are stored per major in browser localStorage for guests and temporary drafts. Authenticated account saves use `GET /api/roadmaps/me` and `PUT /api/roadmaps/me`; the backend derives the owner from the existing login session.
 
 ### Running Locally
 
@@ -154,6 +163,10 @@ npm run test:watch    # watch mode
 | GET  | `/api/sections` | List all persisted sections (optional `?term=`) |
 | GET  | `/api/schedule-data/full-schedule` | All course offerings (optional `?term=`) |
 | GET  | `/api/schedule-data/departments/{dept}/courses` | Courses for a given department |
+| GET  | `/api/roadmaps/majors` | Imported majors with default roadmap data |
+| GET  | `/api/roadmaps/majors/{majorId}` | Public default roadmap for one major |
+| GET  | `/api/roadmaps/me` | Authenticated user's saved roadmap |
+| PUT  | `/api/roadmaps/me` | Save the authenticated user's roadmap |
 
 </details>
 

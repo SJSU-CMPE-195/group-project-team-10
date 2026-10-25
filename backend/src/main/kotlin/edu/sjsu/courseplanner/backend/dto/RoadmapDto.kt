@@ -4,7 +4,10 @@ data class MajorDto(
     val majorId: Int,
     val majorName: String,
     val department: String,
-    val totalRequiredUnits: Int
+    val totalRequiredUnits: Int,
+    val catalogProgramKey: String? = null,
+    val catalogSourceUrl: String? = null,
+    val catalogYear: Int? = null
 )
 
 data class RoadmapCourseDto(
@@ -24,12 +27,22 @@ data class RoadmapPrerequisiteDto(
     val prereqType: String
 )
 
+data class RoadmapPrerequisiteConditionDto(
+    val courseId: Int,
+    val relationshipType: String,
+    val originalText: String,
+    val expressionJson: String?,
+    val sourceUrl: String?
+)
+
 data class RoadmapRequirementDto(
     val requirementId: Int,
     val majorId: Int,
     val categoryName: String,
     val requiredUnits: Int,
-    val courseIds: List<Int>
+    val courseIds: List<Int>,
+    val notes: String? = null,
+    val sourceUrl: String? = null
 )
 
 data class RoadmapSemesterCourseDto(
@@ -50,6 +63,7 @@ data class MajorRoadmapDto(
     val prerequisites: List<RoadmapPrerequisiteDto>,
     val degreeRequirements: List<RoadmapRequirementDto>,
     val semesters: List<RoadmapSemesterDto>,
+    val prerequisiteConditions: List<RoadmapPrerequisiteConditionDto> = emptyList(),
     val sagePrograms: List<SageProgramDto> = emptyList()
 )
 
