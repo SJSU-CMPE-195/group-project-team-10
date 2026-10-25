@@ -6,7 +6,7 @@ import { fetchCatalogCourses } from '../../api/catalog'
 import './Dashboard.css'
 
 // Codes observed in the schedule CSVs, matching GeAreaParser's API output.
-const GE_AREAS = ['1A', '1B', '1C', '2', '3', '3A', '3B', '4', '5A', '5B', '5C', '6', 'E', 'UD 2/5', 'UD 3', 'UD 4', 'US1', 'US2', 'US3']
+const GE_AREAS = ['1A', '1B', '1C', '2', '3A', '3B', '4', '5A', '5B', '5C', '6', 'UD 2/5', 'UD 3', 'UD 4']
 
 function Dashboard() {
   const {
