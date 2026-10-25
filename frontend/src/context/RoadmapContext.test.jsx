@@ -100,6 +100,28 @@ describe('roadmapReducer', () => {
     })
   })
 
+  describe('REMOVE_SEMESTER', () => {
+    it('removes the semester along with its courses', () => {
+      const state = makeState([
+        { semesterId: 1, courses: [{ courseId: 1 }] },
+        { semesterId: 2, courses: [{ courseId: 2 }] },
+      ])
+      const next = roadmapReducer(state, { type: "REMOVE_SEMESTER", semesterId: 2 })
+      expect(next.semesters.map(s => s.semesterId)).toEqual([1])
+      expect(next.hasUnsavedChanges).toBe(true)
+    })
+
+    it('keeps the last remaining semester', () => {
+      const state = makeState([{ semesterId: 1, courses: [] }])
+      expect(roadmapReducer(state, { type: "REMOVE_SEMESTER", semesterId: 1 })).toBe(state)
+    })
+
+    it('returns unchanged state for an unknown semester', () => {
+      const state = makeState([{ semesterId: 1, courses: [] }, { semesterId: 2, courses: [] }])
+      expect(roadmapReducer(state, { type: "REMOVE_SEMESTER", semesterId: 99 })).toBe(state)
+    })
+  })
+
   describe('MOVE_COURSE', () => {
     it('moves a course between semesters', () => {
       const state = makeState([

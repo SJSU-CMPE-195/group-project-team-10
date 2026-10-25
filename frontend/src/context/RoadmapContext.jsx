@@ -202,6 +202,18 @@ export function roadmapReducer(state, action) {
       }
     }
 
+    case 'REMOVE_SEMESTER': {
+      // keep at least one semester so courses have somewhere to go
+      if (state.semesters.length <= 1) return state
+      if (!state.semesters.some(s => s.semesterId === action.semesterId)) return state
+
+      return {
+        ...state,
+        semesters: state.semesters.filter(s => s.semesterId !== action.semesterId),
+        hasUnsavedChanges: true,
+      }
+    }
+
     case 'MOVE_COURSE': {
       const { courseId, toSemesterId, toIndex } = action
 

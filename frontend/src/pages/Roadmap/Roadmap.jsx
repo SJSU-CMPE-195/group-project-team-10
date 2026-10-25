@@ -13,10 +13,32 @@ import { fetchCatalogCourses } from '../../api/catalog'
 import './Roadmap.css'
 
 function SemesterNode({ data }) {
+  const dispatch = useRoadmapDispatch()
+
+  const handleRemove = () => {
+    if (data.courseCount > 0) {
+      const confirmed = window.confirm(
+        `Remove ${data.label}? Its ${data.courseCount} course(s) will be taken off the roadmap.`
+      )
+      if (!confirmed) return
+    }
+    dispatch({ type: "REMOVE_SEMESTER", semesterId: data.semesterId })
+  }
+
   return (
     <div className="roadmap-semester-label">
       <div className="roadmap-semester-term">{data.label}</div>
       <div className="roadmap-semester-units">{data.units} units</div>
+      {data.canRemove && (
+        <button
+          type="button"
+          className="roadmap-btn danger roadmap-semester-remove nodrag"
+          onClick={handleRemove}
+          aria-label={`Remove ${data.label}`}
+        >
+          Remove
+        </button>
+      )}
     </div>
   )
 }
@@ -24,7 +46,7 @@ function SemesterNode({ data }) {
 const NODE_TYPES = { course: CourseNode, semester: SemesterNode }
 
 const SEMESTER_ROW_HEIGHT = 200
-const COURSE_WIDTH = 200
+const COURSE_WIDTH = 240
 const COURSE_CARD_HEIGHT = 96
 const COURSE_Y_OFFSET = (SEMESTER_ROW_HEIGHT - COURSE_CARD_HEIGHT) / 2
 const HEADER_WIDTH = 140
@@ -99,7 +121,13 @@ function buildNodesAndEdges(semesters, violations, courseMap, prerequisites) {
       id: `sem-${sem.semesterId}`,
       type: 'semester',
       position: { x: 0, y },
-      data: { label: sem.term, units: totalUnits },
+      data: {
+        semesterId: sem.semesterId,
+        label: sem.term,
+        units: totalUnits,
+        courseCount: sem.courses.length,
+        canRemove: semesters.length > 1,
+      },
       style: {
         width: getSemesterWidth(sem),
         height: SEMESTER_ROW_HEIGHT,
