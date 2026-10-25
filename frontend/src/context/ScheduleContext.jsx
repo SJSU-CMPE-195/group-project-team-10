@@ -174,6 +174,17 @@ export function ScheduleProvider({ children }) {
     setScheduleError('')
   }
 
+  function removeSections(sectionIds, term = resolvedTerm) {
+    const ids = new Set(sectionIds)
+
+    setSchedulesByTerm(prev => ({
+      ...prev,
+      [term]: (prev[term] || []).filter(section => !ids.has(section.id)),
+    }))
+
+    setScheduleError('')
+  }
+
   function clearSchedule(term = resolvedTerm) {
     setSchedulesByTerm(prev => ({
       ...prev,
@@ -212,6 +223,7 @@ export function ScheduleProvider({ children }) {
     selectedSections,
     addSection,
     removeSection,
+    removeSections,
     clearSchedule,
     isSelected,
     scheduleError,

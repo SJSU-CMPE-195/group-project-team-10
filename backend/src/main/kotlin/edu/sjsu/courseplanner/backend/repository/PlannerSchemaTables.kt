@@ -234,6 +234,68 @@ object AnnouncementsTable : Table("announcements") {
     override val primaryKey = PrimaryKey(id)
 }
 
+object SageProgramsTable : Table("sage_programs") {
+    val id = integer("sage_program_id").autoIncrement()
+
+    val undergraduateMajorId =
+        reference("undergraduate_major_id", MajorsTable.id)
+
+    val graduateProgramName =
+        varchar("graduate_program_name", 150)
+
+    val minimumGpa =
+        double("minimum_gpa").default(3.0)
+
+    val minimumUndergradUnits =
+        integer("minimum_undergrad_units").default(75)
+
+    val maximumUndergradUnits =
+        integer("maximum_undergrad_units").default(120)
+
+    val totalProgramUnits =
+        integer("total_program_units").default(141)
+
+    val maxDoubleCountUnits =
+        integer("max_double_count_units").default(12)
+
+    override val primaryKey = PrimaryKey(id)
+}
+
+object SageRequirementsTable : Table("sage_requirements") {
+    val id = integer("sage_requirement_id").autoIncrement()
+
+    val sageProgramId =
+        reference("sage_program_id", SageProgramsTable.id)
+
+    val requirementName =
+        varchar("requirement_name", 100)
+
+    val requiredUnits =
+        integer("required_units")
+
+    val description =
+        text("description").nullable()
+
+    override val primaryKey = PrimaryKey(id)
+}
+
+object SageCoursesTable : Table("sage_courses") {
+    val requirementId =
+        reference("sage_requirement_id", SageRequirementsTable.id)
+
+    val courseId =
+        reference("course_id", CoursesTable.id)
+
+    val courseRole =
+        varchar("course_role", 50)
+
+    val doubleCountEligible =
+        bool("double_count_eligible").default(false)
+
+    override val primaryKey =
+        PrimaryKey(requirementId, courseId, courseRole)
+}
+
 val plannerSchemaTables = arrayOf(
     MajorsTable,
     StudentsTable,
@@ -251,6 +313,9 @@ val plannerSchemaTables = arrayOf(
     SemesterCoursesTable,
     SectionsTable,
     GradeDistributionsTable,
+    SageProgramsTable,
+    SageRequirementsTable,
+    SageCoursesTable,
     UsersTable,
     UserRoadmapsTable,
     AnnouncementsTable

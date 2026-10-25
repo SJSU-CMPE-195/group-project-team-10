@@ -1,6 +1,8 @@
 import {useContext, useEffect, useMemo, useState} from 'react'
 import {useNavigate} from 'react-router-dom'
 import { Link } from 'react-router-dom'
+import {useEffect, useMemo, useState} from 'react'
+import { useNavigate } from 'react-router-dom'
 import {ReactFlow, Background, Controls, MarkerType,applyEdgeChanges, applyNodeChanges} from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import {useRoadmap, useRoadmapDispatch} from '../../context/RoadmapContext'
@@ -9,6 +11,9 @@ import CourseNode from '../../components/CourseNode/CourseNode'
 import ValidationAlert from '../../components/ValidationAlert/ValidationAlert'
 import { fetchRoadmapByMajor, saveAccountRoadmap } from '../../api/roadmap'
 import { AuthContext } from '../../context/authContextObject'
+import LeaveConfirmModal from '../../components/LeaveConfirmModal/LeaveConfirmModal'
+import { useLeaveGuard } from '../../hooks/useLeaveGuard'
+import { fetchRoadmapByMajor } from '../../api/roadmap'
 import './Roadmap.css'
 
 function SemesterNode({ data }) {
@@ -179,6 +184,7 @@ function Roadmap() {
   const {
     semesters,
     hasUnsavedChanges,
+    variant,
     courses,
     prerequisites,
     prerequisiteConditions: roadmapPrerequisiteConditions,
@@ -279,17 +285,8 @@ function Roadmap() {
     setHoverSemesterIndex(null)
   }
   
-  const handleBack = () => {
-    if (hasUnsavedChanges) {
-      const choice = window.confirm("You have unsaved changes. Press OK to discard, or Cancel to stay.")
-      if (choice) {
-        dispatch({ type: "DISCARD_CHANGES" })
-        navigate("/")
-      }
-    } else {
-      navigate("/")
-    }
-  }
+  // any navigation off /roadmap with unsaved edits waits on the leave dialog
+  const blocker = useLeaveGuard(hasUnsavedChanges)
 
   const handleSave = () => {
     setAccountError('')
@@ -386,7 +383,7 @@ function Roadmap() {
   return (
     <div className="roadmap-page">
       <div className="roadmap-toolbar">
-        <button className="roadmap-back-btn" onClick={handleBack}>
+        <button className="roadmap-back-btn" onClick={() => navigate("/")}>
           &larr; Back
         </button>
 
@@ -426,14 +423,25 @@ function Roadmap() {
           >
             {accountSaving ? 'Saving...' : 'Save Changes'}
           </button>
+          {variant !== 'autosave' && (
+            <>
+              <button
+                onClick={handleSave}
+                disabled={!hasUnsavedChanges}
+                className={`roadmap-btn primary ${hasUnsavedChanges ? '' : 'disabled'}`}
+              >
+                Save Changes
+              </button>
 
-          <button
-            onClick={handleDiscardChanges}
-            disabled={!hasUnsavedChanges}
-            className="roadmap-btn"
-          >
-            Cancel Changes
-          </button>
+              <button
+                onClick={handleDiscardChanges}
+                disabled={!hasUnsavedChanges}
+                className="roadmap-btn"
+              >
+                Cancel Changes
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -609,6 +617,7 @@ function Roadmap() {
           nodesDraggable={true}
           nodesConnectable={false}
           nodeDragThreshold={8}
+          panOnScroll
           minZoom={0.3}
           maxZoom={1.5}
           proOptions={{ hideAttribution: true }}
@@ -623,6 +632,29 @@ function Roadmap() {
               <ValidationAlert violations={violations} courseMap={courseMap} />
         </div>
       )}
+
+      <LeaveConfirmModal
+        blocker={blocker}
+        title="Unsaved roadmap changes"
+        message={<p>You have changes to your roadmap that haven't been saved.</p>}
+        actions={[
+          {
+            label: 'Discard and leave',
+            onClick: () => {
+              handleDiscardChanges()
+              blocker.proceed()
+            },
+          },
+          {
+            label: 'Save and leave',
+            onClick: () => {
+              handleSave()
+              blocker.proceed()
+            },
+            variant: 'primary',
+          },
+        ]}
+      />
     </div>
   )
 }

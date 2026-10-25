@@ -1,6 +1,7 @@
 import { fireEvent, screen } from '@testing-library/react'
+import { act, fireEvent, screen } from '@testing-library/react'
 import { describe, it, expect } from 'vitest'
-import { renderWithProviders } from '../../test-utils'
+import { buildTestRoadmapState, renderWithProviders } from '../../test-utils'
 import Roadmap from './Roadmap'
 
 describe('Roadmap', () => {
@@ -37,5 +38,67 @@ describe('Roadmap', () => {
     expect(screen.getByText(/create an account or log in to save this roadmap across devices/i)).toBeDefined()
     expect(screen.getByRole('link', { name: 'Log In' })).toBeDefined()
     expect(screen.getByRole('link', { name: 'Create Account' })).toBeDefined()
+  })
+})
+
+describe('Roadmap leave guard', () => {
+  function renderDirty() {
+    return renderWithProviders(<Roadmap />, {
+      route: '/roadmap',
+      roadmapState: { ...buildTestRoadmapState(), hasUnsavedChanges: true },
+    })
+  }
+
+  it('leaves without a prompt when there are no unsaved changes', async () => {
+    const { router } = renderWithProviders(<Roadmap />, { route: '/roadmap' })
+
+    await act(() => router.navigate('/catalog'))
+
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(router.state.location.pathname).toBe('/catalog')
+  })
+
+  it('asks before leaving with unsaved changes and stays on Stay', async () => {
+    const { router } = renderDirty()
+
+    await act(() => router.navigate('/catalog'))
+    expect(screen.getByRole('dialog', { name: 'Unsaved roadmap changes' })).toBeDefined()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Stay' }))
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(router.state.location.pathname).toBe('/roadmap')
+  })
+
+  it('leaves on Discard and leave', async () => {
+    const { router } = renderDirty()
+
+    await act(() => router.navigate('/catalog'))
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Discard and leave' }))
+    })
+
+    expect(router.state.location.pathname).toBe('/catalog')
+  })
+
+  it('shows no Save button or prompt in the autosave variant', async () => {
+    const { router } = renderWithProviders(<Roadmap />, { route: '/roadmap', variant: 'autosave' })
+
+    expect(screen.queryByText('Save Changes')).toBeNull()
+    expect(screen.queryByText('Cancel Changes')).toBeNull()
+
+    fireEvent.click(screen.getByText('Add Gap Semester'))
+    await act(() => router.navigate('/catalog'))
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(router.state.location.pathname).toBe('/catalog')
+  })
+
+  it('routes the Back button through the same prompt', async () => {
+    renderDirty()
+
+    await act(async () => {
+      fireEvent.click(screen.getByText(/Back/))
+    })
+
+    expect(screen.getByRole('dialog', { name: 'Unsaved roadmap changes' })).toBeDefined()
   })
 })
