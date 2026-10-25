@@ -4,6 +4,8 @@ import { useAuth } from "../../context/useAuth";
 import { useEscapeKey } from '../../hooks/useEscapeKey'
 import './Layout.css'
 import AnnouncementBanner from '../Announcement/AnnouncementBanner'
+import { FEEDBACK_FORM_URLS } from '../../lib/experiment'
+import { useRoadmap } from '../../context/RoadmapContext'
 
 const navLinkClass = ({ isActive }) => isActive ? "nav-link active" : "nav-link"
 
@@ -15,6 +17,8 @@ function Layout() {
   const navigate = useNavigate()
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  // TEMP: tester feedback form
+  const { variant } = useRoadmap()
 
   useEscapeKey(menuOpen, () => setMenuOpen(false))
 
@@ -91,6 +95,16 @@ function Layout() {
       <main className="main-content">
         <Outlet />
       </main>
+
+      {/* TEMP: opening feedback in new tab*/}
+      <a
+        href={FEEDBACK_FORM_URLS[variant]}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="feedback-button"
+      >
+        Feedback
+      </a>
 
       {showLogoutConfirm && (
         <div className="modal-backdrop" onClick={() => setShowLogoutConfirm(false)}>

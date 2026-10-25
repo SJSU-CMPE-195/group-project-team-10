@@ -271,40 +271,160 @@
   text-decoration: underline;
 }
 
-.grade-distribution-panel {
-  margin-top: 8px;
+.grade-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.grade-modal {
+  width: min(620px, 100%);
+  max-height: 85vh;
+  overflow-y: auto;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 22px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+}
+
+.grade-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.grade-modal-header h3 {
+  margin: 0;
+  color: var(--text-h);
+  font-size: 20px;
+}
+
+.grade-modal-subtitle {
+  margin-top: 5px;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.grade-modal-close {
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.grade-modal-close:hover {
+  color: var(--text-h);
+}
+
+.grade-chart {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 14px;
 }
 
-.grade-distribution-semester {
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 8px;
-  background: rgba(255, 255, 255, 0.02);
-}
-
-.grade-distribution-title {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-h);
-  margin-bottom: 6px;
-}
-
-.grade-distribution-grades {
-  display: flex;
-  flex-wrap: wrap;
+.grade-chart-row {
+  display: grid;
+  grid-template-columns: 28px 1fr 58px;
+  align-items: center;
   gap: 10px;
-  font-size: 12px;
-  color: var(--text);
 }
 
-.grade-distribution-total {
-  margin-top: 6px;
-  font-size: 11px;
+.grade-chart-label {
+  color: var(--text-h);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.grade-chart-track {
+  height: 24px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.grade-chart-bar {
+  height: 100%;
+  min-width: 2px;
+  background: var(--accent);
+  border-radius: 6px;
+  transition: width 0.25s ease;
+}
+
+.grade-chart-value {
   color: var(--text);
-  opacity: 0.75;
+  font-size: 12px;
+  text-align: right;
+}
+
+.grade-modal-total {
+  margin-top: 16px;
+  color: var(--text);
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.grade-history {
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+
+.grade-history h4 {
+  margin: 0 0 12px;
+  color: var(--text-h);
+  font-size: 14px;
+}
+
+.grade-history-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  font-size: 12px;
+}
+
+.grade-history-row:last-child {
+  border-bottom: none;
+}
+
+.grade-view-toggle {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 22px;
+}
+
+.grade-view-toggle button {
+  flex: 1;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.grade-view-toggle button:hover {
+  border-color: var(--accent-border);
+}
+
+.grade-view-toggle button.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
 }
 
 .course-section-rmp {

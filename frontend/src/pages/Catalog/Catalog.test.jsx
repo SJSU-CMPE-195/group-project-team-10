@@ -298,4 +298,29 @@ describe('Catalog', () => {
 
     expect(await screen.findByText(/Failed to load/)).toBeDefined()
   })
+
+  it('goes to the schedule page after adding a section', async () => {
+    const baseFetch = globalThis.fetch
+    globalThis.fetch = vi.fn(url => url === '/api/sections?term=Spring%202026'
+      ? Promise.resolve({
+        ok: true,
+        json: async () => [{
+          id: 'MATH 42-01',
+          courseCode: 'MATH 42',
+          sectionCode: '01',
+          classNumber: 1001,
+          days: 'MW',
+          times: '10:30AM-11:45AM',
+          term: 'Spring 2026',
+        }],
+      })
+      : baseFetch(url))
+
+    const { router } = await renderAndPickTerm()
+    fireEvent.click(await screen.findByRole('button', { name: 'View 1 sections' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Add' }))
+
+    expect(router.state.location.pathname).toBe('/schedule')
+    localStorage.clear()
+  })
 })

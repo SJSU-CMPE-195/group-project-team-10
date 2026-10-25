@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.multipart.MultipartFile
+import edu.sjsu.courseplanner.backend.dto.CourseGradeDistributionDto
+import org.springframework.web.bind.annotation.GetMapping
 
 @RestController
 @RequestMapping("/api/grade-distributions")
@@ -26,6 +28,14 @@ class GradeDistributionController(
                 "message" to "Grade distribution import completed",
                 "rowsImported" to imported
             )
+        )
+    }
+    @GetMapping("/course")
+    fun getCourseDistribution(
+        @RequestParam("courseNumber") courseNumber: String
+    ): ResponseEntity<CourseGradeDistributionDto> {
+        return ResponseEntity.ok(
+            gradeDistributionService.getCourseDistribution(courseNumber)
         )
     }
 }

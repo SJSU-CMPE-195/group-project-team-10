@@ -1,5 +1,5 @@
 import { render } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { RoadmapProvider } from './context/RoadmapContext'
 import { ScheduleProvider } from './context/ScheduleContext'
 import sampleRoadmap from './data/sampleRoadmap'
@@ -7,7 +7,7 @@ import prerequisites from './data/prerequisites'
 import courses from './data/courses'
 import degreeRequirements, { majorInfo } from './data/degreeRequirements'
 
-function buildTestRoadmapState() {
+export function buildTestRoadmapState() {
   return {
     ...structuredClone(sampleRoadmap),
     majors: [structuredClone(majorInfo)],
@@ -22,14 +22,26 @@ function buildTestRoadmapState() {
   }
 }
 
-export function renderWithProviders(ui, { route = '/', roadmapState = buildTestRoadmapState() } = {}) {
-  return render(
-    <MemoryRouter initialEntries={[route]}>
-      <RoadmapProvider initialState={roadmapState} disableAutoLoad>
-        <ScheduleProvider>
-          {ui}
-        </ScheduleProvider>
-      </RoadmapProvider>
-    </MemoryRouter>
+export function renderWithProviders(
+  ui,
+  { route = '/', roadmapState = buildTestRoadmapState(), variant = 'warning' } = {}
+) {
+  // data router to match main.jsx, so useBlocker works in tests
+  const router = createMemoryRouter(
+    [
+      {
+        path: '*',
+        element: (
+          <RoadmapProvider initialState={roadmapState} disableAutoLoad variant={variant}>
+            <ScheduleProvider>
+              {ui}
+            </ScheduleProvider>
+          </RoadmapProvider>
+        ),
+      },
+    ],
+    { initialEntries: [route] }
   )
+
+  return { ...render(<RouterProvider router={router} />), router }
 }

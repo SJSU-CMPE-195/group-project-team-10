@@ -64,4 +64,33 @@ data class MajorRoadmapDto(
     val degreeRequirements: List<RoadmapRequirementDto>,
     val semesters: List<RoadmapSemesterDto>,
     val prerequisiteConditions: List<RoadmapPrerequisiteConditionDto> = emptyList()
+    val sagePrograms: List<SageProgramDto> = emptyList()
+)
+
+data class SageProgramDto(
+    val sageProgramId: Int,
+    val undergraduateMajorId: Int,
+    val graduateProgramName: String,
+    val minimumGpa: Double,
+    val minimumUndergradUnits: Int,
+    val maximumUndergradUnits: Int,
+    val totalProgramUnits: Int,
+    val requirements: List<SageRequirementDto>
+)
+
+data class SageRequirementDto(
+    val requirementId: Int,
+    val requirementName: String,
+    val requiredUnits: Int,
+    val description: String?,
+    val courses: List<SageCourseDto>
+)
+
+data class SageCourseDto(
+    val courseId: Int,
+    val courseCode: String,
+    val courseTitle: String,
+    val units: Int,
+    val courseRole: String,
+    val doubleCountEligible: Boolean
 )

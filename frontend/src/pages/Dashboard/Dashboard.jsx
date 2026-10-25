@@ -10,11 +10,13 @@ function Dashboard() {
     courses,
     prerequisites,
     degreeRequirements,
+    sagePrograms,
     majorInfo,
     isLoadingRoadmap,
     roadmapError,
   } = useRoadmap()
   const [selectedRequirementId, setSelectedRequirementId] = useState(null)
+  const [selectedSageProgramId, setSelectedSageProgramId] = useState(null)
   const courseMap = new Map(courses.map(c => [c.courseId, c]))
   const violations = validateSemesterPlan(semesters, prerequisites)
 
@@ -85,6 +87,31 @@ function Dashboard() {
     ? Math.min(100, Math.round((plannedUnits / totalRequiredUnits) * 100))
     : 0
 
+  const selectedSageProgram =
+    sagePrograms?.find(
+      program => program.sageProgramId === selectedSageProgramId
+    ) || null
+
+  const formatSpecializationName = role => {
+    const names = {
+      SPECIALIZATION_ENTERPRISE: 'Enterprise Software Technologies',
+      SPECIALIZATION_CLOUD: 'Cloud Computing and Virtualization',
+      SPECIALIZATION_SOFTWARE_SYSTEMS: 'Software Systems Engineering',
+      SPECIALIZATION_NETWORKING: 'Networking Software',
+      SPECIALIZATION_DATA_SCIENCE: 'Data Science',
+      SPECIALIZATION_CYBERSECURITY: 'Cybersecurity',
+      SPECIALIZATION_INTELLIGENT_DATA: 'Intelligent Data Systems',
+      SPECIALIZATION_AUTONOMOUS: 'Autonomous Systems',
+      SPECIALIZATION_CYBERSECURITY_AI: 'Cybersecurity in AI',
+      SPECIALIZATION_SYSTEM_SOFTWARE: 'System Software Architecture',
+      SPECIALIZATION_NETWORK_SYSTEMS: 'Network Systems',
+      SPECIALIZATION_EMBEDDED: 'Embedded Systems',
+      SPECIALIZATION_MACHINE_LEARNING: 'Machine Learning Engineering',
+    }
+
+    return names[role] || role
+  }
+
   return (
     <div className="dashboard">
       <h1>Course Planner Plus</h1>
@@ -102,6 +129,57 @@ function Dashboard() {
           {plannedUnits} / {totalRequiredUnits} units are currently on the roadmap ({plannedPct}%).
         </div>
       </div>
+
+      {sagePrograms?.length > 0 && (
+        <div className="sage-card">
+          <div className="sage-card-header">
+            <div>
+              <div className="sage-card-label">SAGE / 4+1 Options</div>
+              <div className="sage-card-title">
+                Accelerated Graduate Programs
+              </div>
+            </div>
+
+            <span className="sage-card-count">
+              {sagePrograms.length} option{sagePrograms.length !== 1 ? 's' : ''}
+            </span>
+          </div>
+
+          <p className="sage-card-description">
+            Earn your bachelor&apos;s and master&apos;s degrees through an
+            accelerated SAGE pathway.
+          </p>
+
+          <div className="sage-program-list">
+            {sagePrograms.map(program => (
+              <button
+                key={program.sageProgramId}
+                type="button"
+                className="sage-program-option"
+                onClick={() =>
+                  setSelectedSageProgramId(program.sageProgramId)
+                }
+              >
+                <div>
+                  <div className="sage-program-name">
+                    {program.graduateProgramName}
+                  </div>
+
+                  <div className="sage-program-meta">
+                    Min GPA {program.minimumGpa.toFixed(1)}
+                    {' • '}
+                    {program.minimumUndergradUnits}–{program.maximumUndergradUnits} undergraduate units
+                    {' • '}
+                    {program.totalProgramUnits} total units
+                  </div>
+                </div>
+
+                <span aria-hidden="true">›</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="requirements-grid">
         {degreeRequirements.map(req => {
@@ -202,6 +280,186 @@ function Dashboard() {
                   <div className="requirement-course-empty">No missing courses in this requirement.</div>
                 )}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {selectedSageProgram && (
+        <div
+          className="requirement-detail-backdrop"
+          onClick={() => setSelectedSageProgramId(null)}
+        >
+          <div
+            className="requirement-detail-modal sage-detail-modal"
+            role="dialog"
+            aria-modal="true"
+            onClick={event => event.stopPropagation()}
+          >
+            <div className="requirement-detail-header">
+              <div>
+                <div className="requirement-detail-label">
+                  SAGE / 4+1 Pathway
+                </div>
+
+                <h2>
+                  {majorInfo?.majorName}
+                  {' + '}
+                  {selectedSageProgram.graduateProgramName}
+                </h2>
+              </div>
+
+              <button
+                type="button"
+                className="requirement-detail-close"
+                onClick={() => setSelectedSageProgramId(null)}
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="sage-detail-requirements">
+              <div>
+                <strong>Minimum GPA</strong>
+                <span>{selectedSageProgram.minimumGpa.toFixed(1)}</span>
+              </div>
+
+              <div>
+                <strong>Admission unit range</strong>
+                <span>
+                  {selectedSageProgram.minimumUndergradUnits}
+                  {' – '}
+                  {selectedSageProgram.maximumUndergradUnits}
+                </span>
+              </div>
+
+              <div>
+                <strong>Total SAGE Program Units</strong>
+                <span>{selectedSageProgram.totalProgramUnits} units</span>
+              </div>
+            </div>
+
+            <div className="sage-course-section">
+              <h3>Graduate Requirements</h3>
+
+              {selectedSageProgram.requirements?.length > 0 ? (
+                selectedSageProgram.requirements.map(requirement => (
+                  <div
+                    key={requirement.requirementId}
+                    className="sage-requirement-block"
+                  >
+                    <div className="sage-requirement-header">
+                      <div>
+                        <div className="sage-requirement-name">
+                          {requirement.requirementName}
+                        </div>
+
+                        {requirement.description && (
+                          <div className="sage-requirement-description">
+                            {requirement.description}
+                          </div>
+                        )}
+                      </div>
+
+                      <span className="sage-requirement-units">
+                        {requirement.requiredUnits} units
+                      </span>
+                    </div>
+
+                    {requirement.courses?.length > 0 ? (
+                      <div className="sage-requirement-courses">
+
+                        {requirement.requirementName === 'Specialization Courses' ? (
+                          Object.entries(
+                            requirement.courses.reduce((groups, course) => {
+                              const key = course.courseRole
+
+                              if (!groups[key]) {
+                                groups[key] = []
+                              }
+
+                              groups[key].push(course)
+                              return groups
+                            }, {})
+                          ).map(([role, specializationCourses]) => (
+                            <div
+                              key={role}
+                              className="sage-specialization-group"
+                            >
+                              <div className="sage-specialization-name">
+                                {formatSpecializationName(role)}
+                              </div>
+
+                              {specializationCourses.map(course => (
+                                <div
+                                  key={`${course.courseId}-${role}`}
+                                  className="sage-course-row"
+                                >
+                                  <div>
+                                    <div className="sage-course-code">
+                                      {course.courseCode}
+                                    </div>
+
+                                    <div className="sage-course-title">
+                                      {course.courseTitle}
+                                    </div>
+                                  </div>
+
+                                  <div className="sage-course-info">
+                                    <span>{course.units} units</span>
+
+                                    {course.doubleCountEligible && (
+                                      <span className="sage-course-role">
+                                        Double-count eligible
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ))
+                        ) : (
+                          requirement.courses.map(course => (
+                            <div
+                              key={`${requirement.requirementId}-${course.courseId}-${course.courseRole}`}
+                              className="sage-course-row"
+                            >
+                              <div>
+                                <div className="sage-course-code">
+                                  {course.courseCode}
+                                </div>
+
+                                <div className="sage-course-title">
+                                  {course.courseTitle}
+                                </div>
+                              </div>
+
+                              <div className="sage-course-info">
+                                <span>{course.units} units</span>
+
+                                {course.doubleCountEligible && (
+                                  <span className="sage-course-role">
+                                    Double-count eligible
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          ))
+                        )}
+
+                      </div>
+                    ) : (
+                      <div className="sage-requirement-rule">
+                        See requirement description above.
+                      </div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="requirement-course-empty">
+                  No SAGE requirement data available yet.
+                </div>
+              )}
             </div>
           </div>
         </div>

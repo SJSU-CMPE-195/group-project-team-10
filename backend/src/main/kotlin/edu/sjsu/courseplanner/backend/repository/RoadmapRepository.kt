@@ -45,6 +45,32 @@ data class RoadmapPrerequisiteConditionRecord(
     val originalText: String,
     val expressionJson: String?,
     val sourceUrl: String?
+data class SageProgramRecord(
+    val sageProgramId: Int,
+    val undergraduateMajorId: Int,
+    val graduateProgramName: String,
+    val minimumGpa: Double,
+    val minimumUndergradUnits: Int,
+    val maximumUndergradUnits: Int,
+    val totalProgramUnits: Int,
+    val maxDoubleCountUnits: Int
+)
+
+data class SageRequirementRecord(
+    val requirementId: Int,
+    val sageProgramId: Int,
+    val requirementName: String,
+    val requiredUnits: Int,
+    val description: String?
+)
+
+data class SageCourseRecord(
+    val courseId: Int,
+    val courseCode: String,
+    val courseTitle: String,
+    val units: Int,
+    val courseRole: String,
+    val doubleCountEligible: Boolean
 )
 
 @Repository
@@ -145,6 +171,77 @@ class RoadmapRepository(
                     originalText = row[PrerequisiteCsvConditionsTable.originalText],
                     expressionJson = row[PrerequisiteCsvConditionsTable.expressionJson],
                     sourceUrl = row[PrerequisiteCsvConditionsTable.officialCourseUrl]
+    fun findSageProgramsForMajor(
+        majorId: Int
+    ): List<SageProgramRecord> = transaction(database) {
+        SageProgramsTable
+            .selectAll()
+            .where {
+                SageProgramsTable.undergraduateMajorId eq majorId
+            }
+            .orderBy(SageProgramsTable.graduateProgramName to SortOrder.ASC)
+            .map { row ->
+                SageProgramRecord(
+                    sageProgramId = row[SageProgramsTable.id],
+                    undergraduateMajorId =
+                        row[SageProgramsTable.undergraduateMajorId],
+                    graduateProgramName =
+                        row[SageProgramsTable.graduateProgramName],
+                    minimumGpa =
+                        row[SageProgramsTable.minimumGpa],
+                    minimumUndergradUnits =
+                        row[SageProgramsTable.minimumUndergradUnits],
+                    maximumUndergradUnits =
+                        row[SageProgramsTable.maximumUndergradUnits],
+                    totalProgramUnits =
+                        row[SageProgramsTable.totalProgramUnits],
+                    maxDoubleCountUnits =
+                        row[SageProgramsTable.maxDoubleCountUnits]
+                )
+            }
+    }
+
+    fun findSageRequirements(
+        sageProgramId: Int
+    ): List<SageRequirementRecord> = transaction(database) {
+
+        SageRequirementsTable
+            .selectAll()
+            .where {
+                SageRequirementsTable.sageProgramId eq sageProgramId
+            }
+            .orderBy(SageRequirementsTable.id to SortOrder.ASC)
+            .map { row ->
+                SageRequirementRecord(
+                    requirementId = row[SageRequirementsTable.id],
+                    sageProgramId = row[SageRequirementsTable.sageProgramId],
+                    requirementName = row[SageRequirementsTable.requirementName],
+                    requiredUnits = row[SageRequirementsTable.requiredUnits],
+                    description = row[SageRequirementsTable.description]
+                )
+            }
+    }
+
+    fun findSageCourses(
+        requirementId: Int
+    ): List<SageCourseRecord> = transaction(database) {
+
+        SageCoursesTable
+            .innerJoin(CoursesTable)
+            .selectAll()
+            .where {
+                SageCoursesTable.requirementId eq requirementId
+            }
+            .orderBy(CoursesTable.courseCode to SortOrder.ASC)
+            .map { row ->
+                SageCourseRecord(
+                    courseId = row[CoursesTable.id],
+                    courseCode = row[CoursesTable.courseCode],
+                    courseTitle = row[CoursesTable.courseTitle],
+                    units = row[CoursesTable.units],
+                    courseRole = row[SageCoursesTable.courseRole],
+                    doubleCountEligible =
+                        row[SageCoursesTable.doubleCountEligible]
                 )
             }
     }
