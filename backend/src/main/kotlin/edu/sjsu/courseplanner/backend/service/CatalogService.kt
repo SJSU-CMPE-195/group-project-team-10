@@ -15,14 +15,29 @@ class CatalogService(
         val courses = catalogRepository.findAllCourses()
         val allOfferings = catalogRepository.findOfferings()
         val filteredOfferings = catalogRepository.findOfferings(term)
+        val geValues = catalogRepository.findCourseGeValues()
 
         val termsByCourseId = allOfferings
             .groupBy { it.courseId }
-            .mapValues { (_, offerings) -> offerings.map { it.term }.distinct().sorted() }
+            .mapValues { (_, offerings) ->
+                offerings
+                    .map { it.term }
+                    .distinct()
+                    .sorted()
+            }
 
         val offeringCountByCourseId = filteredOfferings
             .groupingBy { it.courseId }
             .eachCount()
+
+        val geAreasByCourseCode = geValues
+            .groupBy { it.courseCode.trim().uppercase() }
+            .mapValues { (_, records) ->
+                records
+                    .flatMap { GeAreaParser.parse(it.satisfies) }
+                    .distinct()
+                    .sorted()
+            }
 
         return courses
             .map { course ->
@@ -34,12 +49,20 @@ class CatalogService(
                     units = course.units,
                     department = course.department,
                     offeringCount = offeringCountByCourseId[course.courseId] ?: 0,
-                    availableTerms = termsByCourseId[course.courseId] ?: emptyList()
+                    availableTerms = termsByCourseId[course.courseId] ?: emptyList(),
+                    geAreas = geAreasByCourseCode[
+                        course.courseCode.trim().uppercase()
+                    ] ?: emptyList()
                 )
             }
-            .filter { dto -> term.isNullOrBlank() || dto.offeringCount > 0 }
+            .filter { dto ->
+                term.isNullOrBlank() || dto.offeringCount > 0
+            }
     }
 
     @Transactional(readOnly = true)
-    fun getAvailableTerms(): List<String> = catalogRepository.findAvailableTerms()
+    fun getAvailableTerms(): List<String> {
+        return catalogRepository.findAvailableTerms()
+    }
+
 }

@@ -25,6 +25,11 @@ data class CourseOfferingRecord(
     val term: String
 )
 
+data class CourseGeRecord(
+    val courseCode: String,
+    val satisfies: String
+)
+
 @Repository
 class CatalogRepository(
     private val database: Database
@@ -68,6 +73,22 @@ class CatalogRepository(
                 end == null || !end.isBefore(today)
             }
             .sortedWith(compareBy<String> { extractYear(it) }.thenBy { seasonOrder(it) })
+    }
+
+    fun findCourseGeValues(): List<CourseGeRecord> = transaction(database) {
+        SectionsTable
+            .selectAll()
+            .mapNotNull { row ->
+                val satisfies = row[SectionsTable.satisfies]
+                    ?.trim()
+                    ?.takeIf { it.isNotEmpty() }
+                    ?: return@mapNotNull null
+
+                CourseGeRecord(
+                    courseCode = row[SectionsTable.courseCode],
+                    satisfies = satisfies
+                )
+            }
     }
 
     // latest section end date per term

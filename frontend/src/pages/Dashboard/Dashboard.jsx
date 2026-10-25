@@ -1,8 +1,12 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useRoadmap } from '../../context/RoadmapContext'
 import { validateSemesterPlan } from '../../utils/prerequisiteValidator'
+import { fetchCatalogCourses } from '../../api/catalog'
 import './Dashboard.css'
+
+// Codes observed in the schedule CSVs, matching GeAreaParser's API output.
+const GE_AREAS = ['1A', '1B', '1C', '2', '3A', '3B', '4', '5A', '5B', '5C', '6', 'UD 2/5', 'UD 3', 'UD 4']
 
 function Dashboard() {
   const {
@@ -17,6 +21,32 @@ function Dashboard() {
   } = useRoadmap()
   const [selectedRequirementId, setSelectedRequirementId] = useState(null)
   const [selectedSageProgramId, setSelectedSageProgramId] = useState(null)
+  const [showGeDetails, setShowGeDetails] = useState(false)
+  const [catalogCourses, setCatalogCourses] = useState([])
+  const [geLoadStatus, setGeLoadStatus] = useState('loading')
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadCatalogCourses() {
+      try {
+        const data = await fetchCatalogCourses()
+
+        if (!cancelled) {
+          setCatalogCourses(data)
+          setGeLoadStatus('loaded')
+        }
+      } catch {
+        if (!cancelled) setGeLoadStatus('failed')
+      }
+    }
+
+    loadCatalogCourses()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
   const courseMap = new Map(courses.map(c => [c.courseId, c]))
   const violations = validateSemesterPlan(semesters, prerequisites)
 
@@ -31,6 +61,52 @@ function Dashboard() {
     }
     return statusMap
   }, [semesters])
+
+  const geProgress = useMemo(() => {
+    return GE_AREAS.map(area => {
+      const matchingCourses = catalogCourses.filter(course =>
+        (course.geAreas || []).includes(area)
+      )
+
+      const completedCourses = matchingCourses.filter(
+        course => courseStatusById.get(course.courseId) === 'completed'
+      )
+
+      const plannedCourses = matchingCourses.filter(course => {
+        const status = courseStatusById.get(course.courseId)
+
+        return status === 'planned' || status === 'in_progress'
+      })
+
+      let status = 'missing'
+
+      if (completedCourses.length > 0) {
+        status = 'completed'
+      } else if (plannedCourses.length > 0) {
+        status = 'planned'
+      }
+
+      return {
+        area,
+        status,
+        completedCourses,
+        plannedCourses,
+      }
+    })
+  }, [catalogCourses, courseStatusById])
+
+  const completedGeAreas = geProgress.filter(
+    item => item.status === 'completed'
+  ).length
+
+  const plannedGeAreas = geProgress.filter(
+    item => item.status === 'planned'
+  ).length
+
+  const geProgressPct =
+    GE_AREAS.length > 0
+      ? Math.round((completedGeAreas / GE_AREAS.length) * 100)
+      : 0
 
   const selectedRequirement = degreeRequirements.find(req => req.requirementId === selectedRequirementId) || null
   const selectedRequirementCourses = selectedRequirement
@@ -182,7 +258,9 @@ function Dashboard() {
       )}
 
       <div className="requirements-grid">
-        {degreeRequirements.map(req => {
+        {degreeRequirements
+          .filter(req => req.categoryName !== 'General Education')
+          .map(req => {
           const completedInCategory = req.courseIds.filter(id => completedIds.has(id))
           let categoryUnits = 0
           for (const id of completedInCategory) {
@@ -213,6 +291,46 @@ function Dashboard() {
             </button>
           )
         })}
+        <button
+          type="button"
+          className="requirement-card"
+          onClick={() => setShowGeDetails(true)}
+          disabled={geLoadStatus !== 'loaded'}
+        >
+          <div className="requirement-card-header">
+            <span className="requirement-name">
+              General Education
+            </span>
+
+            <span
+              className="requirement-card-chevron"
+              aria-hidden="true"
+            >
+              ›
+            </span>
+          </div>
+
+          {geLoadStatus === 'loading' && <div role="status">Loading GE progress...</div>}
+          {geLoadStatus === 'failed' && <div role="alert">GE progress is unavailable. Please reload to try again.</div>}
+          {geLoadStatus === 'loaded' && (
+            <>
+              <div className="requirement-progress">
+                {completedGeAreas} / {GE_AREAS.length} areas completed
+              </div>
+
+              <div className="requirement-progress">
+                {plannedGeAreas} areas planned
+              </div>
+
+              <div className="progress-bar-track small">
+                <div
+                  className="progress-bar-fill"
+                  style={{ width: `${geProgressPct}%` }}
+                />
+              </div>
+            </>
+          )}
+        </button>
       </div>
 
       {selectedRequirement && (
@@ -278,6 +396,152 @@ function Dashboard() {
                   ))
                 ) : (
                   <div className="requirement-course-empty">No missing courses in this requirement.</div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showGeDetails && geLoadStatus === 'loaded' && (
+        <div
+          className="requirement-detail-backdrop"
+          onClick={() => setShowGeDetails(false)}
+        >
+          <div
+            className="requirement-detail-modal"
+            role="dialog"
+            aria-modal="true"
+            onClick={event => event.stopPropagation()}
+          >
+            <div className="requirement-detail-header">
+              <div>
+                <div className="requirement-detail-label">
+                  General Education
+                </div>
+
+                <h2>GE Area Progress</h2>
+                <p>Area coverage only; this is not a full GE graduation audit.</p>
+              </div>
+
+              <button
+                type="button"
+                className="requirement-detail-close"
+                onClick={() => setShowGeDetails(false)}
+              >
+                Close
+              </button>
+            </div>
+
+            <div className="requirement-detail-meta">
+              <span>{completedGeAreas} / {GE_AREAS.length} areas completed</span>
+            </div>
+
+            <div className="requirement-detail-stats">
+              <div>
+                <div className="requirement-detail-stat-label">
+                  Completed areas
+                </div>
+
+                <div className="requirement-detail-stat-value">
+                  {completedGeAreas}
+                </div>
+              </div>
+
+              <div>
+                <div className="requirement-detail-stat-label">
+                  Planned areas
+                </div>
+
+                <div className="requirement-detail-stat-value">
+                  {plannedGeAreas}
+                </div>
+              </div>
+
+              <div>
+                <div className="requirement-detail-stat-label">
+                  Missing areas
+                </div>
+
+                <div className="requirement-detail-stat-value">
+                  {GE_AREAS.length - completedGeAreas - plannedGeAreas}
+                </div>
+              </div>
+            </div>
+
+            <div className="requirement-detail-list-wrap">
+              <div className="requirement-detail-list">
+                <h3>Covered / Planned</h3>
+
+                {geProgress.filter(item => item.status !== 'missing').length > 0 ? (
+                  geProgress
+                    .filter(item => item.status !== 'missing')
+                    .map(item => {
+                      const areaCourses =
+                        item.status === 'completed'
+                          ? item.completedCourses
+                          : item.plannedCourses
+
+                      return (
+                        <div
+                          key={item.area}
+                          className="requirement-course-row"
+                        >
+                          <div className="requirement-course-main">
+                            <span className="requirement-course-code">
+                              {item.status === 'completed' ? '✓' : '○'} GE {item.area}
+                            </span>
+
+                            {areaCourses.length > 0 && (
+                              <span className="requirement-course-title">
+                                {areaCourses
+                                  .map(course => course.courseCode)
+                                  .join(', ')}
+                              </span>
+                            )}
+                          </div>
+
+                          <span className="requirement-course-units">
+                            {item.status === 'completed'
+                              ? 'Completed'
+                              : 'Planned'}
+                          </span>
+                        </div>
+                      )
+                    })
+                ) : (
+                  <div className="requirement-course-empty">
+                    No GE areas are covered or planned yet.
+                  </div>
+                )}
+              </div>
+
+              <div className="requirement-detail-list">
+                <h3>Missing</h3>
+
+                {geProgress.filter(item => item.status === 'missing').length > 0 ? (
+                  geProgress
+                    .filter(item => item.status === 'missing')
+                    .map(item => (
+                      <div
+                        key={item.area}
+                        className="requirement-course-row"
+                      >
+                        <div className="requirement-course-main">
+                          <span className="requirement-course-code">
+                            ○ GE {item.area}
+                          </span>
+                        </div>
+
+                        <span className="requirement-course-units">
+                          Missing
+                        </span>
+                      </div>
+                    ))
+                ) : (
+                  <div className="requirement-course-empty">
+                    All GE areas are covered.
+                  </div>
                 )}
               </div>
             </div>

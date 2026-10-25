@@ -8,5 +8,6 @@ data class CatalogCourseDto(
     val units: Int,
     val department: String,
     val offeringCount: Int,
-    val availableTerms: List<String>
+    val availableTerms: List<String>,
+    val geAreas: List<String> = emptyList()
 )
