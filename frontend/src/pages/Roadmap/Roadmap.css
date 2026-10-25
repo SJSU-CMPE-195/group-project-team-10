@@ -161,6 +161,15 @@
   cursor: grabbing;
 }
 
+/* clicked course and courses one prerequisite away from it */
+.react-flow__node.roadmap-node-focused .course-node {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+.react-flow__node.roadmap-node-related .course-node {
+  box-shadow: 0 0 0 2px var(--accent-border);
+}
+
 .roadmap-modal-backdrop {
   position: fixed;
   inset: 0;
@@ -211,7 +220,6 @@
 }
 
 .react-flow__node-semester {
-  pointer-events: none;
   border-radius: 8px;
 }
 
@@ -249,10 +257,6 @@
   font-size: 11px;
 }
 
-.react-flow__node.selected {
-  box-shadow: none !important;
-  border: none !important;
-}
 .roadmap-modal-note {
   font-size: 13px;
   color: var(--text);

@@ -4,6 +4,7 @@ import {ReactFlow, Background, Controls, MarkerType,applyEdgeChanges, applyNodeC
 import '@xyflow/react/dist/style.css'
 import {useRoadmap, useRoadmapDispatch} from '../../context/RoadmapContext'
 import {validateSemesterPlan} from '../../utils/prerequisiteValidator'
+import { getConnectedNodeIds, getVisibleEdges } from '../../utils/roadmapEdges'
 import CourseNode from '../../components/CourseNode/CourseNode'
 import ValidationAlert from '../../components/ValidationAlert/ValidationAlert'
 import LeaveConfirmModal from '../../components/LeaveConfirmModal/LeaveConfirmModal'
@@ -11,6 +12,24 @@ import { useLeaveGuard } from '../../hooks/useLeaveGuard'
 import { fetchRoadmapByMajor } from '../../api/roadmap'
 import { fetchCatalogCourses } from '../../api/catalog'
 import './Roadmap.css'
+
+const SHOW_ARROWS_KEY = 'coursePlanner.showRoadmapArrows'
+
+const getSavedShowArrows = () => {
+  try {
+    return localStorage.getItem(SHOW_ARROWS_KEY) !== 'false'
+  } catch {
+    return true
+  }
+}
+
+const saveShowArrows = (showArrows) => {
+  try {
+    localStorage.setItem(SHOW_ARROWS_KEY, String(showArrows))
+  } catch {
+    // toggle still works for this visit
+  }
+}
 
 function SemesterNode({ data }) {
   const dispatch = useRoadmapDispatch()
@@ -131,6 +150,7 @@ function buildNodesAndEdges(semesters, violations, courseMap, prerequisites) {
       style: {
         width: getSemesterWidth(sem),
         height: SEMESTER_ROW_HEIGHT,
+        pointerEvents: 'none',
       },
       draggable: false,
       selectable: false,
@@ -223,6 +243,8 @@ function Roadmap() {
   const [allCoursesStatus, setAllCoursesStatus] = useState("idle")
   const [addCourseStatus, setAddCourseStatus] = useState("planned")
   const [hoverSemesterIndex, setHoverSemesterIndex] = useState(null)
+  const [selectedCourseId, setSelectedCourseId] = useState(null)
+  const [showAllArrows, setShowAllArrows] = useState(getSavedShowArrows)
 
   const {
     semesters,
@@ -245,16 +267,39 @@ function Roadmap() {
   const [nodes, setNodes] = useState([])
   const [edges, setEdges] = useState([])
 
-  const decoratedNodes = nodes.map(n => {
-    if (!n.id.startsWith('sem-')) return n
+  // selected course thats left the roadmap (course removed, semester removed) drops out here
+  const selectedNodeId = semesters.some(s => s.courses.some(c => c.courseId === selectedCourseId))
+    ? `course-${selectedCourseId}`
+    : null
+  const connectedNodeIds = getConnectedNodeIds(edges, selectedNodeId)
 
-    const semIndex = semesters.findIndex(s => `sem-${s.semesterId}` === n.id)
-
-    return {
-      ...n,
-      className: hoverSemesterIndex === semIndex ? 'semester-column-highlight' : ''
+  const getNodeClassName = (n) => {
+    if (n.id.startsWith('sem-')) {
+      const semIndex = semesters.findIndex(s => `sem-${s.semesterId}` === n.id)
+      return hoverSemesterIndex === semIndex ? 'semester-column-highlight' : ''
     }
+    if (n.id === selectedNodeId) return 'roadmap-node-focused'
+    if (connectedNodeIds.has(n.id)) return 'roadmap-node-related'
+    return ''
+  }
+
+  // keep unchanged nodes as the same object so React Flow skips re-rendering
+  const decoratedNodes = nodes.map(n => {
+    const className = getNodeClassName(n)
+    return (n.className ?? '') === className ? n : { ...n, className }
   })
+
+  const onNodeClick = (_, node) => {
+    if (!node.id.startsWith('course-')) return
+    const courseId = node.data.courseId
+    setSelectedCourseId(current => (current === courseId ? null : courseId))
+  }
+
+  const toggleArrows = () => {
+    const next = !showAllArrows
+    setShowAllArrows(next)
+    saveShowArrows(next)
+  }
 
   const onNodesChange = (changes) => {
     setNodes((nds) => applyNodeChanges(changes, nds))
@@ -422,6 +467,16 @@ function Roadmap() {
             Add Gap Semester
           </button>
 
+          <button
+            onClick={toggleArrows}
+            className="roadmap-btn"
+            disabled={!majorInfo}
+            aria-pressed={showAllArrows}
+            title="Show or hide every prerequisite arrows. Clicking a course always shows its own."
+          >
+            {showAllArrows ? "Hide Arrows" : "Show Arrows"}
+          </button>
+
           {variant !== 'autosave' && (
             <>
               <button
@@ -555,15 +610,18 @@ function Roadmap() {
       <div className="roadmap-flow-container">
         <ReactFlow
           nodes={decoratedNodes}
-          edges={edges}
+          edges={getVisibleEdges(edges, selectedNodeId, showAllArrows)}
           nodeTypes={NODE_TYPES}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onNodeDrag={onNodeDrag}
           onNodeDragStop = {onNodeDragStop}
+          onNodeClick={onNodeClick}
+          onPaneClick={() => setSelectedCourseId(null)}
           fitView
           nodesDraggable={true}
           nodesConnectable={false}
+          elementsSelectable={false}
           nodeDragThreshold={8}
           panOnScroll
           minZoom={0.3}

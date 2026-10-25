@@ -128,3 +128,27 @@ describe('Roadmap add course', () => {
     ])
   })
 })
+
+describe('Roadmap arrow toggle', () => {
+  afterEach(() => {
+    localStorage.clear()
+  })
+
+  it('hides and shows all prerequisite arrows and remembers the choice', () => {
+    renderWithProviders(<Roadmap />, { route: '/roadmap' })
+    const toggle = screen.getByRole('button', { name: 'Hide Arrows' })
+    expect(toggle.getAttribute('aria-pressed')).toBe('true')
+
+    fireEvent.click(toggle)
+
+    expect(toggle.textContent).toBe('Show Arrows')
+    expect(toggle.getAttribute('aria-pressed')).toBe('false')
+    expect(localStorage.getItem('coursePlanner.showRoadmapArrows')).toBe('false')
+  })
+
+  it('starts hidden when arrows were turned off before', () => {
+    localStorage.setItem('coursePlanner.showRoadmapArrows', 'false')
+    renderWithProviders(<Roadmap />, { route: '/roadmap' })
+    expect(screen.getByRole('button', { name: 'Show Arrows' })).toBeDefined()
+  })
+})
