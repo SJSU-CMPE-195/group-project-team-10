@@ -95,6 +95,20 @@ class CatalogTermsTest {
         )
     }
 
+    @Test
+    fun `catalog aggregates normalized GE from all imported sections`() {
+        scheduleImportService.importScrapedTerm("Spring 2090", listOf(
+            scraped("CHAD 70", "01/22/90-05/11/90").copy(satisfies = "GE: Area 4")
+        ))
+        scheduleImportService.importScrapedTerm("Fall 2090", listOf(
+            scraped("CHAD 70", "08/19/90-12/07/90").copy(satisfies = "GE: 4+E+WID+3")
+        ))
+        val course = edu.sjsu.courseplanner.backend.service.CatalogService(catalogRepository)
+            .getCatalogCourses().single()
+        assertEquals(listOf("3", "4", "E"), course.geAreas)
+        assertTrue(scheduleDataRepository.findFullSchedule(null).any { it.satisfies == "GE: Area 4" })
+    }
+
     private var nextClassNumber = 10000
 
     private fun scraped(courseCode: String, dates: String) = ScrapedSectionDto(

@@ -503,3 +503,46 @@
   font-size: 14px;
   font-weight: 600;
 }
+
+.ge-area-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ge-area-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.ge-area-code {
+  color: var(--text-h);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.ge-area-courses {
+  color: var(--text);
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.ge-area-status {
+  color: var(--text);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.ge-area-row.completed {
+  border-color: var(--status-completed);
+}
+
+.ge-area-row.planned {
+  border-color: var(--accent);
+}
