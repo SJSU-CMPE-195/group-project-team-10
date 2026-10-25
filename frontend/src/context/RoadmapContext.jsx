@@ -53,6 +53,18 @@ function applyFailCascade(semesters, courseId, prereqData = []) {
   }))
 }
 
+// the course shape roadmap nodes render from, built from a catalog course or schedule section
+export function toRoadmapCourse(course) {
+  return {
+    courseId: course.courseId,
+    courseCode: course.courseCode,
+    courseTitle: course.courseTitle || course.title || course.courseCode,
+    units: course.units || 0,
+    department: course.department || course.courseCode?.split(' ')[0] || '',
+    description: course.description || '',
+  }
+}
+
 function setCourseStatus(semesters, courseId, status) {
   return semesters.map(sem => ({
     ...sem,
@@ -190,6 +202,18 @@ export function roadmapReducer(state, action) {
       }
     }
 
+    case 'REMOVE_SEMESTER': {
+      // keep at least one semester so courses have somewhere to go
+      if (state.semesters.length <= 1) return state
+      if (!state.semesters.some(s => s.semesterId === action.semesterId)) return state
+
+      return {
+        ...state,
+        semesters: state.semesters.filter(s => s.semesterId !== action.semesterId),
+        hasUnsavedChanges: true,
+      }
+    }
+
     case 'MOVE_COURSE': {
       const { courseId, toSemesterId, toIndex } = action
 
@@ -243,13 +267,19 @@ export function roadmapReducer(state, action) {
     }
 
     case 'ADD_COURSE_TO_SEMESTER': {
-      const { semesterId, courseId, status = 'planned' } = action
+      const { semesterId, courseId, status = 'planned', course } = action
 
       const alreadyExists = state.semesters.some(sem =>
         sem.courses.some(c => c.courseId === courseId)
       )
 
       if (alreadyExists) return state
+
+      // courses outside major need an entry in state.courses to render nodes
+      const isKnownCourse = state.courses.some(c => c.courseId === courseId)
+      const newCourses = !isKnownCourse && course
+        ? [...state.courses, toRoadmapCourse(course)]
+        : state.courses
 
       const newSemesters = state.semesters.map(sem => {
         if (sem.semesterId !== semesterId) return sem
@@ -262,6 +292,7 @@ export function roadmapReducer(state, action) {
 
       return {
         ...state,
+        courses: newCourses,
         semesters: newSemesters,
         hasUnsavedChanges: true,
       }
@@ -342,14 +373,7 @@ export function roadmapReducer(state, action) {
 
       const coursesToAddToCatalogState = courses
         .filter(course => course.courseId && !existingCatalogCourseIds.has(course.courseId))
-        .map(course => ({
-          courseId: course.courseId,
-          courseCode: course.courseCode,
-          courseTitle: course.courseTitle || course.title || course.courseCode,
-          units: course.units || 0,
-          department: course.department || course.courseCode?.split(' ')[0] || '',
-          description: course.description || '',
-        }))
+        .map(toRoadmapCourse)
 
       let didChangeRoadmap = false
 

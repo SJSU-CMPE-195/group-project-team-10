@@ -4,18 +4,60 @@ import {ReactFlow, Background, Controls, MarkerType,applyEdgeChanges, applyNodeC
 import '@xyflow/react/dist/style.css'
 import {useRoadmap, useRoadmapDispatch} from '../../context/RoadmapContext'
 import {validateSemesterPlan} from '../../utils/prerequisiteValidator'
+import { getConnectedNodeIds, getVisibleEdges } from '../../utils/roadmapEdges'
 import CourseNode from '../../components/CourseNode/CourseNode'
 import ValidationAlert from '../../components/ValidationAlert/ValidationAlert'
 import LeaveConfirmModal from '../../components/LeaveConfirmModal/LeaveConfirmModal'
 import { useLeaveGuard } from '../../hooks/useLeaveGuard'
 import { fetchRoadmapByMajor } from '../../api/roadmap'
+import { fetchCatalogCourses } from '../../api/catalog'
 import './Roadmap.css'
 
+const SHOW_ARROWS_KEY = 'coursePlanner.showRoadmapArrows'
+
+const getSavedShowArrows = () => {
+  try {
+    return localStorage.getItem(SHOW_ARROWS_KEY) !== 'false'
+  } catch {
+    return true
+  }
+}
+
+const saveShowArrows = (showArrows) => {
+  try {
+    localStorage.setItem(SHOW_ARROWS_KEY, String(showArrows))
+  } catch {
+    // toggle still works for this visit
+  }
+}
+
 function SemesterNode({ data }) {
+  const dispatch = useRoadmapDispatch()
+
+  const handleRemove = () => {
+    if (data.courseCount > 0) {
+      const confirmed = window.confirm(
+        `Remove ${data.label}? Its ${data.courseCount} course(s) will be taken off the roadmap.`
+      )
+      if (!confirmed) return
+    }
+    dispatch({ type: "REMOVE_SEMESTER", semesterId: data.semesterId })
+  }
+
   return (
     <div className="roadmap-semester-label">
       <div className="roadmap-semester-term">{data.label}</div>
       <div className="roadmap-semester-units">{data.units} units</div>
+      {data.canRemove && (
+        <button
+          type="button"
+          className="roadmap-btn danger roadmap-semester-remove nodrag"
+          onClick={handleRemove}
+          aria-label={`Remove ${data.label}`}
+        >
+          Remove
+        </button>
+      )}
     </div>
   )
 }
@@ -23,7 +65,7 @@ function SemesterNode({ data }) {
 const NODE_TYPES = { course: CourseNode, semester: SemesterNode }
 
 const SEMESTER_ROW_HEIGHT = 200
-const COURSE_WIDTH = 200
+const COURSE_WIDTH = 240
 const COURSE_CARD_HEIGHT = 96
 const COURSE_Y_OFFSET = (SEMESTER_ROW_HEIGHT - COURSE_CARD_HEIGHT) / 2
 const HEADER_WIDTH = 140
@@ -54,6 +96,27 @@ const snapToColumn = (x) => {
   return LEFT_PADDING + HEADER_WIDTH + getInsertIndexFromX(x) * COURSE_WIDTH
 }
 
+// "CS 46A" -> subject "CS", number "46A"
+const parseCourseCode = (courseCode) => {
+  const [subject, ...number] = courseCode.trim().split(/\s+/)
+  return { subject: subject.toUpperCase(), number: number.join(' ') }
+}
+
+// subject -> courses in number order
+const groupCoursesBySubject = (courses) => {
+  const bySubject = new Map()
+  for (const course of courses) {
+    const { subject, number } = parseCourseCode(course.courseCode)
+    if (!bySubject.has(subject)) bySubject.set(subject, [])
+    bySubject.get(subject).push({ course, number })
+  }
+  for (const [subject, entries] of bySubject) {
+    entries.sort((a, b) => a.number.localeCompare(b.number, undefined, { numeric: true, sensitivity: 'base' }))
+    bySubject.set(subject, entries.map(entry => entry.course))
+  }
+  return bySubject
+}
+
 function buildNodesAndEdges(semesters, violations, courseMap, prerequisites) {
   const nodes = []
   const edges = []
@@ -77,10 +140,17 @@ function buildNodesAndEdges(semesters, violations, courseMap, prerequisites) {
       id: `sem-${sem.semesterId}`,
       type: 'semester',
       position: { x: 0, y },
-      data: { label: sem.term, units: totalUnits },
+      data: {
+        semesterId: sem.semesterId,
+        label: sem.term,
+        units: totalUnits,
+        courseCount: sem.courses.length,
+        canRemove: semesters.length > 1,
+      },
       style: {
         width: getSemesterWidth(sem),
         height: SEMESTER_ROW_HEIGHT,
+        pointerEvents: 'none',
       },
       draggable: false,
       selectable: false,
@@ -167,9 +237,14 @@ function Roadmap() {
   const navigate = useNavigate()
   const [showAddCourseModal, setShowAddCourseModal] = useState(false)
   const [addSemesterId, setAddSemesterId] = useState("")
+  const [addSubject, setAddSubject] = useState("")
   const [addCourseId, setAddCourseId] = useState("")
+  const [allCourses, setAllCourses] = useState([])
+  const [allCoursesStatus, setAllCoursesStatus] = useState("idle")
   const [addCourseStatus, setAddCourseStatus] = useState("planned")
   const [hoverSemesterIndex, setHoverSemesterIndex] = useState(null)
+  const [selectedCourseId, setSelectedCourseId] = useState(null)
+  const [showAllArrows, setShowAllArrows] = useState(getSavedShowArrows)
 
   const {
     semesters,
@@ -192,16 +267,39 @@ function Roadmap() {
   const [nodes, setNodes] = useState([])
   const [edges, setEdges] = useState([])
 
-  const decoratedNodes = nodes.map(n => {
-    if (!n.id.startsWith('sem-')) return n
+  // selected course thats left the roadmap (course removed, semester removed) drops out here
+  const selectedNodeId = semesters.some(s => s.courses.some(c => c.courseId === selectedCourseId))
+    ? `course-${selectedCourseId}`
+    : null
+  const connectedNodeIds = getConnectedNodeIds(edges, selectedNodeId)
 
-    const semIndex = semesters.findIndex(s => `sem-${s.semesterId}` === n.id)
-
-    return {
-      ...n,
-      className: hoverSemesterIndex === semIndex ? 'semester-column-highlight' : ''
+  const getNodeClassName = (n) => {
+    if (n.id.startsWith('sem-')) {
+      const semIndex = semesters.findIndex(s => `sem-${s.semesterId}` === n.id)
+      return hoverSemesterIndex === semIndex ? 'semester-column-highlight' : ''
     }
+    if (n.id === selectedNodeId) return 'roadmap-node-focused'
+    if (connectedNodeIds.has(n.id)) return 'roadmap-node-related'
+    return ''
+  }
+
+  // keep unchanged nodes as the same object so React Flow skips re-rendering
+  const decoratedNodes = nodes.map(n => {
+    const className = getNodeClassName(n)
+    return (n.className ?? '') === className ? n : { ...n, className }
   })
+
+  const onNodeClick = (_, node) => {
+    if (!node.id.startsWith('course-')) return
+    const courseId = node.data.courseId
+    setSelectedCourseId(current => (current === courseId ? null : courseId))
+  }
+
+  const toggleArrows = () => {
+    const next = !showAllArrows
+    setShowAllArrows(next)
+    saveShowArrows(next)
+  }
 
   const onNodesChange = (changes) => {
     setNodes((nds) => applyNodeChanges(changes, nds))
@@ -280,13 +378,23 @@ function Roadmap() {
     dispatch({ type: "ADD_GAP_SEMESTER", afterSemesterId: lastId })
   }
 
-  const openAddCourseModal = () => {
+  const openAddCourseModal = async () => {
     setShowAddCourseModal(true)
+    if (allCoursesStatus === "loading" || allCoursesStatus === "loaded") return
+
+    setAllCoursesStatus("loading")
+    try {
+      setAllCourses(await fetchCatalogCourses())
+      setAllCoursesStatus("loaded")
+    } catch {
+      setAllCoursesStatus("failed")
+    }
   }
 
   const closeAddCourseModal = () => {
     setShowAddCourseModal(false)
     setAddSemesterId("")
+    setAddSubject("")
     setAddCourseId("")
     setAddCourseStatus("planned")
   }
@@ -305,6 +413,7 @@ function Roadmap() {
       semesterId,
       courseId,
       status: addCourseStatus,
+      course: courseMap.has(courseId) ? undefined : allCourses.find(c => c.courseId === courseId),
     })
 
     closeAddCourseModal()
@@ -314,7 +423,13 @@ function Roadmap() {
     semesters.flatMap(s => s.courses.map(c => c.courseId))
   )
 
-  const addableCourses = courses.filter(course => !existingCourseIds.has(course.courseId))
+  // every course in the database
+  const addableCoursesBySubject = groupCoursesBySubject(
+    [...courses, ...allCourses.filter(c => !courseMap.has(c.courseId))]
+      .filter(course => !existingCourseIds.has(course.courseId))
+  )
+  const addSubjects = [...addableCoursesBySubject.keys()].sort()
+  const subjectCourses = addableCoursesBySubject.get(addSubject) ?? []
 
   return (
     <div className="roadmap-page">
@@ -350,6 +465,16 @@ function Roadmap() {
 
           <button onClick={handleAddGap} className="roadmap-btn" disabled={!majorInfo}>
             Add Gap Semester
+          </button>
+
+          <button
+            onClick={toggleArrows}
+            className="roadmap-btn"
+            disabled={!majorInfo}
+            aria-pressed={showAllArrows}
+            title="Show or hide every prerequisite arrows. Clicking a course always shows its own."
+          >
+            {showAllArrows ? "Hide Arrows" : "Show Arrows"}
           </button>
 
           {variant !== 'autosave' && (
@@ -407,15 +532,45 @@ function Roadmap() {
               </select>
             </div>
 
+            {allCoursesStatus === "failed" && (
+              <div className="roadmap-modal-note">
+                Could not load the full course list. Showing this major's courses only.
+              </div>
+            )}
+
             <div className="roadmap-modal-field">
-              <label>Course</label>
+              <label htmlFor="add-course-subject">Subject</label>
               <select
+                id="add-course-subject"
+                value={addSubject}
+                onChange={e => {
+                  setAddSubject(e.target.value)
+                  setAddCourseId("")
+                }}
+                className="roadmap-select"
+              >
+                <option value="">
+                  {allCoursesStatus === "loading" ? "Loading subjects..." : "Select subject..."}
+                </option>
+                {addSubjects.map(subject => (
+                  <option key={subject} value={subject}>
+                    {subject}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="roadmap-modal-field">
+              <label htmlFor="add-course-course">Course</label>
+              <select
+                id="add-course-course"
                 value={addCourseId}
                 onChange={e => setAddCourseId(e.target.value)}
                 className="roadmap-select"
+                disabled={!addSubject}
               >
-                <option value="">Select course...</option>
-                {addableCourses.map(course => (
+                <option value="">{addSubject ? "Select course..." : "Pick a subject first"}</option>
+                {subjectCourses.map(course => (
                   <option key={course.courseId} value={course.courseId}>
                     {course.courseCode} — {course.courseTitle}
                   </option>
@@ -455,15 +610,18 @@ function Roadmap() {
       <div className="roadmap-flow-container">
         <ReactFlow
           nodes={decoratedNodes}
-          edges={edges}
+          edges={getVisibleEdges(edges, selectedNodeId, showAllArrows)}
           nodeTypes={NODE_TYPES}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onNodeDrag={onNodeDrag}
           onNodeDragStop = {onNodeDragStop}
+          onNodeClick={onNodeClick}
+          onPaneClick={() => setSelectedCourseId(null)}
           fitView
           nodesDraggable={true}
           nodesConnectable={false}
+          elementsSelectable={false}
           nodeDragThreshold={8}
           panOnScroll
           minZoom={0.3}
