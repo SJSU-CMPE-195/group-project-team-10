@@ -9,7 +9,13 @@ function CourseNoteModal({ courseCode, note = "", onSave, onClose }) {
   useEscapeKey(true, onClose)
 
   return createPortal(
-    <div className="course-note-modal-backdrop" onClick={onClose}>
+    <div
+      className="course-note-modal-backdrop"
+      onClick={(e) => {
+        e.stopPropagation()
+        onClose()
+      }}
+    >
       <div className="course-note-modal" onClick={(e) => e.stopPropagation()}>
         <h3>{courseCode} note</h3>
 

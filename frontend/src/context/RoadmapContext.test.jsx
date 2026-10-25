@@ -159,6 +159,28 @@ describe('roadmapReducer', () => {
     })
   })
 
+  describe('REMOVE_SEMESTER', () => {
+    it('removes the semester along with its courses', () => {
+      const state = makeState([
+        { semesterId: 1, courses: [{ courseId: 1 }] },
+        { semesterId: 2, courses: [{ courseId: 2 }] },
+      ])
+      const next = roadmapReducer(state, { type: "REMOVE_SEMESTER", semesterId: 2 })
+      expect(next.semesters.map(s => s.semesterId)).toEqual([1])
+      expect(next.hasUnsavedChanges).toBe(true)
+    })
+
+    it('keeps the last remaining semester', () => {
+      const state = makeState([{ semesterId: 1, courses: [] }])
+      expect(roadmapReducer(state, { type: "REMOVE_SEMESTER", semesterId: 1 })).toBe(state)
+    })
+
+    it('returns unchanged state for an unknown semester', () => {
+      const state = makeState([{ semesterId: 1, courses: [] }, { semesterId: 2, courses: [] }])
+      expect(roadmapReducer(state, { type: "REMOVE_SEMESTER", semesterId: 99 })).toBe(state)
+    })
+  })
+
   describe('MOVE_COURSE', () => {
     it('moves a course between semesters', () => {
       const state = makeState([
@@ -182,6 +204,28 @@ describe('roadmapReducer', () => {
         type: "MOVE_COURSE", courseId: 1, fromSemesterId: 1, toSemesterId: 1,
       })
       expect(next).toBe(state)
+    })
+  })
+
+  describe('ADD_COURSE_TO_SEMESTER', () => {
+    it('registers a course from outside the major so it can render', () => {
+      const state = { ...makeState([{ semesterId: 1, courses: [] }]), courses: [] }
+      const course = { courseId: 101, courseCode: "CS 46A", courseTitle: "Introduction to Programming", units: 4 }
+
+      const next = roadmapReducer(state, { type: "ADD_COURSE_TO_SEMESTER", semesterId: 1, courseId: 101, course })
+
+      expect(next.semesters[0].courses).toEqual([{ courseId: 101, status: "planned", note: "" }])
+      expect(next.courses).toHaveLength(1)
+      expect(next.courses[0]).toMatchObject({ courseId: 101, courseCode: "CS 46A", department: "CS" })
+    })
+
+    it('does not duplicate a course the roadmap already knows', () => {
+      const known = { courseId: 1, courseCode: "CMPE 30", courseTitle: "Programming", units: 3 }
+      const state = { ...makeState([{ semesterId: 1, courses: [] }]), courses: [known] }
+
+      const next = roadmapReducer(state, { type: "ADD_COURSE_TO_SEMESTER", semesterId: 1, courseId: 1, course: known })
+
+      expect(next.courses).toEqual([known])
     })
   })
 
