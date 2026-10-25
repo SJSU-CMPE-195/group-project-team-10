@@ -50,7 +50,7 @@ All of the features below go through the React frontend, the Spring Boot API and
 
 ### What is incomplete
 
-- Courses from outside the major have no prerequisite checks. Currently we're having issues with scraping the SJSU site due to firewalls so there needs to be lotds of manual edits.
+- Courses from outside the major have no prerequisite checks. Currently we're having issues with scraping the SJSU site due to firewalls so there needs to be lots of manual edits.
 - The `autosave` variant never saves to the account. It saves in the browser only.
 - Data coverage: only two majors and two terms are imported.
 - Admin "Also send as an email" checkbox: it does nothing and is visual currently.
@@ -349,6 +349,7 @@ Open **http://localhost:3030** (not Vite's default 5173).
 3. Data cleanup for areas that have missing data points or shows unknown characters on the frontend
 4. Importing and parsing SJSU unofficial transcript to update profile and roadmap
 5. Look into using assist.org or an equivalent to support transfer courses
+6. Add technical electives for each major
 
 ---
 
