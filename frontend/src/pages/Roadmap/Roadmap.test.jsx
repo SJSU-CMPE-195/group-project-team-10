@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react'
+import { fireEvent, screen } from '@testing-library/react'
 import { describe, it, expect } from 'vitest'
 import { renderWithProviders } from '../../test-utils'
 import Roadmap from './Roadmap'
@@ -23,5 +23,19 @@ describe('Roadmap', () => {
   it('renders the add gap semester button', () => {
     renderWithProviders(<Roadmap />, { route: '/roadmap' })
     expect(screen.getByText('Add Gap Semester')).toBeDefined()
+  })
+
+  it('prompts guests to log in without saving their local roadmap', () => {
+    renderWithProviders(<Roadmap />, { route: '/roadmap' })
+
+    fireEvent.change(screen.getAllByLabelText('Course status')[0], {
+      target: { value: 'completed' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Save Changes' }))
+
+    expect(screen.getByRole('dialog')).toBeDefined()
+    expect(screen.getByText(/create an account or log in to save this roadmap across devices/i)).toBeDefined()
+    expect(screen.getByRole('link', { name: 'Log In' })).toBeDefined()
+    expect(screen.getByRole('link', { name: 'Create Account' })).toBeDefined()
   })
 })

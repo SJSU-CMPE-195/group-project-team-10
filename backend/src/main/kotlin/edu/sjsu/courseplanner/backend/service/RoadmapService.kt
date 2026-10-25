@@ -4,6 +4,7 @@ import edu.sjsu.courseplanner.backend.dto.MajorDto
 import edu.sjsu.courseplanner.backend.dto.MajorRoadmapDto
 import edu.sjsu.courseplanner.backend.dto.RoadmapCourseDto
 import edu.sjsu.courseplanner.backend.dto.RoadmapPrerequisiteDto
+import edu.sjsu.courseplanner.backend.dto.RoadmapPrerequisiteConditionDto
 import edu.sjsu.courseplanner.backend.dto.RoadmapRequirementDto
 import edu.sjsu.courseplanner.backend.dto.RoadmapSemesterCourseDto
 import edu.sjsu.courseplanner.backend.dto.RoadmapSemesterDto
@@ -24,10 +25,7 @@ class RoadmapService(
 ) {
     private val supportedMajorNames = listOf(
         "software engineering",
-        "data science",
-        "computer engineering",
-        "computer science",
-        "cs"
+        "computer engineering"
     )
 
     @Transactional(readOnly = true)
@@ -38,7 +36,9 @@ class RoadmapService(
             supportedMajorNames.any { normalized.contains(it) }
         }
 
-        return supported.map(::toMajorDto)
+        return supported
+            .filter { roadmapRepository.findRequirements(it.majorId).isNotEmpty() }
+            .map(::toMajorDto)
     }
 
     @Transactional(readOnly = true)
@@ -47,6 +47,12 @@ class RoadmapService(
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Major $majorId was not found")
 
         val requirements = roadmapRepository.findRequirements(majorId)
+        if (requirements.isEmpty()) {
+            throw ResponseStatusException(
+                HttpStatus.CONFLICT,
+                "Catalog requirements are not available for ${major.majorName}; import the catalog before loading this roadmap"
+            )
+        }
         val requirementCourses = roadmapRepository.findRequirementCourses(requirements.map { it.requirementId })
         val courseIds = requirementCourses.map { it.courseId }.distinct()
         val prerequisites = roadmapRepository.findPrerequisites(courseIds)
@@ -87,6 +93,15 @@ class RoadmapService(
                     prereqType = it.prereqType
                 )
             },
+            prerequisiteConditions = roadmapRepository.findPrerequisiteConditions(courseIds).map {
+                RoadmapPrerequisiteConditionDto(
+                    courseId = it.courseId,
+                    relationshipType = it.relationshipType,
+                    originalText = it.originalText,
+                    expressionJson = it.expressionJson,
+                    sourceUrl = it.sourceUrl
+                )
+            },
             degreeRequirements = requirements.map { requirement ->
                 RoadmapRequirementDto(
                     requirementId = requirement.requirementId,
@@ -95,7 +110,9 @@ class RoadmapService(
                     requiredUnits = requirement.requiredUnits,
                     courseIds = requirementCourses
                         .filter { it.requirementId == requirement.requirementId }
-                        .map { it.courseId }
+                        .map { it.courseId },
+                    notes = requirement.notes,
+                    sourceUrl = requirement.sourceUrl
                 )
             },
             semesters = buildSemesters(courses, prerequisites, roadmapRequirementCourses)
@@ -196,7 +213,10 @@ class RoadmapService(
             majorId = record.majorId,
             majorName = record.majorName,
             department = record.department,
-            totalRequiredUnits = record.totalUnits
+            totalRequiredUnits = record.totalUnits,
+            catalogProgramKey = record.catalogProgramKey,
+            catalogSourceUrl = record.catalogSourceUrl,
+            catalogYear = record.catalogYear
         )
     }
 }

@@ -404,20 +404,15 @@ class CatalogProgramScraperService {
         }
     }
 
-    private fun parsePrerequisiteSection(html: String, label: String, type: String, courseCode: String): List<ParsedCatalogPrerequisite> {
-        val labelIndex = html.indexOf(label)
+    internal fun parsePrerequisiteSection(html: String, label: String, type: String, courseCode: String): List<ParsedCatalogPrerequisite> {
+        val labelIndex = html.indexOf(label, ignoreCase = true)
         if (labelIndex < 0) return emptyList()
 
         val afterLabel = html.substring(labelIndex + label.length)
-        val endIndex = listOf(
-            afterLabel.indexOf("<br><strong>"),
-            afterLabel.indexOf("<strong>Grading"),
-            afterLabel.indexOf("<br><br><strong>"),
-            afterLabel.indexOf("<br><em>"),
-            afterLabel.indexOf("<p>")
-        ).filter { it >= 0 }.minOrNull() ?: afterLabel.length
-
-        val sectionHtml = afterLabel.substring(0, endIndex)
+        val nextSection = Regex(
+            """(?is)(?:<br\s*/?>\s*)?<(?:strong|b|em)\b[^>]*>\s*(?:Prerequisite\(s\)|Corequisite\(s\)|Grading)\s*:"""
+        ).find(afterLabel)
+        val sectionHtml = if (nextSection == null) afterLabel else afterLabel.substring(0, nextSection.range.first)
 
         return Jsoup.parse(sectionHtml)
             .select("a")

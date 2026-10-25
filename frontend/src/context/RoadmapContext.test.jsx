@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { roadmapReducer } from './RoadmapContext'
+import { persistRoadmapState } from './roadmapStorage'
 
 function makeState(semesters, hasUnsavedChanges = false) {
   const base = { majorId: 1, semesters }
@@ -15,6 +16,64 @@ function makeState(semesters, hasUnsavedChanges = false) {
 }
 
 describe('roadmapReducer', () => {
+  it('restores each major draft on top of that major default roadmap', () => {
+    localStorage.clear()
+    persistRoadmapState({
+      majorId: 2,
+      majorInfo: { majorId: 2 },
+      semesters: [{
+        semesterId: 9,
+        term: 'Spring 2028',
+        courses: [{ courseId: 22, status: 'completed', note: 'saved locally' }],
+      }],
+      courses: [{
+        courseId: 22,
+        courseCode: 'SWE 134',
+        courseTitle: 'Software Engineering',
+        units: 3,
+      }],
+      isLoadingRoadmap: false,
+      hasUnsavedChanges: true,
+    })
+
+    const state = makeState([])
+    const next = roadmapReducer(state, {
+      type: 'SET_ROADMAP_DATA',
+      roadmap: {
+        major: {
+          majorId: 2,
+          majorName: 'Software Engineering, BS',
+          department: 'SWE',
+          totalRequiredUnits: 120,
+        },
+        courses: [{
+          courseId: 21,
+          courseCode: 'SWE 101',
+          courseTitle: 'Intro',
+          units: 3,
+          department: 'SWE',
+        }],
+        prerequisites: [],
+        degreeRequirements: [],
+        semesters: [{
+          semesterId: 1,
+          term: 'Fall 2026',
+          courses: [{ courseId: 21, status: 'planned', note: '' }],
+        }],
+      },
+    })
+
+    expect(next.majorId).toBe(2)
+    expect(next.semesters[0].term).toBe('Spring 2028')
+    expect(next.semesters[0].courses[0]).toMatchObject({
+      courseId: 22,
+      status: 'completed',
+      note: 'saved locally',
+    })
+    expect(next.courses.map(course => course.courseId)).toEqual([21, 22])
+    expect(next.hasUnsavedChanges).toBe(true)
+  })
+
   describe('MARK_COURSE_FAILED', () => {
     it('sets the course status to failed', () => {
       const state = makeState([

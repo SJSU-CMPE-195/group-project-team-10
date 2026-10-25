@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/useAuth";
 import "../Login/Login.css";
 import PasswordField from "../../components/Auth/PasswordField";
@@ -7,6 +7,8 @@ import PasswordField from "../../components/Auth/PasswordField";
 function Signup() {
   const { signup } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const redirectTo = location.state?.from?.pathname || "/";
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -63,7 +65,7 @@ function Signup() {
 
     try {
       await signup(name.trim(), email.trim(), password);
-      navigate("/", { replace: true });
+      navigate(redirectTo, { replace: true });
     } catch (err) {
       setError(err.message || "Signup failed");
     } finally {

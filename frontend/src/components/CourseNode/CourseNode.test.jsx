@@ -39,6 +39,21 @@ describe('CourseNode', () => {
     expect(screen.getByText('3 units')).toBeDefined()
   })
 
+  it('shows the original prerequisite text for review', () => {
+    renderCourseNode({
+      ...defaultData,
+      prerequisiteConditions: [{
+        relationshipType: 'prereq',
+        originalText: 'CS 46A or CS 46AX',
+        expressionJson: null,
+        sourceUrl: 'https://catalog.sjsu.edu/preview_course.php',
+      }],
+    })
+
+    expect(screen.getByText('Prerequisite needs review')).toBeDefined()
+    expect(screen.getByText('CS 46A or CS 46AX')).toBeDefined()
+  })
+
   it('renders status', () => {
     renderCourseNode(defaultData)
     expect(screen.getByText('planned')).toBeDefined()

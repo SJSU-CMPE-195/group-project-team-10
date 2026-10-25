@@ -1,12 +1,12 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useEffect, useReducer } from 'react'
-import { fetchMajors, fetchRoadmapByMajor } from '../api/roadmap'
+import { createContext, useContext, useEffect, useReducer, useRef } from 'react'
+import { fetchAccountRoadmap, fetchMajors, fetchRoadmapByMajor } from '../api/roadmap'
 import { getBlockedCourses } from '../utils/prerequisiteValidator'
+import { AuthContext } from './authContextObject'
+import { getRoadmapDraft, getSavedSelectedMajorId, persistRoadmapState } from './roadmapStorage'
 
 const RoadmapContext = createContext(null)
 const RoadmapDispatchContext = createContext(null)
-
-const SELECTED_MAJOR_KEY = 'coursePlanner.selectedMajorId'
 
 function buildInitialState(initialState) {
   if (initialState) return initialState
@@ -18,11 +18,14 @@ function buildInitialState(initialState) {
     majorInfo: null,
     courses: [],
     prerequisites: [],
+    prerequisiteConditions: [],
     degreeRequirements: [],
     isLoadingRoadmap: true,
     roadmapError: '',
     savedState: { majorId: '', semesters: [] },
     hasUnsavedChanges: false,
+    accountRoadmapPrompt: null,
+    localStorageError: '',
   }
 }
 
@@ -58,19 +61,6 @@ function setCourseStatus(semesters, courseId, status) {
       c.courseId === courseId ? { ...c, status } : c
     ),
   }))
-}
-
-function getSavedSelectedMajorId() {
-  const value = localStorage.getItem(SELECTED_MAJOR_KEY)
-  if (!value) return null
-
-  const parsed = Number(value)
-  return Number.isFinite(parsed) ? parsed : null
-}
-
-function saveSelectedMajorId(majorId) {
-  if (majorId === null || majorId === undefined || majorId === '') return
-  localStorage.setItem(SELECTED_MAJOR_KEY, String(majorId))
 }
 
 export function roadmapReducer(state, action) {
@@ -129,12 +119,19 @@ export function roadmapReducer(state, action) {
     }
 
     case 'SET_ROADMAP_DATA': {
+      const draft = action.restoreDraft === false
+        ? null
+        : action.draft || getRoadmapDraft(action.roadmap.major.majorId)
       const nextRoadmap = {
         majorId: action.roadmap.major.majorId,
         semesters: structuredClone(action.roadmap.semesters),
       }
 
-      saveSelectedMajorId(action.roadmap.major.majorId)
+      const baseCourses = structuredClone(action.roadmap.courses)
+      const coursesById = new Map(baseCourses.map(course => [course.courseId, course]))
+      draft?.courses?.forEach(course => {
+        if (!coursesById.has(course.courseId)) coursesById.set(course.courseId, structuredClone(course))
+      })
 
       return {
         ...state,
@@ -145,14 +142,44 @@ export function roadmapReducer(state, action) {
           department: action.roadmap.major.department,
           totalRequiredUnits: action.roadmap.major.totalRequiredUnits,
         },
-        courses: structuredClone(action.roadmap.courses),
+        courses: [...coursesById.values()],
         prerequisites: structuredClone(action.roadmap.prerequisites),
+        prerequisiteConditions: structuredClone(action.roadmap.prerequisiteConditions || []),
         degreeRequirements: structuredClone(action.roadmap.degreeRequirements),
-        semesters: structuredClone(action.roadmap.semesters),
+        semesters: structuredClone(draft?.semesters || action.roadmap.semesters),
         savedState: nextRoadmap,
+        hasUnsavedChanges: draft?.hasUnsavedChanges === true,
+        isLoadingRoadmap: false,
+        roadmapError: '',
+      }
+    }
+
+    case 'ACCOUNT_ROADMAP_PROMPT':
+      return { ...state, accountRoadmapPrompt: action.prompt }
+
+    case 'CLEAR_ACCOUNT_ROADMAP_PROMPT':
+      return { ...state, accountRoadmapPrompt: null }
+
+    case 'LOCAL_STORAGE_ERROR':
+      if (state.localStorageError === action.error) return state
+      return { ...state, localStorageError: action.error }
+
+    case 'LOAD_ACCOUNT_ROADMAP': {
+      const semesters = structuredClone(action.semesters)
+      const coursesById = new Map(state.courses.map(course => [course.courseId, course]))
+      action.courses?.forEach(course => {
+        coursesById.set(course.courseId, structuredClone(course))
+      })
+      return {
+        ...state,
+        majorId: action.majorId,
+        courses: [...coursesById.values()],
+        semesters,
+        savedState: { majorId: action.majorId, semesters: structuredClone(semesters) },
         hasUnsavedChanges: false,
         isLoadingRoadmap: false,
         roadmapError: '',
+        accountRoadmapPrompt: null,
       }
     }
 
@@ -440,6 +467,10 @@ export function roadmapReducer(state, action) {
 
 export function RoadmapProvider({ children, initialState, disableAutoLoad = false }) {
   const [state, dispatch] = useReducer(roadmapReducer, initialState, buildInitialState)
+  const authState = useContext(AuthContext)
+  const { user = null, authLoading = true } = authState || {}
+  const checkedAccountRef = useRef(null)
+  const accountRequestRef = useRef(0)
 
   useEffect(() => {
     if (disableAutoLoad) return undefined
@@ -473,9 +504,10 @@ export function RoadmapProvider({ children, initialState, disableAutoLoad = fals
         }
 
         const roadmap = await fetchRoadmapByMajor(initialMajorId)
+        const draft = getRoadmapDraft(initialMajorId)
 
         if (!cancelled) {
-          dispatch({ type: 'SET_ROADMAP_DATA', roadmap })
+          dispatch({ type: 'SET_ROADMAP_DATA', roadmap, draft })
         }
       } catch (error) {
         if (!cancelled) {
@@ -490,6 +522,61 @@ export function RoadmapProvider({ children, initialState, disableAutoLoad = fals
       cancelled = true
     }
   }, [disableAutoLoad])
+
+  useEffect(() => {
+    if (disableAutoLoad || state.isLoadingRoadmap || !state.majorInfo) return
+    const saved = persistRoadmapState(state)
+    dispatch({
+      type: 'LOCAL_STORAGE_ERROR',
+      error: saved ? '' : 'This roadmap could not be saved in this browser. Check local storage availability and space.',
+    })
+  }, [state, disableAutoLoad])
+
+  useEffect(() => {
+    if (!user || authLoading) {
+      if (!user && !authLoading) {
+        checkedAccountRef.current = null
+        accountRequestRef.current++
+      }
+      return
+    }
+    if (!state.majorInfo || !state.majorId) {
+      return
+    }
+
+    const identity = user.email || String(user.id || '')
+    if (!identity || checkedAccountRef.current === user) return
+    checkedAccountRef.current = user
+    const requestId = ++accountRequestRef.current
+
+    async function reconcileAccountRoadmap() {
+      try {
+        const savedRoadmap = await fetchAccountRoadmap()
+        if (accountRequestRef.current !== requestId) return
+        if (!savedRoadmap) {
+          if (state.hasUnsavedChanges) {
+            dispatch({ type: 'ACCOUNT_ROADMAP_PROMPT', prompt: { kind: 'save-local' } })
+          }
+          return
+        }
+        dispatch({
+          type: 'ACCOUNT_ROADMAP_PROMPT',
+          prompt: { kind: 'account-conflict', roadmap: savedRoadmap },
+        })
+      } catch (error) {
+        if (accountRequestRef.current === requestId) {
+          dispatch({
+            type: 'ACCOUNT_ROADMAP_PROMPT',
+            prompt: error.status === 401
+              ? { kind: 'reauthenticate', message: error.message }
+              : { kind: 'account-error', message: error.message || 'Unable to check the saved account roadmap.' },
+          })
+        }
+      }
+    }
+
+    reconcileAccountRoadmap()
+  }, [user, authLoading, state.majorInfo, state.majorId, state.hasUnsavedChanges])
 
   return (
     <RoadmapContext.Provider value={state}>

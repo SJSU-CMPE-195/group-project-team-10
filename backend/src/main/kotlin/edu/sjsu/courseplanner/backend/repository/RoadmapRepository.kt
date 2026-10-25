@@ -13,14 +13,19 @@ data class MajorRecord(
     val majorId: Int,
     val majorName: String,
     val department: String,
-    val totalUnits: Int
+    val totalUnits: Int,
+    val catalogProgramKey: String?,
+    val catalogSourceUrl: String?,
+    val catalogYear: Int?
 )
 
 data class RequirementRecord(
     val requirementId: Int,
     val majorId: Int,
     val categoryName: String,
-    val requiredUnits: Int
+    val requiredUnits: Int,
+    val notes: String?,
+    val sourceUrl: String?
 )
 
 data class RequirementCourseRecord(
@@ -32,6 +37,14 @@ data class RoadmapPrerequisiteRecord(
     val courseId: Int,
     val prereqCourseId: Int,
     val prereqType: String
+)
+
+data class RoadmapPrerequisiteConditionRecord(
+    val courseId: Int,
+    val relationshipType: String,
+    val originalText: String,
+    val expressionJson: String?,
+    val sourceUrl: String?
 )
 
 @Repository
@@ -63,7 +76,9 @@ class RoadmapRepository(
                     requirementId = row[DegreeRequirementsTable.id],
                     majorId = row[DegreeRequirementsTable.majorId],
                     categoryName = row[DegreeRequirementsTable.categoryName],
-                    requiredUnits = row[DegreeRequirementsTable.requiredUnits]
+                    requiredUnits = row[DegreeRequirementsTable.requiredUnits],
+                    notes = row[DegreeRequirementsTable.notes],
+                    sourceUrl = row[DegreeRequirementsTable.sourceUrl]
                 )
             }
     }
@@ -117,12 +132,32 @@ class RoadmapRepository(
             }
     }
 
+    fun findPrerequisiteConditions(courseIds: List<Int>): List<RoadmapPrerequisiteConditionRecord> = transaction(database) {
+        if (courseIds.isEmpty()) return@transaction emptyList()
+
+        PrerequisiteCsvConditionsTable
+            .selectAll()
+            .where { PrerequisiteCsvConditionsTable.courseId inList courseIds }
+            .map { row ->
+                RoadmapPrerequisiteConditionRecord(
+                    courseId = row[PrerequisiteCsvConditionsTable.courseId],
+                    relationshipType = row[PrerequisiteCsvConditionsTable.relationshipType],
+                    originalText = row[PrerequisiteCsvConditionsTable.originalText],
+                    expressionJson = row[PrerequisiteCsvConditionsTable.expressionJson],
+                    sourceUrl = row[PrerequisiteCsvConditionsTable.officialCourseUrl]
+                )
+            }
+    }
+
     private fun toMajorRecord(row: ResultRow): MajorRecord {
         return MajorRecord(
             majorId = row[MajorsTable.id],
             majorName = row[MajorsTable.majorName],
             department = row[MajorsTable.department],
-            totalUnits = row[MajorsTable.totalUnits]
+            totalUnits = row[MajorsTable.totalUnits],
+            catalogProgramKey = row[MajorsTable.catalogProgramKey],
+            catalogSourceUrl = row[MajorsTable.catalogSourceUrl],
+            catalogYear = row[MajorsTable.catalogYear]
         )
     }
 }
