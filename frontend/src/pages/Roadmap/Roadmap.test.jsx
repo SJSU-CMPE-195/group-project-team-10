@@ -1,4 +1,3 @@
-import { fireEvent, screen } from '@testing-library/react'
 import { act, fireEvent, screen } from '@testing-library/react'
 import { describe, it, expect } from 'vitest'
 import { buildTestRoadmapState, renderWithProviders } from '../../test-utils'

@@ -1,19 +1,22 @@
-import {useContext, useEffect, useMemo, useState} from 'react'
-import {useNavigate} from 'react-router-dom'
-import { Link } from 'react-router-dom'
-import {useEffect, useMemo, useState} from 'react'
-import { useNavigate } from 'react-router-dom'
-import {ReactFlow, Background, Controls, MarkerType,applyEdgeChanges, applyNodeChanges} from '@xyflow/react'
+import { useContext, useEffect, useMemo, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import {
+  ReactFlow,
+  Background,
+  Controls,
+  MarkerType,
+  applyEdgeChanges,
+  applyNodeChanges
+} from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import {useRoadmap, useRoadmapDispatch} from '../../context/RoadmapContext'
-import {validateSemesterPlan} from '../../utils/prerequisiteValidator'
+import { useRoadmap, useRoadmapDispatch } from '../../context/RoadmapContext'
+import { validateSemesterPlan } from '../../utils/prerequisiteValidator'
 import CourseNode from '../../components/CourseNode/CourseNode'
 import ValidationAlert from '../../components/ValidationAlert/ValidationAlert'
 import { fetchRoadmapByMajor, saveAccountRoadmap } from '../../api/roadmap'
 import { AuthContext } from '../../context/authContextObject'
 import LeaveConfirmModal from '../../components/LeaveConfirmModal/LeaveConfirmModal'
 import { useLeaveGuard } from '../../hooks/useLeaveGuard'
-import { fetchRoadmapByMajor } from '../../api/roadmap'
 import './Roadmap.css'
 
 function SemesterNode({ data }) {
@@ -416,21 +419,14 @@ function Roadmap() {
             Add Gap Semester
           </button>
 
-          <button
-            onClick={handleSave}
-            disabled={!hasUnsavedChanges || accountSaving}
-            className={`roadmap-btn primary ${hasUnsavedChanges ? '' : 'disabled'}`}
-          >
-            {accountSaving ? 'Saving...' : 'Save Changes'}
-          </button>
           {variant !== 'autosave' && (
             <>
               <button
                 onClick={handleSave}
-                disabled={!hasUnsavedChanges}
+                disabled={!hasUnsavedChanges || accountSaving}
                 className={`roadmap-btn primary ${hasUnsavedChanges ? '' : 'disabled'}`}
               >
-                Save Changes
+                {accountSaving ? 'Saving...' : 'Save Changes'}
               </button>
 
               <button

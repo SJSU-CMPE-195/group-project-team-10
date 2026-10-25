@@ -1,9 +1,8 @@
 import { useEffect } from 'react'
 import { act } from '@testing-library/react'
 import { describe, it, expect } from 'vitest'
-import { roadmapReducer } from './RoadmapContext'
-import { persistRoadmapState } from './roadmapStorage'
 import { roadmapReducer, useRoadmap, useRoadmapDispatch } from './RoadmapContext'
+import { persistRoadmapState } from './roadmapStorage'
 import { buildTestRoadmapState, renderWithProviders } from '../test-utils'
 
 function makeState(semesters, hasUnsavedChanges = false) {

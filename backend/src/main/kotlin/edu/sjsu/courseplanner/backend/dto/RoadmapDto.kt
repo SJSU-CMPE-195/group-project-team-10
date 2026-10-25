@@ -63,7 +63,7 @@ data class MajorRoadmapDto(
     val prerequisites: List<RoadmapPrerequisiteDto>,
     val degreeRequirements: List<RoadmapRequirementDto>,
     val semesters: List<RoadmapSemesterDto>,
-    val prerequisiteConditions: List<RoadmapPrerequisiteConditionDto> = emptyList()
+    val prerequisiteConditions: List<RoadmapPrerequisiteConditionDto> = emptyList(),
     val sagePrograms: List<SageProgramDto> = emptyList()
 )
 
