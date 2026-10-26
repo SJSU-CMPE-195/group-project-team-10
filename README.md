@@ -312,7 +312,7 @@ Open **http://localhost:3030** (not Vite's default 5173).
 
 ## Demo
 
-**Demo video:** _[link]_
+**Demo video:** [_[link]_](https://drive.google.com/file/d/1vIh7BnYTj83LtE95pSNj1jkPLkDoHul5/view?usp=sharing)
 
 | Feature   | Screenshot                                                                                     |
 |-----------|------------------------------------------------------------------------------------------------|
