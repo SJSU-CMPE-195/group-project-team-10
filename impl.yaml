@@ -1,0 +1,45 @@
+project_name: "Course Planner Plus"
+project_type: "web"
+
+impl_claim: "A user can create an email/password account, choose an SJSU CMPE or SWE major, view imported roadmap and course data, edit a semester plan, save it to the account, and schedule sections with conflict checks through the browser."
+
+languages: ["kotlin", "javascript", "sql"]
+hardware_required: false
+
+setup:
+  - "Install JDK 21, Node.js 20.19+ with npm, MySQL 8+, Git, and curl."
+  - "cd frontend && npm install"
+  - "Create a MySQL database named course_planner."
+  - "Set DB_USERNAME and DB_PASSWORD before starting the backend; optionally set ADMIN_EMAILS."
+
+build:
+  - "cd backend && ./gradlew build"
+  - "cd frontend && npm run build"
+
+test:
+  - "cd backend && ./gradlew test"
+  - "cd frontend && npm test"
+  - "cd frontend && npm run lint"
+
+run:
+  - "cd backend && ./gradlew bootRun"
+  - "cd frontend && npm run dev"
+
+mock_mode:
+  available: true
+  commands:
+    - "cd backend && ./gradlew test"
+    - "cd frontend && npm test"
+
+demo:
+  video: null
+  screenshots:
+    - "docs/screenshots/dashboard.png"
+    - "docs/screenshots/roadmap.png"
+    - "docs/screenshots/catalog.png"
+    - "docs/screenshots/schedule-1.png"
+    - "docs/screenshots/schedule-2.png"
+    - "docs/screenshots/profile.png"
+    - "docs/screenshots/admin.png"
+
+notes: "The frontend is a React/Vite single-page application and the backend is a Kotlin/Spring Boot REST API using MySQL and JetBrains Exposed. Backend tests use in-memory H2, so the mock mode does not require MySQL credentials or hardware. A full run requires MySQL, DB_USERNAME, and DB_PASSWORD. A fresh database requires the catalog, prerequisite, schedule, grade-distribution, and SAGE import commands documented in README.md before the dashboard contains data. Google sign-in requires separate OAuth credentials and a compatible redirect URI; email/password sign-in works without that external service."
