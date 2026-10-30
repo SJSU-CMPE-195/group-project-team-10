@@ -145,6 +145,21 @@
   transition: background 0.15s, color 0.15s;
 }
 
+.theme-select {
+  padding: 7px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--nav-bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.theme-select:hover {
+  color: var(--text-h);
+}
+
 .logout-button:hover {
   background: var(--accent-bg);
   color: var(--text-h);
@@ -209,6 +224,7 @@
 
   .nav-link,
   .logout-button,
+  .theme-select,
   .profile-nav-link {
     display: flex;
     align-items: center;

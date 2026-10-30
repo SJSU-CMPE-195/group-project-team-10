@@ -6,6 +6,8 @@ import './Layout.css'
 import AnnouncementBanner from '../Announcement/AnnouncementBanner'
 import { FEEDBACK_FORM_URLS } from '../../lib/experiment'
 import { useRoadmap } from '../../context/RoadmapContext'
+import { useTheme } from '../../hooks/useTheme'
+import { THEMES } from '../../lib/theme'
 
 const navLinkClass = ({ isActive }) => isActive ? "nav-link active" : "nav-link"
 
@@ -17,6 +19,7 @@ function Layout() {
   const navigate = useNavigate()
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [theme, setTheme] = useTheme()
   // TEMP: tester feedback form
   const { variant } = useRoadmap()
 
@@ -69,6 +72,19 @@ function Layout() {
           </div>
 
           <div className="nav-auth">
+            <select
+              className="theme-select"
+              aria-label="Color theme"
+              value={theme}
+              onChange={(e) => setTheme(e.target.value)}
+            >
+              {THEMES.map(option => (
+                <option key={option} value={option}>
+                  {option[0].toUpperCase() + option.slice(1)}
+                </option>
+              ))}
+            </select>
+
             {!user ? (
               <NavLink to="/login" className={loginLinkClass}>Login</NavLink>
             ) : (
