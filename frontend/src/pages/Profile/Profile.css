@@ -10,9 +10,9 @@
   max-width: 560px;
   padding: 1.6rem;
   border-radius: 16px;
-  background: #171b2a;
-  border: 1px solid #2a3147;
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  box-shadow: var(--shadow);
 }
 
 .profile-header {
@@ -28,22 +28,22 @@
   border-radius: 999px;
   display: grid;
   place-items: center;
-  background: rgba(168, 85, 247, 0.18);
-  border: 1px solid rgba(192, 132, 252, 0.35);
-  color: #d8b4fe;
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  color: var(--accent);
   font-weight: 800;
   font-size: 1.35rem;
 }
 
 .profile-card h1 {
   margin: 0;
-  color: #f5f7ff;
+  color: var(--text-h);
   font-size: 1.7rem;
 }
 
 .profile-muted {
   margin: 0.35rem 0 0;
-  color: #98a2b3;
+  color: var(--text);
 }
 
 .profile-details {
@@ -56,15 +56,15 @@
   justify-content: space-between;
   gap: 1rem;
   padding: 0.85rem 0;
-  border-top: 1px solid #2a3147;
+  border-top: 1px solid var(--card-border);
 }
 
 .profile-row span {
-  color: #98a2b3;
+  color: var(--text);
 }
 
 .profile-row strong {
-  color: #f5f7ff;
+  color: var(--text-h);
   font-weight: 600;
   text-align: right;
 }
