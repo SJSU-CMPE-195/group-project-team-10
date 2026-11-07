@@ -73,6 +73,10 @@ class CatalogProgramScraperService {
         val originalSourceUrl = originalCatalogSourceUrls[normalizedKey] ?: url
         val requirements = parseRequirements(document)
         val prerequisites = requirements
+            .filterNot {
+                it.categoryName.contains("approved upper division electives", ignoreCase = true) ||
+                    it.categoryName.equals("technical electives", ignoreCase = true)
+            }
             .flatMap { it.courses }
             .distinctBy { it.courseCode }
             .flatMap { parsePrerequisites(originalSourceUrl, it) }
@@ -179,7 +183,7 @@ class CatalogProgramScraperService {
         return fallback ?: 120
     }
 
-    private fun parseRequirements(document: Document): List<ParsedCatalogRequirement> {
+    internal fun parseRequirements(document: Document): List<ParsedCatalogRequirement> {
         val requirements = mutableListOf<ParsedCatalogRequirement>()
 
         val cores = document.select("div.core")
@@ -198,6 +202,26 @@ class CatalogProgramScraperService {
 
             val children = core.select(".core__child")
             if (children.isNotEmpty()) {
+                if (headingText.contains("major preparation", ignoreCase = true)) {
+                    val units = Regex("""\((\d+)\s+units?\)""", RegexOption.IGNORE_CASE)
+                        .find(headingText)
+                        ?.groupValues
+                        ?.getOrNull(1)
+                        ?.toIntOrNull() ?: 0
+                    val courses = core.select(".core__courses .course")
+                        .mapNotNull { parseCourseDiv(it) }
+                        .distinctBy { it.courseCode }
+
+                    requirements.add(
+                        ParsedCatalogRequirement(
+                            categoryName = "Major Preparation",
+                            requiredUnits = units,
+                            courses = courses
+                        )
+                    )
+                    continue
+                }
+
                 for (child in children) {
                     val childHeadingEl = child.selectFirst(".core__child-name") ?: continue
                     val childHeadingText = normalizeText(childHeadingEl.text())
@@ -433,7 +457,7 @@ class CatalogProgramScraperService {
             .replace('\u00a0', ' ')
             .replace(Regex("""\s+"""), " ")
             .trim()
-        val match = Regex("""^([A-Z]{2,5})\s+([0-9]{1,3}[A-Z]?)""").find(normalized.uppercase()) ?: return null
+        val match = Regex("""^([A-Z]{2,5})\s+([0-9]{1,3}[A-Z]{0,2})""").find(normalized.uppercase()) ?: return null
         return "${match.groupValues[1]} ${match.groupValues[2]}"
     }
 

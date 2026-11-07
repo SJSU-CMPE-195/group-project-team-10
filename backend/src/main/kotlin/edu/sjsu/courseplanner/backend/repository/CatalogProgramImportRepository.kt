@@ -3,6 +3,7 @@ package edu.sjsu.courseplanner.backend.repository
 import edu.sjsu.courseplanner.backend.dto.CatalogProgramImportResultDto
 import edu.sjsu.courseplanner.backend.service.ParsedCatalogCourse
 import edu.sjsu.courseplanner.backend.service.ParsedCatalogProgram
+import edu.sjsu.courseplanner.backend.service.ParsedCatalogRequirement
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.jdbc.Database
@@ -17,12 +18,39 @@ import org.springframework.stereotype.Repository
 class CatalogProgramImportRepository(
     private val database: Database
 ) {
-    fun importProgram(program: ParsedCatalogProgram): CatalogProgramImportResultDto = transaction(database) {
+    fun importProgram(
+        program: ParsedCatalogProgram
+    ): CatalogProgramImportResultDto = transaction(database) {
         val majorId = upsertMajor(program)
-        val allCourses = program.requirements.flatMap { it.courses }.distinctBy { it.courseCode }
-        val courseIdsByCode = upsertCourses(allCourses).toMutableMap()
+        val requirements = program.requirements.filterNot {
+            it.categoryName.equals(TECHNICAL_ELECTIVES_CATEGORY, ignoreCase = true)
+        }
+        if (program.programKey.equals("swe", ignoreCase = true) &&
+            requirements.any { it.categoryName.equals(MAJOR_PREPARATION_CATEGORY, ignoreCase = true) }
+        ) {
+            val obsoletePreparationRequirementIds = DegreeRequirementsTable
+                .selectAll()
+                .where { DegreeRequirementsTable.majorId eq majorId }
+                .filter { row ->
+                    val name = row[DegreeRequirementsTable.categoryName]
+                    name.equals(ONE_COURSE_FROM_CATEGORY, ignoreCase = true) ||
+                        name.equals(ADDITIONAL_MATH_SCIENCE_CATEGORY, ignoreCase = true)
+                }
+                .map { it[DegreeRequirementsTable.id] }
+            if (obsoletePreparationRequirementIds.isNotEmpty()) {
+                RequirementCoursesTable.deleteWhere {
+                    RequirementCoursesTable.requirementId inList obsoletePreparationRequirementIds
+                }
+                DegreeRequirementsTable.deleteWhere {
+                    DegreeRequirementsTable.id inList obsoletePreparationRequirementIds
+                }
+            }
+        }
+        val regularRequirements = requirements.filterNot(::isApprovedUpperDivisionElectives)
+        val majorCourses = regularRequirements.flatMap { it.courses }.distinctBy { it.courseCode }
+        val courseIdsByCode = upsertCourses(majorCourses).toMutableMap()
 
-        val importedCourseIds = allCourses.mapNotNull { courseIdsByCode[it.courseCode] }
+        val importedCourseIds = majorCourses.mapNotNull { courseIdsByCode[it.courseCode] }
         if (importedCourseIds.isNotEmpty()) {
             PrerequisitesTable.deleteWhere { PrerequisitesTable.courseId inList importedCourseIds }
         }
@@ -41,25 +69,36 @@ class CatalogProgramImportRepository(
             }
         }
 
-        val oldRequirementIds = DegreeRequirementsTable
-            .selectAll()
-            .where { DegreeRequirementsTable.majorId eq majorId }
-            .map { it[DegreeRequirementsTable.id] }
-
-        if (oldRequirementIds.isNotEmpty()) {
-            RequirementCoursesTable.deleteWhere { RequirementCoursesTable.requirementId inList oldRequirementIds }
-            DegreeRequirementsTable.deleteWhere { DegreeRequirementsTable.id inList oldRequirementIds }
-        }
-
         var requirementCoursesCreated = 0
-        program.requirements.forEach { requirement ->
-            val requirementId = DegreeRequirementsTable.insert { statement ->
-                statement[DegreeRequirementsTable.majorId] = majorId
-                statement[DegreeRequirementsTable.categoryName] = requirement.categoryName
-                statement[DegreeRequirementsTable.requiredUnits] = requirement.requiredUnits
-            } get DegreeRequirementsTable.id
+        requirements.forEach { requirement ->
+            val existingRequirement = DegreeRequirementsTable
+                .selectAll()
+                .where { DegreeRequirementsTable.majorId eq majorId }
+                .firstOrNull {
+                    val categoryName = it[DegreeRequirementsTable.categoryName]
+                    categoryName.equals(requirement.categoryName, ignoreCase = true) ||
+                        (isApprovedUpperDivisionElectives(requirement) &&
+                            categoryName.contains(APPROVED_UPPER_DIVISION_CATEGORY, ignoreCase = true))
+                }
+            val requirementId = if (existingRequirement != null) {
+                val id = existingRequirement[DegreeRequirementsTable.id]
+                if (!isApprovedUpperDivisionElectives(requirement)) {
+                    RequirementCoursesTable.deleteWhere { RequirementCoursesTable.requirementId eq id }
+                }
+                DegreeRequirementsTable.update({ DegreeRequirementsTable.id eq id }) { statement ->
+                    statement[requiredUnits] = requirement.requiredUnits
+                }
+                id
+            } else {
+                DegreeRequirementsTable.insert { statement ->
+                    statement[DegreeRequirementsTable.majorId] = majorId
+                    statement[DegreeRequirementsTable.categoryName] = requirement.categoryName
+                    statement[DegreeRequirementsTable.requiredUnits] = requirement.requiredUnits
+                } get DegreeRequirementsTable.id
+            }
 
-            requirement.courses.forEach { course ->
+            val courses = if (isApprovedUpperDivisionElectives(requirement)) emptyList() else requirement.courses
+            courses.forEach { course ->
                 val courseId = requireNotNull(courseIdsByCode[course.courseCode]) { "Missing course ID for ${course.courseCode}" }
                 RequirementCoursesTable.insert { statement ->
                     statement[RequirementCoursesTable.requirementId] = requirementId
@@ -75,8 +114,8 @@ class CatalogProgramImportRepository(
             majorId = majorId,
             majorName = program.majorName,
             totalUnits = program.totalUnits,
-            coursesUpserted = allCourses.size,
-            requirementsCreated = program.requirements.size,
+            coursesUpserted = majorCourses.size,
+            requirementsCreated = requirements.size,
             requirementCoursesCreated = requirementCoursesCreated,
             prerequisitesCreated = program.prerequisites.size
         )
@@ -93,6 +132,8 @@ class CatalogProgramImportRepository(
             MajorsTable.update({ MajorsTable.id eq existingId }) { statement ->
                 statement[department] = program.department
                 statement[totalUnits] = program.totalUnits
+                statement[catalogProgramKey] = program.programKey
+                statement[catalogSourceUrl] = program.sourceUrl
             }
             return existingId
         }
@@ -101,6 +142,8 @@ class CatalogProgramImportRepository(
             statement[majorName] = program.majorName
             statement[department] = program.department
             statement[totalUnits] = program.totalUnits
+            statement[catalogProgramKey] = program.programKey
+            statement[catalogSourceUrl] = program.sourceUrl
         } get MajorsTable.id
     }
 
@@ -109,6 +152,9 @@ class CatalogProgramImportRepository(
             course.courseCode to upsertCourse(course)
         }
     }
+
+    private fun isApprovedUpperDivisionElectives(requirement: ParsedCatalogRequirement): Boolean =
+        requirement.categoryName.contains(APPROVED_UPPER_DIVISION_CATEGORY, ignoreCase = true)
 
     private fun upsertCourse(course: ParsedCatalogCourse): Int {
         val existingId = CoursesTable
@@ -161,5 +207,13 @@ class CatalogProgramImportRepository(
             statement[CoursesTable.avgWorkload] = null
             statement[CoursesTable.syllabusUrl] = null
         } get CoursesTable.id
+    }
+
+    private companion object {
+        const val MAJOR_PREPARATION_CATEGORY = "Major Preparation"
+        const val ONE_COURSE_FROM_CATEGORY = "Complete One Course From:"
+        const val ADDITIONAL_MATH_SCIENCE_CATEGORY = "Complete Additional Math/Science Electives (7 units)"
+        const val APPROVED_UPPER_DIVISION_CATEGORY = "approved upper division electives"
+        const val TECHNICAL_ELECTIVES_CATEGORY = "Technical Electives"
     }
 }
