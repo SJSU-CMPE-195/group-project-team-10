@@ -2,6 +2,7 @@ package edu.sjsu.courseplanner.backend.controller
 
 import edu.sjsu.courseplanner.backend.service.CatalogProgramImportService
 import edu.sjsu.courseplanner.backend.service.PrerequisiteCsvImportService
+import edu.sjsu.courseplanner.backend.service.TechnicalElectiveImportService
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
@@ -12,7 +13,8 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/api/catalog-programs")
 class CatalogProgramImportController(
     private val catalogProgramImportService: CatalogProgramImportService,
-    private val prerequisiteCsvImportService: PrerequisiteCsvImportService
+    private val prerequisiteCsvImportService: PrerequisiteCsvImportService,
+    private val technicalElectiveImportService: TechnicalElectiveImportService
 ) {
     @GetMapping("/supported")
     fun supportedPrograms() = catalogProgramImportService.supportedProgramKeys().sorted()
@@ -23,4 +25,8 @@ class CatalogProgramImportController(
     @PostMapping("/import-prerequisites")
     fun importPrerequisites(@RequestParam program: String) =
         prerequisiteCsvImportService.import(program)
+
+    @PostMapping("/import-technical-electives")
+    fun importTechnicalElectives(@RequestParam program: String) =
+        technicalElectiveImportService.import(program)
 }
